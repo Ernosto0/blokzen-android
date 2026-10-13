@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Blokzen</title>
+<meta name="theme-color" content="#1a1330">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Blokzen">
+<meta name="format-detection" content="telephone=no">
+<script>if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) document.documentElement.classList.add("native");</script>
+<script type="module" src="./main.js"></script>
+</head>
+<body>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<div id="app">
+  <div id="tutTip" hidden role="status" aria-live="polite">
+    <div class="tut-head"><span class="tut-step" id="tutStep">1/3</span><b id="tutTitle"></b><button id="tutSkip" class="tut-skip" type="button">Geç</button></div>
+    <p id="tutText"></p>
+  </div>
+  <div class="top">
+    <div class="best" id="bestBox" title="En iyi skor">
+      <svg id="icoBest" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5L3 7z"/></svg>
+      <svg id="icoZen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14"/><path d="M5 19l7-7"/></svg>
+      <svg id="icoPuz" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M12 2.6l4.6 5.1L12 21.4 7.4 7.7z" opacity=".55"/><path d="M7.4 7.7L12 2.6 3.4 7.7l8.6 13.7zM16.6 7.7L12 2.6l8.6 5.1L12 21.4z"/></svg>
+      <span id="best">0</span>
+    </div>
+    <div class="tools">
+      <button id="undo" type="button" aria-label="Son hamleyi geri al" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4.5 9.5 9 5"/><path d="M4.5 9.5H14a5.5 5.5 0 0 1 0 11h-3"/></svg>
+        <span class="badge" id="undoBadge">1</span>
+      </button>
+      <button id="menuBtn" type="button" aria-label="Ana menü">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5L12 4.5l8 7"/><path d="M6.5 10v9.5h11V10"/><path d="M10.2 19.5v-5h3.6v5"/></svg>
+      </button>
+      <button id="themeBtn" type="button" aria-label="Temalar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.9-.7-1.3-.7-2.1 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5C21 6.4 17 3 12 3z"/><circle cx="7.5" cy="11.5" r="1.5" fill="var(--btn)"/><circle cx="10" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="14.6" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="17.2" cy="11" r="1.5" fill="var(--btn)"/></svg>
+        <svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><rect id="ringRect" x="1.3" y="1.3" width="37.4" height="37.4" rx="11.5" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>
+      </button>
+      <button id="restart" type="button" aria-label="Yeni oyun">
+        <svg id="icoRestart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>
+        <svg id="icoCheck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+      </button>
+      <button id="mute" type="button" aria-label="Sesi kapat">
+        <svg id="icoOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+        <svg id="icoOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="goalRow" class="goalrow" hidden role="img">
+    <span class="gday"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="goalDay"></span></span>
+    <div class="gbar"><i id="goalFill"></i><div id="goalMarks"></div></div>
+    <span class="gnext" id="goalNext"></span>
+  </div>
+  <div id="puzRow" class="puzrow" hidden>
+    <button id="puzTitle" class="ptitle" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span id="puzName"></span></button>
+    <span class="pchip" id="puzGoal"></span>
+    <span class="pchip" id="puzLeft"></span>
+  </div>
+  <div class="scorebox">
+    <div id="score">0</div>
+    <div class="subrow"><span id="lvl" class="lvl" hidden></span><span id="combo" hidden></span></div>
+  </div>
+  <div id="stage">
+    <canvas id="cv" aria-label="Oyun tahtası"></canvas>
+    <div id="over" class="scrim" hidden>
+      <div class="card">
+        <h2 id="overTitle">Yer kalmadı</h2>
+        <div class="big" id="finalScore">0</div>
+        <div class="stars ostars" id="overStars" role="img" hidden></div>
+        <div class="rec" id="newRec" hidden>Yeni rekor!</div>
+        <div class="sub" id="overSub"></div>
+        <div class="sub note" id="overNote" hidden></div>
+        <button id="revive" class="cta" type="button" hidden>Devam et</button>
+        <button id="again" class="cta" type="button">Tekrar oyna</button>
+        <div class="orow">
+          <button id="share" class="ghost" type="button" hidden>Sonucu kopyala</button>
+          <button id="puzUndo" class="ghost" type="button" hidden>Geri al</button>
+          <button id="puzRetry" class="ghost" type="button" hidden>Tekrar</button>
+          <button id="puzLevels" class="ghost" type="button" hidden>Bölümler</button>
+          <button id="toMenu" class="ghost" type="button">Ana menü</button>
+        </div>
+      </div>
+    </div>
+    <div id="tutDone" class="scrim" hidden>
+      <div class="card">
+        <h2>Rehber bitti</h2>
+        <div class="big">Hazırsın!</div>
+        <ul class="tut-list">
+          <li><span>Parçalar döndürülemez, olduğu gibi yerleştirilir.</span></li>
+          <li><span>Üç parça bitince yenileri gelir.</span></li>
+          <li><span>Art arda temizlemeler kombo yapar, puan katlanır.</span></li>
+          <li><span>Hiçbir parça sığmadığında oyun biter.</span></li>
+        </ul>
+        <button id="tutStart" class="cta" type="button">Oyuna başla</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="menu" hidden role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+  <div class="menu-inner">
+    <div class="mhead">
+      <canvas id="logo" aria-hidden="true"></canvas>
+      <h1 class="mtitle" id="menuTitle">Blokzen</h1>
+      <p class="mtag" id="menuTag">Yerleştir, temizle, rahatla.</p>
+    </div>
+    <div class="modes">
+      <section class="mode" id="modeClassicCard" aria-labelledby="classicName">
+        <button id="play" class="mode-main" type="button" aria-describedby="classicSub">
+          <canvas class="mode-art" id="artClassic" aria-hidden="true"></canvas>
+          <span class="mode-txt"><b id="classicName">Klasik</b><small id="classicSub"></small></span>
+          <span class="mode-go"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg><span id="playLbl">Oyna</span></span>
+        </button>
+        <div class="mode-foot" id="classicFoot" hidden>
+          <span class="resume" id="resumeInfo"></span>
+          <button id="menuNew" class="mini" type="button">Yeni oyun</button>
+        </div>
+      </section>
+      <section class="mode daily" id="modeDailyCard" aria-labelledby="dailyName">
+        <button id="playDaily" class="mode-main" type="button" aria-describedby="dailySub">
+          <canvas class="mode-art" id="artDaily" aria-hidden="true"></canvas>
+          <span class="mode-txt"><b id="dailyName">Günlük</b><small id="dailySub"></small></span>
+          <span class="mode-go"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg><span id="dailyLbl">Başla</span></span>
+        </button>
+        <div class="mode-foot">
+          <div class="stars" id="dailyStars" role="img"></div>
+          <span class="streak" id="dailyStreak"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.6 2.4c.5 3-1.2 4.6-2.6 6.2-1.3 1.5-2.6 3-2.6 5.4 0 1.1.3 2 .8 2.8-1.6-.6-2.8-2-3-3.8-1.4 1.6-2 3.4-2 4.9C3.2 21.2 7 23 12 23s8.8-2.6 8.8-7.4c0-3.6-2-6-3.6-8-.2 1.7-.8 2.9-1.9 3.6.4-4.2-1.2-7-2.7-8.8zM12 21c-2 0-3.4-1.2-3.4-3 0-1.6 1-2.6 2-3.6.6-.6 1.1-1.2 1.3-2.1 1.7 1.3 3.4 3.1 3.4 5.4 0 2-1.4 3.3-3.3 3.3z"/></svg><span id="streakTxt"></span></span>
+        </div>
+      </section>
+      <section class="mode puzzle" id="modePuzzleCard" aria-labelledby="puzzleName">
+        <button id="playPuzzle" class="mode-main" type="button" aria-describedby="puzzleSub">
+          <canvas class="mode-art" id="artPuzzle" aria-hidden="true"></canvas>
+          <span class="mode-txt"><b id="puzzleName">Bulmaca</b><small id="puzzleSub"></small></span>
+          <span class="mode-go"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg><span id="puzzleLbl">Başla</span></span>
+        </button>
+        <div class="mode-foot">
+          <span class="resume" id="puzzleInfo"></span>
+          <button id="puzzleLevels" class="mini" type="button">Bölümler</button>
+        </div>
+      </section>
+      <section class="mode zen" id="modeZenCard" aria-labelledby="zenName">
+        <button id="playZen" class="mode-main" type="button" aria-describedby="zenSub">
+          <canvas class="mode-art" id="artZen" aria-hidden="true"></canvas>
+          <span class="mode-txt"><b id="zenName">Zen</b><small id="zenSub"></small></span>
+          <span class="mode-go"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg><span id="zenLbl">Oyna</span></span>
+        </button>
+        <div class="mode-foot" id="zenFoot" hidden>
+          <span class="resume" id="zenInfo"></span>
+          <button id="zenNew" class="mini" type="button">Sıfırla</button>
+        </div>
+      </section>
+    </div>
+    <div class="mgrid">
+      <button id="menuThemes" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.9-.7-1.3-.7-2.1 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5C21 6.4 17 3 12 3z"/><circle cx="7.5" cy="11.5" r="1.5" fill="var(--btn)"/><circle cx="10" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="14.6" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="17.2" cy="11" r="1.5" fill="var(--btn)"/></svg>
+        Temalar
+      </button>
+      <button id="menuHelp" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.3-2.6 3.9"/><circle cx="12" cy="17.3" r=".6" fill="currentColor"/></svg>
+        Nasıl oynanır
+      </button>
+      <button id="menuStats" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 20V13M12 20V5M19 20v-9"/></svg>
+        İstatistik
+      </button>
+      <button id="menuSettings" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17.4 7H20M4 17h2.6M11 17h9"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="8.8" cy="17" r="2.2"/></svg>
+        Ayarlar
+      </button>
+    </div>
+    <p class="mfoot">Reklam yok, süre yok, acele yok.</p>
+  </div>
+</div>
+
+<div id="info" class="scrim" hidden role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="infoTitle">Nasıl oynanır</h2>
+      <span class="count"></span>
+      <button id="infoClose" class="iconbtn" type="button" aria-label="Kapat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <ol class="rules" id="helpBody">
+      <li><span>Alttaki üç parçadan birini sürükle ve <b>8×8</b> tahtada boş bir yere bırak. Parçalar döndürülemez.</span></li>
+      <li><span>Bir <b>satır</b> ya da <b>sütun</b> tamamen dolunca temizlenir. Aynı hamlede ne kadar çok sıra, o kadar çok puan.</span></li>
+      <li><span>Art arda temizlemeler <b>kombo</b> yapar ve puanı katlar. Üç hamle boyunca hiç sıra temizlemezsen kombo biter.</span></li>
+      <li><span>Tahtayı <b>tamamen boşaltmak</b> büyük bonus verir. Puan arttıkça seviye ve puan çarpanı da yükselir.</span></li>
+      <li><span>Üç parça bitince yenileri gelir. Hiçbiri sığmadığında oyun biter.</span></li>
+      <li><span><b>Klasik</b> modda her oyunda <b>3 geri alma</b> hakkın var. Yer kalmadığında bir kez <b>devam</b> edebilirsin: en dolu sıralar temizlenir ve oyun sürer.</span></li>
+      <li><span>Kilitli <b>temalar</b>, altlarında yazan görevi tamamlayınca açılır.</span></li>
+      <li><span><b>Günlük</b> modda herkes o günün aynı başlangıç tahtası ve aynı ilk parçalarıyla oynar. Üç hedef puana ulaşıp <b>yıldız</b> topla. İstediğin kadar tekrar deneyebilirsin, günün en iyi skoru sayılır.</span></li>
+      <li><span>Her gün en az bir yıldız alırsan <b>serin</b> büyür. Bir gün atlarsan seri sıfırdan başlar.</span></li>
+      <li><span><b>Zen</b> modunda oyun hiç bitmez. Hiçbir parça sığmayınca tahta bir <b>nefes</b> alır: en dolu sıralar sessizce boşalır ve oyun sürer. Seviye, rekor baskısı ve ekran sarsıntısı yok. Tek oyun rekorları sayılmaz, toplam ilerleme ve oyun süresi sayılır.</span></li>
+      <li><span><b>Zen koleksiyonundaki</b> on tema, dünyanın farklı kültürlerinden esinlenir ve sadece Zen'de oynayarak açılır.</span></li>
+      <li><span><b>Bulmaca</b> modunda her bölümün sabit bir tahtası, sırası belli parçaları ve tek bir hedefi var: <b>taşları</b> temizlemek, tahtayı boşaltmak, bir puana ya da bir komboya ulaşmak. Taş, ancak bulunduğu satır ya da sütun temizlenince gider. Hedefe ne kadar az parçayla ulaşırsan o kadar çok <b>yıldız</b> alırsın. Her denemede son hamleni bir kez <b>geri alabilirsin</b>. Bulmaca rekorları ve diğer tema görevlerini etkilemez.</span></li>
+      <li><span><b>Bulmaca koleksiyonundaki</b> temalar akıl oyunlarından esinlenir ve sadece bölüm çözerek açılır: bir bölümü son parçayla bitirmek, tek hamlede üç taş kırmak gibi. Finali <b>Satranç</b>, bütün bölümleri 3 yıldızla bitirince açılır.</span></li>
+    </ol>
+    <div class="stats-wrap" id="statsBody" hidden></div>
+    <button id="helpTut" class="ghost" type="button">Rehberi baştan izle</button>
+  </div>
+</div>
+
+<div id="settings" class="scrim" hidden role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="setTitle">Ayarlar</h2>
+      <span class="count"></span>
+      <button id="setClose" class="iconbtn" type="button" aria-label="Kapat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="set-group">
+      <h3>Ses</h3>
+      <label class="switch" for="optSound">
+        <input type="checkbox" id="optSound">
+        <span class="track"></span>
+        <span class="lbl"><b>Ses efektleri</b><small>Yerleştirme, temizleme ve kombo sesleri</small></span>
+      </label>
+      <div class="range" id="volRow">
+        <div class="range-head"><b id="volLbl">Efekt ses seviyesi</b><span id="volVal">100%</span></div>
+        <input type="range" id="optVol" min="5" max="100" step="5" value="100" aria-labelledby="volLbl">
+      </div>
+    </div>
+    <div class="set-group">
+      <h3>Dokunuş ve görüntü</h3>
+      <label class="switch" for="optVib" id="vibRow">
+        <input type="checkbox" id="optVib">
+        <span class="track"></span>
+        <span class="lbl"><b>Titreşim</b><small id="vibNote">Hamlelerde ve temizlemelerde kısa titreşim</small></span>
+      </label>
+      <label class="switch" for="optLow">
+        <input type="checkbox" id="optLow">
+        <span class="track"></span>
+        <span class="lbl"><b>Düşük efekt modu</b><small>Daha az parçacık, ekran sarsıntısı yok, sakin arka plan</small></span>
+      </label>
+    </div>
+    <div class="set-group" id="devGroup" hidden>
+      <h3>Geliştirici</h3>
+      <label class="switch" for="optDev">
+        <input type="checkbox" id="optDev">
+        <span class="track"></span>
+        <span class="lbl"><b>Tüm temaları göster</b><small>Kilitler sadece görünümde kalkar; görevler ve ilerleme aynen sayılmaya devam eder</small></span>
+      </label>
+    </div>
+  </div>
+</div>
+
+<div id="levels" class="scrim" hidden role="dialog" aria-modal="true" aria-labelledby="lvTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="lvTitle">Bölümler</h2>
+      <span class="count" id="lvCount"></span>
+      <button id="lvClose" class="iconbtn" type="button" aria-label="Kapat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="lvbody" id="lvBody"></div>
+    <div class="lvnext" id="lvNext"></div>
+    <p class="hint">Bir bölümü bitirmek sonrakini açar. Yıldızlar, hedefe ulaştığında elinde kalan parça sayısına göre verilir.</p>
+  </div>
+</div>
+
+<div id="gallery" class="scrim" hidden role="dialog" aria-modal="true" aria-labelledby="galTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="galTitle">Temalar</h2>
+      <span class="count" id="galCount"></span>
+      <button id="galClose" class="iconbtn" type="button" aria-label="Kapat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <label class="switch" for="autoTheme">
+      <input type="checkbox" id="autoTheme">
+      <span class="track"></span>
+      <span class="lbl"><b>Otomatik değiştir</b><small>Puan arttıkça açık temalar arasında geçilir</small></span>
+    </label>
+    <div class="seg">
+      <span class="seg-lbl" id="segLbl">Blok görünümü</span>
+      <div class="seg-row" role="radiogroup" aria-labelledby="segLbl">
+        <button type="button" id="modeClassic" role="radio" aria-checked="true"><canvas aria-hidden="true"></canvas>Klasik</button>
+        <button type="button" id="modeSoft" role="radio" aria-checked="false"><canvas aria-hidden="true"></canvas>Yumuşak</button>
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+    <p class="hint" id="galHint"></p>
+  </div>
+</div>
+</body>
+</html>

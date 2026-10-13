@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // SMOKE_CMD lets the suite run against another copy of the game (e.g. the old single-file www/).
-const cmd = process.env.SMOKE_CMD || 'npx vite www --port 4173 --strictPort';
+const cmd = process.env.SMOKE_CMD || 'npm run build && npx vite preview --port 4173 --strictPort';
 
 export default defineConfig({
   testDir: 'tests',

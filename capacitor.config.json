@@ -1,6 +1,6 @@
 {
   "appId": "com.cinaraksoy.blokzen",
   "appName": "Blokzen",
-  "webDir": "www",
+  "webDir": "dist",
   "backgroundColor": "#1a1330"
 }

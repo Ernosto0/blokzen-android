@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "Blokzen Android app (Capacitor shell around the web game)",
   "scripts": {
-    "sync": "cap sync android",
-    "test": "playwright test"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "playwright test",
+    "sync": "npm run build && cap sync android"
   },
   "license": "ISC",
   "private": true,

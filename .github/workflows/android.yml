@@ -29,6 +29,12 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Build the web game
+        run: npm run build
+
+      - name: Smoke tests
+        run: npx playwright install --with-deps chromium && npx playwright test
+
       - name: Copy the game into the Android project
         run: npx cap sync android
 
