@@ -144,10 +144,12 @@ defineMode({
   },
   renderCard() {
   const cs = classicStatus();
-  $('playLbl').textContent = cs.prog ? 'Devam et' : 'Oyna';
   $('classicSub').textContent = state.best ? `En iyi ${fmtN(state.best)}` : 'Yer kalmayana kadar';
-  $('classicFoot').hidden = !cs.prog;
-  if (cs.prog) $('resumeInfo').textContent = `Yarım oyun · ${fmtN(cs.score)} puan`;
+  $('menuNew').hidden = !cs.prog;
+  },
+  hero() {
+    const cs = classicStatus();
+    return { label: cs.prog ? 'Devam et' : 'Oyna', sub: cs.prog ? `Klasik · ${fmtN(cs.score)} puan` : state.best ? `Klasik · En iyi ${fmtN(state.best)}` : 'Klasik' };
   },
   resetNew,
   remember: clsRemember,

@@ -71,10 +71,12 @@ defineMode({
   },
   renderCard() {
   const zs = zenStatus();
-  $('zenLbl').textContent = zs.prog ? 'Devam et' : 'Oyna';
   $('zenSub').textContent = 'Bitmez, acele yok';
-  $('zenFoot').hidden = !zs.prog;
-  if (zs.prog) $('zenInfo').textContent = `${fmtN(zs.lines)} sıra · ${fmtN(zs.score)} puan`;
+  $('zenNew').hidden = !zs.prog;
+  },
+  hero() {
+    const zs = zenStatus();
+    return { label: zs.prog ? 'Devam et' : 'Oyna', sub: zs.prog ? `Zen · ${fmtN(zs.lines)} sıra · ${fmtN(zs.score)} puan` : 'Zen' };
   },
   resetNew,
   started() { stats.zenSessions++; },

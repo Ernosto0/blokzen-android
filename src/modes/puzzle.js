@@ -236,11 +236,14 @@ defineMode({
   }
   },
   renderCard() {
-  const ps = puzzleStatus(), solved = puzSolved(), nx = nextLevelIndex();
   $('puzzleSub').textContent = `${puzTotalStars()} / ${LEVELS.length * 3} yıldız`;
-  $('puzzleLbl').textContent = ps.prog ? 'Devam et' : nx < 0 ? 'Bölümler' : 'Başla';
-  $('puzzleInfo').textContent = ps.prog ? `Bölüm ${ps.li + 1} yarım kaldı` : nx < 0 ? `${solved} bölümün hepsi çözüldü` : `Sıradaki: Bölüm ${nx + 1}`;
-  $('playPuzzle').querySelector('.mode-go').classList.toggle('soft', !ps.prog && nx < 0);
+  },
+  hero() {
+    const ps = puzzleStatus(), nx = nextLevelIndex();
+    return {
+      label: ps.prog ? 'Devam et' : nx < 0 ? 'Bölümler' : 'Başla',
+      sub: ps.prog ? `Bulmaca · Bölüm ${ps.li + 1} yarım kaldı` : nx < 0 ? `Bulmaca · ${puzSolved()} bölümün hepsi çözüldü` : `Bulmaca · Bölüm ${nx + 1}`,
+    };
   },
   // carry on with a half-played level, else start the next unsolved one; with every level solved, show the list
   play() {
