@@ -4,7 +4,7 @@ import { state } from '../core/state.js';
 import { LEVELS, PUZZLE_GROUPS } from '../modes/puzzle-levels.js';
 import { bestStars, GOAL_ICON, goalText, levelOpen, nextLevelIndex, puzTotalStars } from '../modes/puzzle.js';
 import { copyText, newGame, resetShare, shareText, startLevel, switchMode } from '../game/flow.js';
-import { MINI_STAR } from './hud.js';
+import { MINI_STAR } from '../modes/puzzle.js';
 import { closeMenu, menuOpen, puzzleStatus, resetMenuNew } from './menu.js';
 import { openInfo } from './info.js';
 import { openSettings } from './settings.js';

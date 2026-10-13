@@ -4,7 +4,10 @@ import { store } from '../core/store.js';
 import { state, emptyGrid, pop } from '../core/state.js';
 import { stats } from '../themes/progress.js';
 import { GEM_COLOR, LEVELS, PUZ_KEY, PUZ_SAVE_KEY } from './puzzle-levels.js';
-import { defineMode } from './registry.js';
+import { defineMode, hudInfo } from './registry.js';
+import { $ } from '../ui/dom.js';
+import { STAR_SVG } from '../game/flow.js';
+import { updateUndoBtn } from '../ui/hud.js';
 import { refreshFits } from '../game/flow.js';
 import { fmtN } from '../ui/menu.js';
 
@@ -90,4 +93,27 @@ export function puzRemember() {
 /* Classic second chances: three undos per game (up to three moves back) and one continue when the board locks up.
    pendingEnd: the game-over card is up but the player may still undo or continue, so the game is not counted as ended yet. */
 
-defineMode({ id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true });
+// puzzle row: level name (opens the level list), goal progress, pieces left with the stars a win right now would give
+export const MINI_STAR = on => STAR_SVG.replace('<svg ', `<svg class="${on ? 'on' : ''}" `);
+function updatePuzzleHud() {
+  const lv = puzLevel(), g = puzGoal(), left = piecesLeft(), pot = puzStarsFor(left, lv.stars);
+  $('puzName').textContent = `${state.puz.li + 1} · ${lv.title}`;
+  $('puzTitle').setAttribute('aria-label', `Bölüm ${state.puz.li + 1}, ${lv.title}. Bölüm listesini aç`);
+  const goal = $('puzGoal');
+  goal.innerHTML = GOAL_ICON[lv.goal.type] + `<span>${g.html}</span>`;
+  goal.classList.toggle('done', g.done);
+  goal.title = goalText(lv);
+  goal.setAttribute('aria-label', `Hedef: ${goalText(lv)}. ${g.label}`);
+  const lf = $('puzLeft');
+  lf.innerHTML = `<span>${left} parça</span><span class="pst">${[0, 1, 2].map(i => MINI_STAR(i < pot)).join('')}</span>`;
+  lf.title = `Kalan parça ${left}. Şimdi bitirirsen ${pot} yıldız`;
+  lf.setAttribute('aria-label', lf.title);
+  updateUndoBtn();
+}
+
+defineMode({
+  id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true,
+  hud: () => hudInfo({ best: `${state.puz.li + 1}/${LEVELS.length}`, bestTitle: 'Bölüm', icon: 'puz', puzRow: true, undo: true }),
+  updateHud: updatePuzzleHud,
+  undoInfo: { left: () => state.puz.undoUsed ? 0 : 1, spent: 'Geri alma hakkı kullanıldı' },
+});

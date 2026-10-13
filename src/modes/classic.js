@@ -1,5 +1,7 @@
 import { N, SAVE_KEY, SHAPES } from '../core/constants.js';
-import { defineMode } from './registry.js';
+import { defineMode, hudInfo } from './registry.js';
+import { updateUndoBtn } from '../ui/hud.js';
+import { fmtN } from '../ui/menu.js';
 import { CLS_UNDOS, freshCls, state, theme } from '../core/state.js';
 import { stats } from '../themes/progress.js';
 import { trayIds } from './puzzle.js';
@@ -45,4 +47,9 @@ export function readPrev(p, lv) {
   };
 }
 
-defineMode({ id: 'classic', saveKey: SAVE_KEY, button: 'play', restartLabel: 'Yeni oyun' });
+defineMode({
+  id: 'classic', saveKey: SAVE_KEY, button: 'play', restartLabel: 'Yeni oyun',
+  hud: () => hudInfo({ best: fmtN(state.best), bestTitle: 'En iyi skor', undo: true }),
+  updateHud: updateUndoBtn,
+  undoInfo: { left: () => state.cls.undoLeft, spent: 'Geri alma hakların bitti' },
+});

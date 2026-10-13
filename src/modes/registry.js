@@ -14,6 +14,11 @@
 //   themeLocked  the theme never changes mid-game; unlocks wait for the end card
 //   endless      the game never ends: a gentler dealer and no late-game pressure
 //   fullCap      most full clears whose bonus keeps growing
+//
+// Hooks (all optional; a mode defines only what it needs):
+//   hud()          what the top bar shows, as hudInfo({ best, bestTitle, icon, goalRow, puzRow, undo })
+//   updateHud()    extra HUD work only this mode has (the daily goal bar, the puzzle row, the undo badge)
+//   undoInfo       { left(), spent } for the undo badge: moves left and what to announce when none are
 import { state } from '../core/state.js';
 
 export const MODE_KEY = 'blokzen.mode'; // which mode was played last
@@ -25,4 +30,6 @@ const BASE = {
 export const defineMode = def => (MODES[def.id] = { ...BASE, ...def });
 
 export const mode = () => MODES[state.mode];
+// the top bar's best box and which rows are shown; icon is 'best' | 'zen' | 'puz'
+export const hudInfo = o => ({ icon: 'best', goalRow: false, puzRow: false, undo: false, ...o });
 export const saveKey = () => mode().saveKey;

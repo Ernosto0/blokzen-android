@@ -5,7 +5,10 @@ import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { state, emptyGrid } from '../core/state.js';
 import { dayKey, stats } from '../themes/progress.js';
-import { defineMode } from './registry.js';
+import { defineMode, hudInfo } from './registry.js';
+import { $ } from '../ui/dom.js';
+import { STAR_SVG } from '../game/flow.js';
+import { fmtN } from '../ui/menu.js';
 import { L } from '../render/layout.js';
 
 /* ---------- Daily challenge ----------
@@ -98,4 +101,30 @@ export function dailyProgress(now, midX) {
   saveDaily();
 }
 
-defineMode({ id: 'daily', saveKey: DAILY_SAVE_KEY, button: 'playDaily', restartLabel: 'Günlüğü baştan dene' });
+// daily goal bar: three equal thirds, one per star, so the first target is as visible as the last
+const goalPos = (sc, tg) => { let lo = 0; for (let i = 0; i < 3; i++) { if (sc < tg[i]) return (i + (sc - lo) / (tg[i] - lo)) / 3; lo = tg[i]; } return 1; };
+let goalBuilt = 0; // goalShown: the bar has been drawn for this day, so newly lit stars may pop
+function updateGoal() {
+  const tg = dailyStart(state.gameDay).targets, st = starsFor(state.score, tg);
+  if (goalBuilt !== state.gameDay) {
+    goalBuilt = state.gameDay;
+    $('goalDay').textContent = fmtDay(state.gameDay);
+    $('goalMarks').innerHTML = tg.map((t, i) => `<span class="gmark" style="left:${(100 * (i + 1) / 3).toFixed(2)}%">${STAR_SVG}</span>`).join('');
+  }
+  $('goalFill').style.width = (100 * goalPos(state.score, tg)).toFixed(2) + '%';
+  [...$('goalMarks').children].forEach((m, i) => {
+    const was = m.classList.contains('on');
+    m.classList.toggle('on', i < st);
+    if (!was && i < st && state.goalShown === state.gameDay) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
+  });
+  state.goalShown = state.gameDay;
+  const next = tg.find(t => t > state.score);
+  $('goalNext').textContent = next ? fmtN(next) : 'Tamam!';
+  $('goalRow').setAttribute('aria-label', `Günlük hedef: ${st} / 3 yıldız` + (next ? `, sonraki ${fmtN(next)}` : ''));
+}
+
+defineMode({
+  id: 'daily', saveKey: DAILY_SAVE_KEY, button: 'playDaily', restartLabel: 'Günlüğü baştan dene',
+  hud: () => hudInfo({ best: fmtN(Math.max(dayBest(state.gameDay), state.score)), bestTitle: 'Bugünün en iyisi', goalRow: true }),
+  updateHud: updateGoal,
+});
