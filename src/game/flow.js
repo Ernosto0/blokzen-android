@@ -246,6 +246,7 @@ export function gameEnded() {
   countGame();
   const hr = new Date().getHours();
   if (hr >= 5 && hr < 9) stats.morningGames++;
+  if (hr >= 18 && hr < 21) stats.duskGames++;
   themesDone.add(THEMES[theme.cur].id); store.set(DONE_KEY, [...themesDone]); stats.themesDone = themesDone.size;
   stats.streak10k = state.score >= 10000 ? stats.streak10k + 1 : 0;
   stats.bestStreak10k = Math.max(stats.bestStreak10k, stats.streak10k);

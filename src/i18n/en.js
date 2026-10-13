@@ -355,6 +355,7 @@ export default {
   'Kawaii Kedi': 'Kawaii Kitty',
   'Fiyonk!': 'Bow!',
   'Köpük Kasabası': 'Bubble Town',
+  'Çöl Akşamı': 'Desert Dusk',
 
   /* ---- theme unlock tasks ---- */
   'Tek oyunda 2.500 puan yap': 'Score 2,500 points in one game',
@@ -395,6 +396,7 @@ export default {
   'Tahtayı toplam 25 kez temizle': 'Clear the board 25 times in total',
   'Fiyonk yap: aynı hamlede hem satırı hem sütunu temizle (7 kez)': 'Tie a bow: clear a row and a column in the same move (7 times)',
   'Köpük patlat: tek hamlede 2+ sırayı 25 kez temizle': 'Pop the bubbles: clear 2+ lines in one move 25 times',
+  'Gün batımında oyna: akşam 18:00 ile 21:00 arası 5 oyun bitir': 'Play at sunset: finish 5 games between 18:00 and 21:00',
   'Toplamda 3.000.000 puan topla': 'Earn 3,000,000 points in total',
   "Bir oyunda 10'lu kombo yap": 'Make a 10x combo in one game',
   'Toplam 2.500 sıra temizle': 'Clear 2,500 rows in total',
