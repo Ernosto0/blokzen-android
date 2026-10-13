@@ -58,6 +58,8 @@ export let settings = { auto: true, fixed: 0, block: 'classic' };
 export let earned = new Set([0]);   // themes the player has really unlocked (saved)
 export let discovered = earned;      // themes shown as open: the same set, or every theme in developer mode
 export const DEV_KEY = 'blokzen.dev';
+// developer mode exists only in dev and test builds (.env.development, .env.test); the Play build has no way to switch it on
+export const DEV_TOOLS = import.meta.env.VITE_DEV_TOOLS === '1';
 
 export function syncOpen() { discovered = state.devMode ? new Set(THEMES.map((_, i) => i)) : earned; }
 

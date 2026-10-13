@@ -9,6 +9,7 @@ import { toggleMute } from '../game/input.js';
 import { menuOpen } from './menu.js';
 import { setDev } from './devmode.js';
 import { t } from '../i18n/index.js';
+import { CONTACT_EMAIL, PRIVACY_URL } from '../core/links.js';
 
 /* ---------- Settings ---------- */
 function savePrefs() { store.set(PREFS_KEY, prefs); }
@@ -29,6 +30,10 @@ export function syncSettings() {
   $('optLow').checked = prefs.lowFx;
   $('devGroup').hidden = !state.devMode; $('optDev').checked = state.devMode;
 }
+// About: version from package.json, the policy and contact links only when they are filled in (core/links.js)
+$('aboutVer').textContent = t('Sürüm {v}', { v: __APP_VERSION__ });
+if (PRIVACY_URL) { $('aboutPrivacy').href = PRIVACY_URL; $('aboutPrivacy').hidden = false; }
+if (CONTACT_EMAIL) { $('aboutContact').href = 'mailto:' + CONTACT_EMAIL; $('aboutContact').hidden = false; }
 export function openSettings() {
   Sfx.unlock(); Sfx.pick();
   syncSettings();

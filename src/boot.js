@@ -4,7 +4,7 @@ import { Sfx } from './audio/sfx.js';
 import { prefs } from './platform/haptics.js';
 import { store } from './core/store.js';
 import { stage } from './ui/dom.js';
-import { state, DEV_KEY, discovered, earned, fresh, settings, syncOpen, theme } from './core/state.js';
+import { state, DEV_KEY, DEV_TOOLS, discovered, earned, fresh, settings, syncOpen, theme } from './core/state.js';
 import { checkUnlocks, DONE_KEY, META_V, NEW_TASKS, stats, STATS_KEY, themesDone, UNLOCKS } from './themes/progress.js';
 import { daily, loadDaily } from './modes/daily.js';
 import { MODE_KEY, MODES } from './modes/registry.js';
@@ -39,7 +39,7 @@ export function start(data) {
   }
   if (meta && (meta.v | 0) < META_V) THEMES.forEach((t, i) => { if (NEW_TASKS.includes(t.id)) earned.delete(i); });
   THEMES.forEach((t, i) => { if (!UNLOCKS[t.id]) earned.add(i); });
-  state.devMode = !!store.get(DEV_KEY); syncOpen();
+  state.devMode = DEV_TOOLS && !!store.get(DEV_KEY); syncOpen();
   if (meta && Array.isArray(meta.fresh)) meta.fresh.forEach(i => { if (discovered.has(i)) fresh.add(i); });
   if (!discovered.has(settings.fixed)) settings.fixed = 0;
   if (meta && (meta.v | 0) < META_V) saveMeta();
@@ -52,7 +52,10 @@ export function start(data) {
   loadDaily();
   loadPuzzle();
   stats.dailyBestStreak = Math.max(stats.dailyBestStreak, daily.best);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) store.set(STATS_KEY, stats); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { store.set(STATS_KEY, stats); Sfx.suspend(); }
+    else Sfx.unlock(); // wakes the audio again
+  });
   if (!store.get(TUT_KEY) && (state.best > 0 || stats.totalLines > 0)) store.set(TUT_KEY, true); // returning players skip the automatic guide
   theme.mode = theme.prevMode = settings.block;
   syncMute();

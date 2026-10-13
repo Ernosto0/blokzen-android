@@ -4,6 +4,7 @@ import { mixHex } from '../core/color.js';
 import { THEME_KEY } from '../core/constants.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
+import { setBarsLight } from '../platform/systembars.js';
 import { store } from '../core/store.js';
 import { $, metaTheme } from '../ui/dom.js';
 import { state, discovered, earned, fresh, settings, theme, THEME_DUR } from '../core/state.js';
@@ -23,6 +24,7 @@ export function applyDomColors(now) {
   for (const k of ['bg', 'board', 'fg', 'muted', 'accent', 'ink', 'btn']) st.setProperty('--' + k, mixK(k));
   st.setProperty('--surface', e < 0.5 ? a.surface : b.surface);
   st.colorScheme = b.light ? 'light' : 'dark';
+  setBarsLight(!!b.light);
   metaTheme.content = mixK('bg');
   theme.domDone = m >= 1;
 }

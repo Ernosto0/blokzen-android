@@ -80,3 +80,31 @@ test('dialogs open and close', async ({ page }) => {
   for (const id of ['menuBtn']) { await page.click('#' + id); await expect(page.locator('#menu')).toBeVisible(); }
   expect(errors).toEqual([]);
 });
+
+// Escape and the Android back button share goBack(): dialog first, then the menu, and the main menu is the end of the road.
+test('back goes dialog, then menu, then stays on the main menu', async ({ page }) => {
+  const errors = watchErrors(page);
+  await seed(page, baseSeed());
+  await page.goto('/');
+  await page.click('#play');
+  await expect(page.locator('#menu')).toBeHidden();
+  await page.click('#menuBtn');
+  await page.click('#menuSettings');
+  await expect(page.locator('#settings')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#settings')).toBeHidden();
+  await expect(page.locator('#menu')).toBeVisible(); // the dialog closed, the menu it was opened from is still there
+  await page.click('#play');
+  await expect(page.locator('#menu')).toBeHidden();
+  await page.keyboard.press('Escape'); // from the board: to the menu
+  await expect(page.locator('#menu')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('settings show the app version', async ({ page }) => {
+  await seed(page, baseSeed());
+  await page.goto('/');
+  await page.click('#menuSettings');
+  await expect(page.locator('#aboutVer')).toHaveText(/\d+\.\d+\.\d+/);
+  await expect(page.locator('#aboutPrivacy')).toBeHidden(); // no policy URL configured yet: no empty link
+});

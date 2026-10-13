@@ -1,0 +1,82 @@
+name: Play release
+
+# Builds the signed Android App Bundle (.aab) for Google Play. Run it by pushing a tag (git tag v1.0.0 && git push --tags)
+# or from the Actions tab. The upload keystore lives in repository secrets, never in the repo:
+#   BLOKZEN_KEYSTORE_B64       the .jks file, base64 (base64 -w0 blokzen-upload.jks)
+#   BLOKZEN_KEYSTORE_PASSWORD  keystore password
+#   BLOKZEN_KEY_ALIAS          key alias
+#   BLOKZEN_KEY_PASSWORD       key password
+# versionName is "version" in package.json; versionCode is this workflow's run number, so every upload is higher.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  aab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BLOKZEN_KEYSTORE_PASSWORD: ${{ secrets.BLOKZEN_KEYSTORE_PASSWORD }}
+      BLOKZEN_KEY_ALIAS: ${{ secrets.BLOKZEN_KEY_ALIAS }}
+      BLOKZEN_KEY_PASSWORD: ${{ secrets.BLOKZEN_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the signing secrets and the tag
+        env:
+          KEYSTORE_B64: ${{ secrets.BLOKZEN_KEYSTORE_B64 }}
+        run: |
+          for v in KEYSTORE_B64 BLOKZEN_KEYSTORE_PASSWORD BLOKZEN_KEY_ALIAS BLOKZEN_KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "::error::Secret for $v is not set (see the top of this file)"; exit 1; fi
+          done
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            pkg="v$(node -p "require('./package.json').version")"
+            if [ "${GITHUB_REF_NAME}" != "$pkg" ]; then echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version $pkg"; exit 1; fi
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install
+        run: npm ci
+
+      # No VITE_DEV_TOOLS here: the Play build has no developer mode.
+      - name: Build the web game
+        run: npm run build
+
+      # The tests build their own copy (dist-test, with dev tools), so dist/ stays the Play build.
+      - name: Smoke tests
+        run: npx playwright install --with-deps chromium && npx playwright test
+
+      - name: Copy the game into the Android project
+        run: npx cap sync android
+
+      - name: Build the signed bundle
+        working-directory: android
+        env:
+          KEYSTORE_B64: ${{ secrets.BLOKZEN_KEYSTORE_B64 }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/blokzen-upload.jks"
+          export BLOKZEN_KEYSTORE="$RUNNER_TEMP/blokzen-upload.jks"
+          ./gradlew bundleRelease --no-daemon
+          rm -f "$RUNNER_TEMP/blokzen-upload.jks"
+
+      - name: Check that the bundle is signed
+        run: |
+          aab=android/app/build/outputs/bundle/release/app-release.aab
+          ls -lh "$aab"
+          jarsigner -verify "$aab"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Blokzen-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30

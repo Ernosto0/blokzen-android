@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// The tests run against a separate dev-tools build (dist-test), so dist/ stays the Play build.
 // SMOKE_CMD lets the suite run against another copy of the game (e.g. the old single-file www/).
-const cmd = process.env.SMOKE_CMD || 'npm run build && npx vite preview --port 4173 --strictPort';
+const cmd = process.env.SMOKE_CMD || 'npx vite build --mode test --outDir ../dist-test && npx vite preview --outDir ../dist-test --port 4173 --strictPort';
 
 export default defineConfig({
   testDir: 'tests',
