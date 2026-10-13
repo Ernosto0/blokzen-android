@@ -356,6 +356,7 @@ export default {
   'Fiyonk!': 'Bow!',
   'Köpük Kasabası': 'Bubble Town',
   'Çöl Akşamı': 'Desert Dusk',
+  'Sıcak Yuva': 'Cozy Nook',
 
   /* ---- theme unlock tasks ---- */
   'Tek oyunda 2.500 puan yap': 'Score 2,500 points in one game',
@@ -426,6 +427,7 @@ export default {
   "Zen'de art arda 150 hamle boyunca tahta yarıyı geçmesin": 'Keep the Zen board under half full for 150 moves in a row',
   "Zen'de hiç nefes almadan art arda 200 hamle yap": 'Make 200 moves in a row in Zen without a single breath',
   "Zen'de akşam 19:00 ile 23:00 arası toplam 45 dakika oyna": 'Play Zen for 45 minutes in total between 19:00 and 23:00 in the evening',
+  "Zen'de gece 22:00 ile 05:00 arası toplam 25 dakika oyna": 'Play Zen for 25 minutes in total between 22:00 and 05:00 at night',
   "Zen'de toplam 3 saat oyna": 'Play Zen for 3 hours in total',
   "Zen'de toplam 1.000 sıra temizle. Koleksiyonun finali": 'Clear 1,000 rows in Zen in total. The collection finale',
   'Bulmacada ilk bölümünü bitir': 'Finish your first Puzzle level',
@@ -452,7 +454,7 @@ export const HELP_EN = [
   'In <b>Daily</b> everyone plays the same starting board with the same first pieces that day. Reach three target scores to collect <b>stars</b>. You can retry as often as you like; the best score of the day counts.',
   'Get at least one star every day and your <b>streak</b> grows. Skip a day and the streak starts over.',
   'In <b>Zen</b> the game never ends. When no piece fits, the board takes a <b>breath</b>: the fullest lines quietly empty and play goes on. No levels, no record pressure, no screen shake. Single-game records do not count, only total progress and play time.',
-  'The ten themes in the <b>Zen collection</b> are inspired by cultures around the world and unlock only by playing Zen.',
+  'The eleven themes in the <b>Zen collection</b> are inspired by cultures around the world and unlock only by playing Zen.',
   'In <b>Puzzle</b> every level has a fixed board, pieces in a set order and a single goal: clear the <b>gems</b>, empty the board, reach a score or reach a combo. A gem only goes when its row or column clears. The fewer pieces you use to reach the goal, the more <b>stars</b> you earn. Each attempt lets you <b>undo</b> your last move once. Puzzle does not affect records or other theme tasks.',
   'The themes in the <b>Puzzle collection</b> are inspired by brain games and unlock only by solving levels: finishing a level on the last piece, breaking three gems in one move and so on. The finale, <b>Chess</b>, unlocks when you finish every level with 3 stars.',
 ];

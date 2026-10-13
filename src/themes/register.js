@@ -81,3 +81,4 @@ import './chess/index.js';
 import './kawaii/index.js';
 import './bubble/index.js';
 import './dunes/index.js';
+import './cozy/index.js';

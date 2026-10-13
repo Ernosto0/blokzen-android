@@ -43,7 +43,11 @@ export function renderGallery() {
   $('galHint').textContent = (settings.auto
     ? t('Tema {n} puanda açık temalardan bir sonrakine geçer.', { n: fmtNum(nextAt) }) + ' '
     : t('Seçtiğin tema sabit kalır.') + ' ') + (state.devMode ? t('Geliştirici modu açık: kilitli temalar da gösteriliyor ve "Test" yazıyor.') : t('Kilitli temalar, altlarında yazan görevi tamamlayınca açılır.'));
-  THEMES.forEach((th, i) => {
+  // saved indexes never move, so a theme added later for a collection is only shown next to it (cozy follows the last Zen theme)
+  const shown = THEMES.map((_, i) => i), at = THEMES.findIndex(th => th.id === 'inkmount'), cz = THEMES.findIndex(th => th.id === 'cozy');
+  if (at >= 0 && cz >= 0) { shown.splice(cz, 1); shown.splice(at + 1, 0, cz); }
+  shown.forEach(i => {
+    const th = THEMES[i];
     const sec = { news: t('Günlük koleksiyon'), zellige: t('Zen koleksiyonu'), jigsaw: t('Bulmaca koleksiyonu') }[th.id];
     if (sec) { const h = document.createElement('h3'); h.className = 'gal-sec'; h.textContent = sec; wrap.appendChild(h); }
     const known = discovered.has(i), cur = i === theme.cur;

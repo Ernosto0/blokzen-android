@@ -20,7 +20,7 @@ export const NEW_TASKS = THEMES.filter(t => t.newTask).map(t => t.id);
 export let stats = { bestScore: 0, bestCombo: 0, bestLines: 0, totalFulls: 0, totalLines: 0, bestFulls: 0, games: 0, totalScore: 0, totalPlaced: 0, bestMoves: 0,
   daysPlayed: 0, lastDay: 0, todayGames: 0, bestDayGames: 0, bestMulti: 0, total3: 0, morningGames: 0, themesDone: 0, playSec: 0, bestCalm: 0, streak10k: 0, bestStreak10k: 0,
   dailyGames: 0, dailyDays: 0, dailyStars: 0, dailyThree: 0, dailyBestStreak: 0, dailyMorning: 0, dailyFirst3: 0, dailyBeat: 0, dailyWeekend: 0, dailyNight: 0, dailyBestFulls: 0,
-  zenMoves: 0, zenLines: 0, zenBreaths: 0, zenSec: 0, zenSessions: 0, zenFulls: 0, zenMorningSec: 0, zenEveningSec: 0, zenBestCalm: 0, zenBestRun: 0,
+  zenMoves: 0, zenLines: 0, zenBreaths: 0, zenSec: 0, zenSessions: 0, zenFulls: 0, zenMorningSec: 0, zenEveningSec: 0, zenBestCalm: 0, zenBestRun: 0, zenNightSec: 0,
   puzzlePlaced: 0, puzzleLines: 0, puzzleSec: 0, puzzleWins: 0, puzzleTries: 0, // puzzle keeps its own counters: they move only the puzzle collection's tasks
   puzzleBack: 0, puzzleBestGems: 0, puzzleTypes3: 0, puzzleLast: 0, puzzleClean: 0, puzzleCross: 0, puzzleClear3: 0, puzzleGemsTotal: 0, puzzleStars: 0,
   crossMoves: 0, // moves that cleared a row and a column at once (the kawaii theme's bow)

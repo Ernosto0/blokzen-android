@@ -80,6 +80,7 @@ import chess from './chess/theme.js';
 import kawaii from './kawaii/theme.js';
 import bubble from './bubble/theme.js';
 import dunes from './dunes/theme.js';
+import cozy from './cozy/theme.js';
 
 /* ---------- Themes ---------- */
 // The order is the index that saved games, unlock records and the gallery refer to: add new themes at the end.
@@ -165,6 +166,7 @@ export const THEMES = [
   kawaii,
   bubble,
   dunes,
+  cozy,
 ];
 // derived fields: clear effect, outline and surface colors
 THEMES.forEach(th => {

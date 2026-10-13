@@ -103,5 +103,6 @@ defineMode({
     stats.zenSec += dt;
     const hr = hourNow();
     if (hr >= 5 && hr < 10) stats.zenMorningSec += dt; else if (hr >= 19 && hr < 23) stats.zenEveningSec += dt;
+    if (hr >= 22 || hr < 5) stats.zenNightSec += dt; // the cozy theme's late-night task
   },
 });
