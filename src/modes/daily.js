@@ -147,16 +147,17 @@ defineMode({
   }
   },
   renderCard() {
-  const day = dayKey(), info = dailyStart(day), rec = daily.days[day], ds = dailyStatus(), st = rec ? rec.stars : 0;
+  const day = dayKey(), rec = daily.days[day];
   const nb = x => x.replace(/ /g, '\u00a0'); // keep each half on one line; wrap only at the dot
   $('dailySub').textContent = nb(fmtDay(day)) + ' · ' + nb(rec && rec.best ? t('En iyi {n}', { n: fmtN(rec.best) }) : t('Herkese aynı tahta'));
-  $('dailyLbl').textContent = ds.prog ? t('Devam et') : rec && rec.tries ? t('Tekrar') : t('Başla');
-  $('playDaily').querySelector('.mode-go').classList.toggle('soft', st === 3 && !ds.prog);
-  paintStars($('dailyStars'), st, info.targets);
   const sk = curStreak(), saved = daily.last === day;
-  $('streakTxt').textContent = sk ? t('{n} gün seri', { n: sk }) : t('Seri yok');
-  $('dailyStreak').classList.toggle('off', !sk);
-  $('dailyStreak').title = sk ? (saved ? t('Bugün yıldızını aldın, seri sürüyor') : t('Seriyi korumak için bugün bir yıldız al')) : t('Bir yıldız al, seri başlasın');
+  $('streakTxt').textContent = sk;
+  $('dailyStreak').hidden = !sk;
+  $('dailyStreak').title = t('{n} gün seri', { n: sk }) + ' · ' + (saved ? t('Bugün yıldızını aldın, seri sürüyor') : t('Seriyi korumak için bugün bir yıldız al'));
+  },
+  hero() {
+    const day = dayKey(), rec = daily.days[day];
+    return { label: dailyStatus().prog ? t('Devam et') : rec && rec.tries ? t('Tekrar') : t('Başla'), sub: t('Günlük') + ' · ' + fmtDay(day) };
   },
   // the day's prepared board and seeded dealer; each start counts a try
   setup(now) {

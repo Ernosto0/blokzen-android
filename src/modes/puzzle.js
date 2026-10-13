@@ -237,11 +237,14 @@ defineMode({
   }
   },
   renderCard() {
-  const ps = puzzleStatus(), solved = puzSolved(), nx = nextLevelIndex();
   $('puzzleSub').textContent = t('{a} / {b} yıldız', { a: puzTotalStars(), b: LEVELS.length * 3 });
-  $('puzzleLbl').textContent = ps.prog ? t('Devam et') : nx < 0 ? t('Bölümler') : t('Başla');
-  $('puzzleInfo').textContent = ps.prog ? t('Bölüm {n} yarım kaldı', { n: ps.li + 1 }) : nx < 0 ? t('{n} bölümün hepsi çözüldü', { n: solved }) : t('Sıradaki: Bölüm {n}', { n: nx + 1 });
-  $('playPuzzle').querySelector('.mode-go').classList.toggle('soft', !ps.prog && nx < 0);
+  },
+  hero() {
+    const ps = puzzleStatus(), nx = nextLevelIndex();
+    return {
+      label: ps.prog ? t('Devam et') : nx < 0 ? t('Bölümler') : t('Başla'),
+      sub: t('Bulmaca') + ' · ' + (ps.prog ? t('Bölüm {n} yarım kaldı', { n: ps.li + 1 }) : nx < 0 ? t('{n} bölümün hepsi çözüldü', { n: puzSolved() }) : t('Bölüm {n}', { n: nx + 1 })),
+    };
   },
   // carry on with a half-played level, else start the next unsolved one; with every level solved, show the list
   play() {

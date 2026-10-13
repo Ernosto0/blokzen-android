@@ -24,7 +24,7 @@ export function setDev(on) {
 let devTaps = 0, devLast = 0, devMsgTimer = 0;
 function devMsg(text) {
   const el = $('menuTag'); el.textContent = text;
-  clearTimeout(devMsgTimer); devMsgTimer = setTimeout(() => { el.textContent = t('Yerleştir, temizle, rahatla.'); }, 2200);
+  clearTimeout(devMsgTimer); devMsgTimer = setTimeout(() => { el.textContent = ''; }, 2200);
 }
 $('menuTitle').addEventListener('click', () => {
   const now = performance.now();

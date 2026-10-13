@@ -30,6 +30,7 @@
 //   beforeFresh()  runs before a new game starts because no save was found (the puzzle picks its level)
 //   leave()        the game is being left or replaced; stop()  stop timers
 //   drawArt(th)    draws the picture on the mode's menu card;  renderCard()  fills in the card's text
+//   hero()         the menu's big button: { label, sub } ("Devam et" / "Klasik · 1.240 puan"); it starts the mode that was played last
 //   resetNew()     puts the card's "new game" button back to rest;  play()  what the card's main button does (default: start the mode)
 //   remember()     called before a piece is placed (what undo will restore)
 //   cellCleared(r, c)  a cell is cleared: return 1 if it held something special (a gem) and take it off
@@ -60,6 +61,7 @@ const BASE = {
   restore() { state.mode = this.id; state.dealRng = null; return true; },
   // is this save a game of this mode that can be picked up now?
   canResume(d) { return (d.mode || 'classic') === this.id; },
+  hero() { return { label: 'Oyna', sub: '' }; },
   levelCard: false, volume: 1, levels: true, shake: true, records: true, countsGame: true, themeLocked: false, endless: false, fullCap: Infinity,
 };
 export const defineMode = def => (MODES[def.id] = { ...BASE, ...def });

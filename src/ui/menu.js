@@ -43,6 +43,8 @@ export function drawLogo() {
 export function resetMenuNew() { for (const m of Object.values(MODES)) if (m.resetNew) m.resetNew(); }
 function renderMenu() {
   for (const m of Object.values(MODES)) if (m.renderCard) m.renderCard();
+  const h = mode().hero();
+  $('heroLbl').textContent = h.label; $('heroSub').textContent = h.sub;
   resetMenuNew(); syncMute();
   drawLogo();
 }
@@ -51,7 +53,7 @@ export function openMenu(focus = true) {
   resetConfirm();
   menuOpen = true; $('menu').hidden = false;
   renderMenu();
-  if (focus) $(mode().button).focus({ preventScroll: true });
+  if (focus) $('menuHero').focus({ preventScroll: true });
 }
 export function closeMenu() { menuOpen = false; $('menu').hidden = true; resetMenuNew(); }
 $('menuBtn').addEventListener('click', () => { Sfx.unlock(); Sfx.pick(); openMenu(); });
@@ -64,8 +66,9 @@ export function startMode(m) {
   closeMenu();
   if (firstRun) startTutorial();
 }
-// every mode's card has a main button: it starts the mode, or does what the mode says.
+// the big button starts the mode played last; every mode's card has a main button too: it starts the mode, or does what the mode says.
 // Called once all modes have registered (main.js); at load time the modes are not all defined yet.
 export function bindModeButtons() {
+  $('menuHero').addEventListener('click', () => { const m = mode(); if (m.play) m.play(); else startMode(m.id); });
   for (const m of Object.values(MODES)) $(m.button).addEventListener('click', () => (m.play ? m.play() : startMode(m.id)));
 }

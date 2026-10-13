@@ -18,7 +18,7 @@ test.describe('Turkish device', () => {
   test('menu is in Turkish', async ({ page }) => {
     const errors = await open(page);
     await expect(page.locator('html')).toHaveAttribute('lang', 'tr');
-    await expect(page.locator('#menuTag')).toHaveText('Yerleştir, temizle, rahatla.');
+    await expect(page.locator('#heroLbl')).toHaveText('Oyna');
     await expect(page.locator('#classicName')).toHaveText('Klasik');
     expect(errors).toEqual([]);
   });
@@ -30,9 +30,9 @@ test.describe('English device', () => {
   test('menu is in English', async ({ page }) => {
     const errors = await open(page);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.locator('#menuTag')).toHaveText('Place, clear, relax.');
+    await expect(page.locator('#heroLbl')).toHaveText('Play');
+    await expect(page.locator('#heroSub')).toHaveText('Classic');
     await expect(page.locator('#classicName')).toHaveText('Classic');
-    await expect(page.locator('#playLbl')).toHaveText('Play');
     await expect(page.locator('#menuThemes')).toContainText('Themes');
     expect(errors).toEqual([]);
   });

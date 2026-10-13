@@ -72,10 +72,12 @@ defineMode({
   },
   renderCard() {
   const zs = zenStatus();
-  $('zenLbl').textContent = zs.prog ? t('Devam et') : t('Oyna');
   $('zenSub').textContent = t('Bitmez, acele yok');
-  $('zenFoot').hidden = !zs.prog;
-  if (zs.prog) $('zenInfo').textContent = t('{l} sıra · {s} puan', { l: fmtN(zs.lines), s: fmtN(zs.score) });
+  $('zenNew').hidden = !zs.prog;
+  },
+  hero() {
+    const zs = zenStatus();
+    return { label: zs.prog ? t('Devam et') : t('Oyna'), sub: t('Zen') + (zs.prog ? ' · ' + t('{l} sıra · {s} puan', { l: fmtN(zs.lines), s: fmtN(zs.score) }) : '') };
   },
   resetNew,
   started() { stats.zenSessions++; },

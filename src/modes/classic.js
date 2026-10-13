@@ -145,10 +145,12 @@ defineMode({
   },
   renderCard() {
   const cs = classicStatus();
-  $('playLbl').textContent = cs.prog ? t('Devam et') : t('Oyna');
   $('classicSub').textContent = state.best ? t('En iyi {n}', { n: fmtN(state.best) }) : t('Yer kalmayana kadar');
-  $('classicFoot').hidden = !cs.prog;
-  if (cs.prog) $('resumeInfo').textContent = t('Yarım oyun · {n} puan', { n: fmtN(cs.score) });
+  $('menuNew').hidden = !cs.prog;
+  },
+  hero() {
+    const cs = classicStatus();
+    return { label: cs.prog ? t('Devam et') : t('Oyna'), sub: t('Klasik') + (cs.prog ? ' · ' + t('{n} puan', { n: fmtN(cs.score) }) : state.best ? ' · ' + t('En iyi {n}', { n: fmtN(state.best) }) : '') };
   },
   resetNew,
   remember: clsRemember,
