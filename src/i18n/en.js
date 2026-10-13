@@ -82,6 +82,8 @@ export default {
   'Uygula': 'Apply',
   'Kilitli tema.': 'Locked theme.',
   'YENİ TEMA AÇILDI': 'NEW THEME UNLOCKED',
+  'Görev tamamlandı': 'Task complete',
+  'Yeni tema: {name}': 'New theme: {name}',
   'KOLEKSİYON FİNALİ': 'COLLECTION FINALE',
   'TEMA': 'THEME',
   'GÜNLÜK KOLEKSİYON FİNALİ': 'DAILY COLLECTION FINALE',

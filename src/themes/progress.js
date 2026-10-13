@@ -6,6 +6,7 @@ import { state, discovered, earned, fresh, settings, theme } from '../core/state
 import { LEVELS } from '../modes/puzzle-levels.js';
 import { burst, saveMeta } from './switching.js';
 import { t } from '../i18n/index.js';
+import { taskToast } from '../ui/toast.js';
 
 /* ---------- Theme unlocks: every theme except the first has a task and stays locked until it is done.
    Tasks are spaced so a new theme opens every game or two at first, then every few sessions; the running totals
@@ -56,6 +57,7 @@ export function checkUnlocks(now) {
   });
   if (!got.length) return;
   saveMeta();
+  for (const j of got) taskToast(t(UNLOCKS[THEMES[j].id].text), t(THEMES[j].name)); // say which task opened which theme, right when it is done
   const fin = got.find(j => FINALES[THEMES[j].id]), finale = fin !== undefined; // a collection's last theme gets a bigger moment
   const i = finale ? fin : got[0];
   if (mode().themeLocked) { // a level never changes theme halfway: the end card names it and the next board celebrates it
