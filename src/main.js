@@ -4,6 +4,9 @@ import './styles/main.css';
 // Every theme registers its blocks, backgrounds, particles and sounds.
 import './themes/register.js';
 
+// Every game mode registers its flags and hooks.
+import './modes/register.js';
+
 // Screens wire up their buttons when loaded.
 import './game/input.js';
 import './ui/menu.js';

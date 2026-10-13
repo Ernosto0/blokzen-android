@@ -3,7 +3,8 @@ import { Sfx } from '../audio/sfx.js';
 import { store } from '../core/store.js';
 import { state, emptyGrid, pop } from '../core/state.js';
 import { stats } from '../themes/progress.js';
-import { GEM_COLOR, LEVELS, PUZ_KEY } from './puzzle-levels.js';
+import { GEM_COLOR, LEVELS, PUZ_KEY, PUZ_SAVE_KEY } from './puzzle-levels.js';
+import { defineMode } from './registry.js';
 import { refreshFits } from '../game/flow.js';
 import { fmtN } from '../ui/menu.js';
 
@@ -88,3 +89,5 @@ export function puzRemember() {
 }
 /* Classic second chances: three undos per game (up to three moves back) and one continue when the board locks up.
    pendingEnd: the game-over card is up but the player may still undo or continue, so the game is not counted as ended yet. */
+
+defineMode({ id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true });

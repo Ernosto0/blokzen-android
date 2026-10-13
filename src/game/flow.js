@@ -7,12 +7,13 @@ import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $ } from '../ui/dom.js';
-import { state, discovered, emptyGrid, pop, settings, theme } from '../core/state.js';
+import { state, discovered, emptyGrid, freshCls, pop, settings, theme } from '../core/state.js';
 import { autoTheme, checkUnlocks, dayKey, DONE_KEY, playHeldUnlock, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
-import { curStreak, dailyProgress, dailySeed, dailyStart, dayBest, dayRec, fmtDay, MODE_KEY, saveDaily, saveKey, starsFor } from '../modes/daily.js';
+import { curStreak, dailyProgress, dailySeed, dailyStart, dayBest, dayRec, fmtDay, saveDaily, starsFor } from '../modes/daily.js';
+import { mode, MODE_KEY, MODES, saveKey } from '../modes/registry.js';
 import { LEVELS, PUZ_SAVE_KEY } from '../modes/puzzle-levels.js';
 import { bestStars, countGems, goalText, levelOpen, nextLevelIndex, puzCollect, puzDeal, puzGoal, puzLevel, puzLoad, puzProg, puzRemember, puzStarsFor, savePuzzle } from '../modes/puzzle.js';
-import { canRevive, canUndo, clsRemember, freshCls, readCls, readPrev, REC_KEYS } from '../modes/classic.js';
+import { canRevive, canUndo, clsRemember, readCls, readPrev, REC_KEYS } from '../modes/classic.js';
 import { L } from '../render/layout.js';
 import { burst, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
@@ -35,7 +36,7 @@ export function refreshFits() {
 // One played game, counted once when a classic or daily game ends with at least one piece placed.
 // Counting at the start let empty games (new game spam, in and out of the menu) open the "play N games" themes.
 function countGame() {
-  if (state.mode === 'zen' || state.mode === 'puzzle' || state.moves < 1) return;
+  if (!mode().countsGame || state.moves < 1) return;
   touchDay();
   stats.todayGames++; stats.bestDayGames = Math.max(stats.bestDayGames, stats.todayGames); stats.games++;
 }
@@ -129,7 +130,7 @@ export function restore(d, keepTheme = false) {
   state.tray = [0, 1, 2].map(i => { const t = d.tray[i]; return t && SHAPES[t.s] ? { piece: { shape: SHAPES[t.s], color: conv(t.c) }, appear: now + i * 70, ret: null, fits: true } : null; });
   if (state.tray.every(t => !t)) { if (state.mode === 'puzzle') puzDeal(now); else deal(now); }
   const open = i => discovered.has(i) ? i : 0;
-  if (state.mode === 'puzzle' && keepTheme) { if (!settings.auto && settings.fixed !== theme.cur) snapTheme(settings.fixed); }
+  if (mode().themeLocked && keepTheme) { if (!settings.auto && settings.fixed !== theme.cur) snapTheme(settings.fixed); }
   else if (d.th) { theme.start = open(d.th.start | 0); theme.stage = d.th.stage | 0; snapTheme(settings.auto ? open((d.th.cur | 0) % T) : settings.fixed); }
   else { theme.start = 0; theme.stage = stageAt(state.score); snapTheme(settings.auto ? autoTheme(theme.stage) : settings.fixed); }
   refreshFits();
@@ -150,7 +151,7 @@ export function switchMode(m) {
   state.over = false; $('over').hidden = true;
   cancelBreath();
   const d = store.get(saveKey());
-  if (d && (d.mode || 'classic') === m && (m !== 'daily' || d.day === dayKey()) && restore(d, m === 'puzzle')) { refreshFits(); updateHud(); checkOver(performance.now()); }
+  if (d && (d.mode || 'classic') === m && (m !== 'daily' || d.day === dayKey()) && restore(d, MODES[m].themeLocked)) { refreshFits(); updateHud(); checkOver(performance.now()); }
   else {
     state.mode = m;
     state.moves = 0; // the board still in memory is the game of the mode just left: it was saved, not given up, so newGame must not count it
@@ -242,7 +243,7 @@ export function placePiece(slot, r0, c0) {
       buzz([30, 40, 30, 40, 60]);
     }
 
-    if (!state.REDUCED && state.mode !== 'zen') state.shake = { amp: Math.min(3 + lines * 3 + state.combo + (boardClean ? 8 : 0), 20), t0: now + 60 };
+    if (!state.REDUCED && mode().shake) state.shake = { amp: Math.min(3 + lines * 3 + state.combo + (boardClean ? 8 : 0), 20), t0: now + 60 };
     Sfx.clear(lines, state.combo);
     buzz(lines >= 2 ? [18, 30, 24] : 20);
   } else {
@@ -280,7 +281,7 @@ export function placePiece(slot, r0, c0) {
     return;
   }
   const lvl = levelOf(state.score);
-  if (lvl > lvlBefore && state.mode !== 'zen') {
+  if (lvl > lvlBefore && mode().levels) {
     state.texts.push({ text: `Seviye ${lvl} · Puan ${fmtMult(levelMult(lvl))}`, x: midX, y: L.gy + L.cell * 6.4, t0: now + (lines ? 900 : 400), dur: 1800, size: L.cell * 0.52, role: 'accent' });
     $('lvl').classList.add('up'); setTimeout(() => $('lvl').classList.remove('up'), 900);
   }
@@ -291,7 +292,7 @@ export function placePiece(slot, r0, c0) {
   }
   // single-game records (best score, longest combo, most moves...) only count outside zen, where a game can end;
   // totals count in every mode
-  const oneGame = state.mode !== 'zen';
+  const oneGame = mode().records;
   if (oneGame) {
     stats.bestScore = Math.max(stats.bestScore, state.score);
     stats.bestCombo = Math.max(stats.bestCombo, state.combo);

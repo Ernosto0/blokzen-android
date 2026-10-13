@@ -1,4 +1,5 @@
 import { OS_REDUCED, PREFS_KEY } from '../core/constants.js';
+import { mode } from '../modes/registry.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz, CAN_VIBRATE, iosTick, prefs } from '../platform/haptics.js';
 import { store } from '../core/store.js';
@@ -11,7 +12,7 @@ import { setDev } from './devmode.js';
 /* ---------- Settings ---------- */
 function savePrefs() { store.set(PREFS_KEY, prefs); }
 export function applyPrefs() {
-  Sfx.setVol(prefs.vol / 100 * (state.mode === 'zen' ? 0.75 : 1)); // zen plays a little quieter
+  Sfx.setVol(prefs.vol / 100 * mode().volume); // zen plays a little quieter
   state.REDUCED = OS_REDUCED || prefs.lowFx;
   document.body.classList.toggle('lowfx', !!prefs.lowFx);
 }

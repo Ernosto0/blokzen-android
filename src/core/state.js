@@ -1,6 +1,9 @@
 import { THEMES } from '../themes/catalog.js';
 import { N, OS_REDUCED } from './constants.js';
-import { freshCls } from '../modes/classic.js';
+
+// classic: three undos and one continue per game
+export const CLS_UNDOS = 3;
+export const freshCls = () => ({ undoLeft: CLS_UNDOS, contUsed: false, hist: [], pendingEnd: false });
 
 // Game state written by more than one module: read and write it as state.x.
 // A variable with a single writer stays in that module and is exported from there.

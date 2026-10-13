@@ -1,18 +1,18 @@
-import { N, SAVE_KEY } from '../core/constants.js';
+import { N } from '../core/constants.js';
 import { dealStream } from '../core/dealer.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { state, emptyGrid } from '../core/state.js';
 import { dayKey, stats } from '../themes/progress.js';
-import { PUZ_SAVE_KEY } from './puzzle-levels.js';
+import { defineMode } from './registry.js';
 import { L } from '../render/layout.js';
 
 /* ---------- Daily challenge ----------
    One game a day that is the same for everyone: a seeded start board, a seeded dealer and three target scores.
    Retries are free and replay the same day; the best score of the day counts. A day with at least one star keeps the streak going.
    Classic and daily keep separate saves, so switching modes never loses a game. */
-export const DAILY_SAVE_KEY = 'blokzen.daily.game', DAILY_KEY = 'blokzen.daily', MODE_KEY = 'blokzen.mode';
+export const DAILY_SAVE_KEY = 'blokzen.daily.game', DAILY_KEY = 'blokzen.daily';
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 export const WEEKDAYS = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
 const DAILY_BASE = [5000, 25000, 100000]; // star targets before the day's own ±15% twist
@@ -52,10 +52,6 @@ export const dayRec = k => daily.days[k] || (daily.days[k] = { best: 0, stars: 0
 export const dayBest = k => (daily.days[k] && daily.days[k].best) || 0;
 export const starsFor = (sc, tg) => tg.reduce((n, t) => n + (sc >= t ? 1 : 0), 0);
 export const curStreak = () => { const t = dayKey(); return daily.last === t || daily.last === dayShift(t, -1) ? daily.streak : 0; };
-/* Zen: an endless, calm game with its own save. The dealer stays generous, there are no levels, and when no piece fits
-   the board breathes out (its fullest lines clear quietly, no points) instead of ending. */
-export const ZEN_SAVE_KEY = 'blokzen.zen.game';
-export const saveKey = () => state.mode === 'daily' ? DAILY_SAVE_KEY : state.mode === 'zen' ? ZEN_SAVE_KEY : state.mode === 'puzzle' ? PUZ_SAVE_KEY : SAVE_KEY;
 export function saveDaily() {
   const keys = Object.keys(daily.days).map(Number).sort((a, b) => b - a);
   for (const k of keys.slice(120)) delete daily.days[k]; // keep the last 120 days
@@ -101,3 +97,5 @@ export function dailyProgress(now, midX) {
   }
   saveDaily();
 }
+
+defineMode({ id: 'daily', saveKey: DAILY_SAVE_KEY, button: 'playDaily', restartLabel: 'Günlüğü baştan dene' });

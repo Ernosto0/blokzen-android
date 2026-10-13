@@ -1,4 +1,5 @@
 import { THEMES } from './catalog.js';
+import { mode } from '../modes/registry.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { state, discovered, earned, fresh, settings, theme } from '../core/state.js';
@@ -51,7 +52,7 @@ export function checkUnlocks(now) {
   saveMeta();
   const fin = got.find(j => FINALES[THEMES[j].id]), finale = fin !== undefined; // a collection's last theme gets a bigger moment
   const i = finale ? fin : got[0];
-  if (state.mode === 'puzzle') { // a level never changes theme halfway: the end card names it and the next board celebrates it
+  if (mode().themeLocked) { // a level never changes theme halfway: the end card names it and the next board celebrates it
     heldUnlock = { i, finale };
     if (state.puz.gems) state.puz.opened.push(...got.map(j => THEMES[j].name));
     return;

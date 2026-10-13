@@ -1,4 +1,5 @@
 import { milestone, THEMES } from './catalog.js';
+import { mode } from '../modes/registry.js';
 import { mixHex } from '../core/color.js';
 import { THEME_KEY } from '../core/constants.js';
 import { Sfx } from '../audio/sfx.js';
@@ -59,7 +60,7 @@ export function pickStartTheme() {
 }
 export function updateRing() {
   const r = $('ringRect');
-  if (!settings.auto || state.mode === 'puzzle') { r.style.strokeDashoffset = 100; return; } // a puzzle level never changes the theme
+  if (!settings.auto || mode().themeLocked) { r.style.strokeDashoffset = 100; return; } // a puzzle level never changes the theme
   const a = milestone(theme.stage), b = milestone(theme.stage + 1);
   r.style.strokeDashoffset = 100 * (1 - clamp01((state.score - a) / (b - a)));
 }

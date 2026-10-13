@@ -1,4 +1,5 @@
 import { comboMult, fmtMult, levelMult, levelOf } from '../core/scoring.js';
+import { mode } from '../modes/registry.js';
 import { $, elBest, elCombo, elScore } from './dom.js';
 import { state } from '../core/state.js';
 import { dailyStart, dayBest, fmtDay, starsFor } from '../modes/daily.js';
@@ -34,7 +35,7 @@ export function updateHud() {
   else if (state.mode === 'classic') updateUndoBtn();
   if (!$('restart').classList.contains('confirm')) $('restart').setAttribute('aria-label', restartLabel());
   const lvl = levelOf(state.score), el = $('lvl');
-  el.hidden = lvl < 2 || zen || pz;
+  el.hidden = lvl < 2 || !mode().levels;
   el.innerHTML = `Seviye ${lvl}<b>${fmtMult(levelMult(lvl))}</b>`;
   if (state.combo >= 2) {
     const left = 3 - state.msc;

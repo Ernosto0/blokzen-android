@@ -1,4 +1,5 @@
 import { N, SHAPES } from './constants.js';
+import { mode } from '../modes/registry.js';
 import { applyBits, bitsOf, fits, fitsAnywhere, LINES, popcount, solvable } from './bitboard.js';
 import { state } from './state.js';
 
@@ -102,7 +103,7 @@ const pickFrom = list => { // weighted by the base weights
 
 // How kind the dealer is (0..1). Kind at the start, firmer as the game goes on, rescues a crowded board.
 function kindness(moves, fill) {
-  if (state.mode === 'zen') return 0.95; // zen never gets firmer, however long the session runs
+  if (mode().endless) return 0.95; // zen never gets firmer, however long the session runs
   let k = moves < 150 ? 0.92 : moves < 350 ? 0.8 : moves < 700 ? 0.66 : moves < 1200 ? 0.52 : 0.42;
   if (fill > 0.5) k = Math.max(k, 0.55 + (fill - 0.5) * 1.5);
   return Math.min(k, 0.95);
@@ -155,7 +156,7 @@ export function generateSet(grid, moves) {
   const kind = kindness(moves, fill);
 
   // Full-board clear: how often a found wipe is dealt depends on how much there is to wipe
-  const zen = state.mode === 'zen';
+  const zen = mode().endless;
   const pWipe = (cells >= 12 ? 0.75 : cells > 0 ? 0.5 : 0.2) * (moves > 900 && !zen ? 0.75 : 1);
   if (cells <= 36 && drand() < pWipe) { // more than 36 filled cells cannot be wiped by three pieces in practice
     const seq = findWipe(lo, hi, wipePool());

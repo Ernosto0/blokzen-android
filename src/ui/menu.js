@@ -1,11 +1,13 @@
 import { N, SAVE_KEY, TUT_KEY } from '../core/constants.js';
+import { mode } from '../modes/registry.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $ } from './dom.js';
 import { state, theme } from '../core/state.js';
 import { dayKey, TH } from '../themes/progress.js';
-import { curStreak, daily, DAILY_SAVE_KEY, dailyStart, fmtDay, ZEN_SAVE_KEY } from '../modes/daily.js';
+import { curStreak, daily, DAILY_SAVE_KEY, dailyStart, fmtDay } from '../modes/daily.js';
+import { ZEN_SAVE_KEY } from '../modes/zen.js';
 import { GEM_COLOR, LEVELS, PUZ_SAVE_KEY } from '../modes/puzzle-levels.js';
 import { nextLevelIndex, puzSolved, puzTotalStars } from '../modes/puzzle.js';
 import { drawGemOn, rr, sprite } from '../render/sprites.js';
@@ -138,7 +140,7 @@ export function openMenu(focus = true) {
   resetConfirm();
   menuOpen = true; $('menu').hidden = false;
   renderMenu();
-  if (focus) $(state.mode === 'daily' ? 'playDaily' : state.mode === 'zen' ? 'playZen' : state.mode === 'puzzle' ? 'playPuzzle' : 'play').focus({ preventScroll: true });
+  if (focus) $(mode().button).focus({ preventScroll: true });
 }
 export function closeMenu() { menuOpen = false; $('menu').hidden = true; resetMenuNew(); }
 $('menuBtn').addEventListener('click', () => { Sfx.unlock(); Sfx.pick(); openMenu(); });

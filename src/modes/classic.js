@@ -1,12 +1,11 @@
-import { N, SHAPES } from '../core/constants.js';
-import { state, theme } from '../core/state.js';
+import { N, SAVE_KEY, SHAPES } from '../core/constants.js';
+import { defineMode } from './registry.js';
+import { CLS_UNDOS, freshCls, state, theme } from '../core/state.js';
 import { stats } from '../themes/progress.js';
 import { trayIds } from './puzzle.js';
 import { tut } from '../ui/tutorial.js';
 
-const CLS_UNDOS = 3;
 export const REC_KEYS = ['bestScore', 'bestCombo', 'bestFulls', 'bestMoves', 'bestMulti', 'bestCalm']; // one-game records an undo takes back
-export const freshCls = () => ({ undoLeft: CLS_UNDOS, contUsed: false, hist: [], pendingEnd: false });
 
 export function clsRemember() {
   if (state.cls.undoLeft <= 0) { state.cls.hist = []; return; }
@@ -45,3 +44,5 @@ export function readPrev(p, lv) {
     score: p.score | 0, combo: p.combo | 0, msc: p.msc | 0, moves: p.moves | 0, fulls: p.fulls | 0, seq: Math.min(lv.pieces.length, p.seq | 0),
   };
 }
+
+defineMode({ id: 'classic', saveKey: SAVE_KEY, button: 'play', restartLabel: 'Yeni oyun' });

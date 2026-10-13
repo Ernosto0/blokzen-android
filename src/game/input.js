@@ -1,4 +1,5 @@
 import { MUTE_KEY, N } from '../core/constants.js';
+import { mode } from '../modes/registry.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
@@ -95,7 +96,7 @@ export function resetConfirm() {
   $('icoRestart').hidden = false; $('icoCheck').hidden = true;
   b.setAttribute('aria-label', restartLabel());
 }
-export function restartLabel() { return state.mode === 'daily' ? 'Günlüğü baştan dene' : state.mode === 'zen' ? 'Zen tahtasını sıfırla' : state.mode === 'puzzle' ? 'Bölümü baştan al' : 'Yeni oyun'; }
+export const restartLabel = () => mode().restartLabel;
 $('restart').addEventListener('click', () => {
   Sfx.unlock();
   const b = $('restart');
