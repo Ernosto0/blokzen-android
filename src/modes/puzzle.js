@@ -8,7 +8,7 @@ import { canUndo, defineMode, hudInfo, leaveGame, MODE_KEY, stopTimers } from '.
 import { $ } from '../ui/dom.js';
 import { checkOver, newGame, refreshFits, save, showOver, STAR_SVG } from '../game/flow.js';
 import { updateHud, updateUndoBtn } from '../ui/hud.js';
-import { closeMenu, fmtN } from '../ui/menu.js';
+import { closeMenu, fmtN, inProgress, prepCanvas, startMode } from '../ui/menu.js';
 import { buzz } from '../platform/haptics.js';
 import { L } from '../render/layout.js';
 import { closeLevels, openLevels } from '../ui/levels.js';
@@ -16,6 +16,7 @@ import { startTutorial, tut } from '../ui/tutorial.js';
 import { burst } from '../themes/switching.js';
 import { readPrev } from './classic.js';
 import { applyPrefs } from '../ui/settings.js';
+import { drawGemOn, rr, sprite } from '../render/sprites.js';
 
 // best stars per level id; levels that have been lost once, and those later won with three stars (chalkboard theme) (saved)
 // clean: levels solved with three stars in one attempt that never ran out and never used the undo (cipher theme)
@@ -160,6 +161,14 @@ export function startLevel(li) {
   if (firstRun) startTutorial();
 }
 
+const ART_PUZZLE = [[2, 2, 0, 4, 4], [9, 1, 0, 0, 4], [1, 1, 0, 3, 3], [0, 0, 0, 3, 9], [5, 5, 5, 0, 7]]; // 9: a gem
+export function puzzleStatus() {
+  if (state.mode === 'puzzle' && state.puz.gems) return { prog: inProgress() && !state.puz.won, li: state.puz.li };
+  const d = store.get(PUZ_SAVE_KEY), li = d && d.puz ? LEVELS.findIndex(l => l.id === d.puz.id) : -1;
+  return li >= 0 && d.mode === 'puzzle' ? { prog: (d.moves | 0) > 0, li } : { prog: false, li: -1 };
+}
+$('puzzleLevels').addEventListener('click', () => openLevels());
+
 defineMode({
   id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true,
   hud: () => hudInfo({ best: `${state.puz.li + 1}/${LEVELS.length}`, bestTitle: 'Bölüm', icon: 'puz', puzRow: true, undo: true }),
@@ -215,6 +224,31 @@ function puzUndo() {
 defineMode({
   id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true,
   levelCard: true, bodyClass: 'puzzle',
+  drawArt(th) {
+  const p = prepCanvas($('artPuzzle'), 'puzzle');
+  if (p) { // a small board with two gems set into it
+    const { g, w, dpr } = p, pad = w * 0.11, cs = (w - 2 * pad) / 5, px = Math.ceil(cs * dpr);
+    rr(g, 0, 0, w, w, w * 0.24); g.fillStyle = th.board; g.fill();
+    ART_PUZZLE.forEach((row, r) => row.forEach((v, cc) => {
+      g.drawImage(sprite(theme.cur, v === 9 ? GEM_COLOR : v, px), pad + cc * cs, pad + r * cs, cs, cs);
+      if (v === 9) drawGemOn(g, theme.cur, pad + cc * cs, pad + r * cs, cs, dpr);
+    }));
+  }
+  },
+  renderCard() {
+  const ps = puzzleStatus(), solved = puzSolved(), nx = nextLevelIndex();
+  $('puzzleSub').textContent = `${puzTotalStars()} / ${LEVELS.length * 3} yıldız`;
+  $('puzzleLbl').textContent = ps.prog ? 'Devam et' : nx < 0 ? 'Bölümler' : 'Başla';
+  $('puzzleInfo').textContent = ps.prog ? `Bölüm ${ps.li + 1} yarım kaldı` : nx < 0 ? `${solved} bölümün hepsi çözüldü` : `Sıradaki: Bölüm ${nx + 1}`;
+  $('playPuzzle').querySelector('.mode-go').classList.toggle('soft', !ps.prog && nx < 0);
+  },
+  // carry on with a half-played level, else start the next unsolved one; with every level solved, show the list
+  play() {
+    const ps = puzzleStatus(), nx = nextLevelIndex();
+    if (ps.prog) startMode('puzzle');
+    else if (nx < 0) openLevels();
+    else startLevel(nx);
+  },
   setup(now) { puzLoad(now); state.dealRng = null; },
   // a level keeps the theme the player is in, and counts nowhere but in the puzzle stats
   start(now) {

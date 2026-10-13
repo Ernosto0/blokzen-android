@@ -2,9 +2,9 @@ import { Sfx } from '../audio/sfx.js';
 import { $ } from './dom.js';
 import { state } from '../core/state.js';
 import { LEVELS, PUZZLE_GROUPS } from '../modes/puzzle-levels.js';
-import { bestStars, GOAL_ICON, goalText, levelOpen, MINI_STAR, nextLevelIndex, puzTotalStars, startLevel } from '../modes/puzzle.js';
-import { copyText, newGame, resetShare, shareText, switchMode } from '../game/flow.js';
-import { closeMenu, menuOpen, puzzleStatus, resetMenuNew } from './menu.js';
+import { bestStars, GOAL_ICON, goalText, levelOpen, MINI_STAR, nextLevelIndex, puzTotalStars, puzzleStatus, startLevel } from '../modes/puzzle.js';
+import { copyText, resetShare, shareText } from '../game/flow.js';
+import { menuOpen } from './menu.js';
 import { openInfo } from './info.js';
 import { openSettings } from './settings.js';
 import { openGallery } from './gallery.js';
@@ -61,20 +61,6 @@ export function closeLevels() {
 }
 $('lvClose').addEventListener('click', closeLevels);
 $('levels').addEventListener('click', e => { if (e.target.id === 'levels') closeLevels(); });
-$('zenNew').addEventListener('click', () => {
-  Sfx.unlock();
-  const b = $('zenNew');
-  if (b.classList.contains('confirm')) { resetMenuNew(); switchMode('zen'); newGame(); closeMenu(); return; }
-  b.classList.add('confirm'); b.textContent = 'Silinecek · Onayla';
-  state.zenNewTimer = setTimeout(resetMenuNew, 3000);
-});
-$('menuNew').addEventListener('click', () => {
-  Sfx.unlock();
-  const b = $('menuNew');
-  if (b.classList.contains('confirm')) { resetMenuNew(); switchMode('classic'); newGame(); closeMenu(); return; }
-  b.classList.add('confirm'); b.textContent = 'Silinecek · Onayla';
-  state.menuNewTimer = setTimeout(resetMenuNew, 3000);
-});
 $('share').addEventListener('click', async () => {
   Sfx.unlock(); Sfx.pick();
   const ok = await copyText(shareText());

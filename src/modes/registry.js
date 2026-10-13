@@ -29,6 +29,8 @@
 //   stale()        the running game is out of date and should start over (a daily from yesterday)
 //   beforeFresh()  runs before a new game starts because no save was found (the puzzle picks its level)
 //   leave()        the game is being left or replaced; stop()  stop timers
+//   drawArt(th)    draws the picture on the mode's menu card;  renderCard()  fills in the card's text
+//   resetNew()     puts the card's "new game" button back to rest;  play()  what the card's main button does (default: start the mode)
 //   remember()     called before a piece is placed (what undo will restore)
 //   cellCleared(r, c)  a cell is cleared: return 1 if it held something special (a gem) and take it off
 //   cleared({ gemHit, rows, cols }), gemPraise(gemHit)   what a clear means to the mode

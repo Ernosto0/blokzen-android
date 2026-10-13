@@ -1,16 +1,18 @@
 import { defineMode, hudInfo } from './registry.js';
-import { state } from '../core/state.js';
-import { fmtN } from '../ui/menu.js';
+import { state, theme } from '../core/state.js';
+import { closeMenu, fmtN, inProgress, prepCanvas } from '../ui/menu.js';
 import { Sfx } from '../audio/sfx.js';
 import { bitsOf } from '../core/bitboard.js';
 import { cellsOf } from '../core/dealer.js';
 import { store } from '../core/store.js';
-import { clearFullest, deal, refreshFits, save } from '../game/flow.js';
+import { clearFullest, deal, newGame, refreshFits, save, switchMode } from '../game/flow.js';
 import { buzz } from '../platform/haptics.js';
 import { L } from '../render/layout.js';
 import { checkUnlocks, hourNow, stats, STATS_KEY } from '../themes/progress.js';
 import { updateHud } from '../ui/hud.js';
 import { tut } from '../ui/tutorial.js';
+import { rr, sprite } from '../render/sprites.js';
+import { $ } from '../ui/dom.js';
 
 /* Zen: an endless, calm game with its own save. The dealer stays generous, there are no levels, and when no piece fits
    the board breathes out (its fullest lines clear quietly, no points) instead of ending. */
@@ -33,9 +35,48 @@ function zenBreath(now) {
   save();
 }
 
+const ART_ZEN = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [3, 3, 0, 5, 0]]; // a few stones under an open circle
+function zenStatus() {
+  if (state.mode === 'zen') return { prog: inProgress(), score: state.score, lines: state.gs.lines };
+  const d = store.get(ZEN_SAVE_KEY);
+  return d && d.mode === 'zen' && Array.isArray(d.grid) ? { prog: (d.moves | 0) > 0, score: d.score | 0, lines: (d.gs && d.gs.lines) | 0 } : { prog: false, score: 0, lines: 0 };
+}
+let newTimer = 0;
+function resetNew() {
+  clearTimeout(newTimer);
+  const z = $('zenNew'); z.classList.remove('confirm'); z.textContent = 'Sıfırla';
+}
+$('zenNew').addEventListener('click', () => {
+  Sfx.unlock();
+  const b = $('zenNew');
+  if (b.classList.contains('confirm')) { resetNew(); switchMode('zen'); newGame(); closeMenu(); return; }
+  b.classList.add('confirm'); b.textContent = 'Silinecek · Onayla';
+  newTimer = setTimeout(resetNew, 3000);
+});
+
 defineMode({
   id: 'zen', saveKey: ZEN_SAVE_KEY, button: 'playZen', restartLabel: 'Zen tahtasını sıfırla', bodyClass: 'zen',
   hud: () => hudInfo({ best: fmtN(state.gs.lines), bestTitle: 'Bu oturumda temizlenen sıra', icon: 'zen' }),
+  drawArt(th) {
+  const p = prepCanvas($('artZen'), 'zen');
+  if (p) { // a few stones on a quiet board, under an open ensō circle
+    const { g, w, dpr } = p, pad = w * 0.11, cs = (w - 2 * pad) / 5, px = Math.ceil(cs * dpr);
+    rr(g, 0, 0, w, w, w * 0.24); g.fillStyle = th.board; g.fill();
+    ART_ZEN.forEach((row, r) => row.forEach((v, cc) => g.drawImage(sprite(theme.cur, v, px), pad + cc * cs, pad + r * cs, cs, cs)));
+    g.save();
+    g.lineCap = 'round'; g.lineWidth = w * 0.065; g.strokeStyle = th.accent;
+    g.beginPath(); g.arc(w / 2, w * 0.4, w * 0.24, Math.PI * 0.62, Math.PI * 2.38); g.stroke();
+    g.restore();
+  }
+  },
+  renderCard() {
+  const zs = zenStatus();
+  $('zenLbl').textContent = zs.prog ? 'Devam et' : 'Oyna';
+  $('zenSub').textContent = 'Bitmez, acele yok';
+  $('zenFoot').hidden = !zs.prog;
+  if (zs.prog) $('zenInfo').textContent = `${fmtN(zs.lines)} sıra · ${fmtN(zs.score)} puan`;
+  },
+  resetNew,
   started() { stats.zenSessions++; },
   stop: cancelBreath,
   volume: 0.75, levels: false, shake: false, records: false, countsGame: false, endless: true, fullCap: 5,

@@ -3,13 +3,14 @@ import { dealStream } from '../core/dealer.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
-import { state, emptyGrid, pop } from '../core/state.js';
+import { state, emptyGrid, pop, theme } from '../core/state.js';
 import { dayKey, stats } from '../themes/progress.js';
 import { defineMode, hudInfo } from './registry.js';
 import { $ } from '../ui/dom.js';
 import { paintStars, resetShare, STAR_SVG } from '../game/flow.js';
-import { fmtN } from '../ui/menu.js';
+import { fmtN, inProgress, prepCanvas } from '../ui/menu.js';
 import { L } from '../render/layout.js';
+import { rr, sprite } from '../render/sprites.js';
 
 /* ---------- Daily challenge ----------
    One game a day that is the same for everyone: a seeded start board, a seeded dealer and three target scores.
@@ -123,9 +124,38 @@ function updateGoal() {
   $('goalRow').setAttribute('aria-label', `Günlük hedef: ${st} / 3 yıldız` + (next ? `, sonraki ${fmtN(next)}` : ''));
 }
 
+function dailyStatus() {
+  const t = dayKey();
+  if (state.mode === 'daily' && state.gameDay === t) return { prog: inProgress(), score: state.score };
+  const d = store.get(DAILY_SAVE_KEY);
+  return d && d.day === t ? { prog: (d.moves | 0) > 0, score: d.score | 0 } : { prog: false, score: 0 };
+}
+
 defineMode({
   id: 'daily', saveKey: DAILY_SAVE_KEY, button: 'playDaily', restartLabel: 'Günlüğü baştan dene',
   bodyClass: 'daily',
+  // today's start board in miniature
+  drawArt(th) {
+    const today = dayKey();
+  const p = prepCanvas($('artDaily'), 'daily' + today);
+  if (p) { // today's start board in miniature
+    const { g, w, dpr } = p, pad = w * 0.09, cs = (w - 2 * pad) / N, px = Math.ceil(cs * dpr), sg = dailyStart(today).grid;
+    rr(g, 0, 0, w, w, w * 0.24); g.fillStyle = th.board; g.fill();
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) g.drawImage(sprite(theme.cur, sg[r][c], px), pad + c * cs, pad + r * cs, cs, cs);
+  }
+  },
+  renderCard() {
+  const t = dayKey(), info = dailyStart(t), rec = daily.days[t], ds = dailyStatus(), st = rec ? rec.stars : 0;
+  const nb = x => x.replace(/ /g, '\u00a0'); // keep each half on one line; wrap only at the dot
+  $('dailySub').textContent = nb(fmtDay(t)) + ' · ' + nb(rec && rec.best ? `En iyi ${fmtN(rec.best)}` : 'Herkese aynı tahta');
+  $('dailyLbl').textContent = ds.prog ? 'Devam et' : rec && rec.tries ? 'Tekrar' : 'Başla';
+  $('playDaily').querySelector('.mode-go').classList.toggle('soft', st === 3 && !ds.prog);
+  paintStars($('dailyStars'), st, info.targets);
+  const sk = curStreak(), saved = daily.last === t;
+  $('streakTxt').textContent = sk ? `${sk} gün seri` : 'Seri yok';
+  $('dailyStreak').classList.toggle('off', !sk);
+  $('dailyStreak').title = sk ? (saved ? 'Bugün yıldızını aldın, seri sürüyor' : 'Seriyi korumak için bugün bir yıldız al') : 'Bir yıldız al, seri başlasın';
+  },
   // the day's prepared board and seeded dealer; each start counts a try
   setup(now) {
     state.gameDay = dayKey();

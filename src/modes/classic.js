@@ -1,17 +1,18 @@
 import { N, SAVE_KEY, SHAPES } from '../core/constants.js';
 import { canRevive, canUndo, defineMode, hudInfo } from './registry.js';
 import { updateHud, updateUndoBtn } from '../ui/hud.js';
-import { fmtN } from '../ui/menu.js';
+import { closeMenu, fmtN, inProgress, prepCanvas } from '../ui/menu.js';
 import { state, CLS_UNDOS, freshCls, pop, theme } from '../core/state.js';
 import { stats, STATS_KEY } from '../themes/progress.js';
 import { trayIds } from './puzzle.js';
 import { tut } from '../ui/tutorial.js';
 import { Sfx } from '../audio/sfx.js';
 import { store } from '../core/store.js';
-import { clearFullest, deal, gameEnded, refreshFits, save } from '../game/flow.js';
+import { clearFullest, deal, gameEnded, newGame, refreshFits, save, switchMode } from '../game/flow.js';
 import { buzz } from '../platform/haptics.js';
 import { L } from '../render/layout.js';
 import { $ } from '../ui/dom.js';
+import { rr, sprite } from '../render/sprites.js';
 
 export const REC_KEYS = ['bestScore', 'bestCombo', 'bestFulls', 'bestMoves', 'bestMulti', 'bestCalm']; // one-game records an undo takes back
 
@@ -58,6 +59,26 @@ function endClassic() {
   gameEnded();
   store.set(SAVE_KEY, null);
 }
+
+const ART_CLASSIC = [[1, 1, 0, 4], [0, 2, 2, 4], [6, 2, 2, 4], [6, 6, 0, 0]];
+function classicStatus() {
+  if (state.mode === 'classic') return { prog: inProgress(), score: state.score };
+  const d = store.get(SAVE_KEY);
+  return d && Array.isArray(d.grid) ? { prog: (d.moves | 0) > 0, score: d.score | 0 } : { prog: false, score: 0 };
+}
+// the card's "new game" button asks twice; the timer gives the question up after a while
+let newTimer = 0;
+function resetNew() {
+  clearTimeout(newTimer);
+  const b = $('menuNew'); b.classList.remove('confirm'); b.textContent = 'Yeni oyun';
+}
+$('menuNew').addEventListener('click', () => {
+  Sfx.unlock();
+  const b = $('menuNew');
+  if (b.classList.contains('confirm')) { resetNew(); switchMode('classic'); newGame(); closeMenu(); return; }
+  b.classList.add('confirm'); b.textContent = 'Silinecek · Onayla';
+  newTimer = setTimeout(resetNew, 3000);
+});
 
 defineMode({
   id: 'classic', saveKey: SAVE_KEY, button: 'play', restartLabel: 'Yeni oyun',
@@ -113,6 +134,22 @@ defineMode({
   canRevive: () => !tut && !state.cls.contUsed,
   undo: classicUndo,
   revive: classicRevive,
+  drawArt(th) {
+  const p = prepCanvas($('artClassic'), 'classic');
+  if (p) {
+    const { g, w, dpr } = p, pad = w * 0.13, cs = (w - 2 * pad) / 4, px = Math.ceil(cs * dpr);
+    rr(g, 0, 0, w, w, w * 0.24); g.fillStyle = th.board; g.fill();
+    ART_CLASSIC.forEach((row, r) => row.forEach((v, cc) => g.drawImage(sprite(theme.cur, v, px), pad + cc * cs, pad + r * cs, cs, cs)));
+  }
+  },
+  renderCard() {
+  const cs = classicStatus();
+  $('playLbl').textContent = cs.prog ? 'Devam et' : 'Oyna';
+  $('classicSub').textContent = state.best ? `En iyi ${fmtN(state.best)}` : 'Yer kalmayana kadar';
+  $('classicFoot').hidden = !cs.prog;
+  if (cs.prog) $('resumeInfo').textContent = `Yarım oyun · ${fmtN(cs.score)} puan`;
+  },
+  resetNew,
   remember: clsRemember,
   snapshot: () => ({ cls: { u: state.cls.undoLeft, c: state.cls.contUsed, h: state.cls.hist } }),
   restore(d) { state.mode = 'classic'; state.dealRng = null; state.cls = readCls(d.cls); return true; },

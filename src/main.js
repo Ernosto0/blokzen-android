@@ -17,6 +17,8 @@ import './ui/devmode.js';
 import './ui/gallery.js';
 import './ui/tutorial.js';
 
+import { bindModeButtons } from './ui/menu.js';
 import { start } from './boot.js';
 
+bindModeButtons();
 start();

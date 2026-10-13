@@ -43,8 +43,6 @@ export const state = {
   cls: freshCls(),
   shareTimer: 0,
   goalShown: 0, // goalShown: the bar has been drawn for this day, so newly lit stars may pop
-  menuNewTimer: 0,
-  zenNewTimer: 0,
 };
 
 /* ---------- Board and theme state (single writer: exported directly) ---------- */

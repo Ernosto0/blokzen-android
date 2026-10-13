@@ -10,8 +10,8 @@ src/
   main.js          entry: styles, themes, screens, then boot
   boot.js          start(): load saves and settings, first frame
   core/            board, pieces, dealing, scoring, storage, shared state
-  modes/           daily, puzzle (+ level data), classic
-  game/            game flow, input
+  modes/           one file per mode (classic, daily, puzzle, zen), registry.js, register.js
+  game/            game flow (new game, placing a piece, saves), input
   render/          layout, block sprites, textures, backgrounds, frame loop
   themes/          one folder per theme, plus the shared pieces:
     <id>/          theme.js (colours, unlock task, clear effect), block.js, ambient.js,
@@ -29,6 +29,14 @@ src/
 tests/             Playwright smoke tests
 android/           Capacitor Android project
 ```
+
+## Game modes
+
+A mode is an object registered with `defineMode({ id, ... })` in its own file under `src/modes/`. The game never checks
+`state.mode`: it asks the active mode, `mode()`, for flags (save key, volume, levels, shake, records, theme lock...) and
+calls its hooks: the HUD, the game-over card, undo, how a game starts, saves and restores, what a move does, the menu card.
+The full list of flags and hooks is documented at the top of `modes/registry.js`. To add a mode: write `modes/<id>.js`,
+import it in `modes/register.js`, and add its card to `index.html`.
 
 ## Adding a theme
 
