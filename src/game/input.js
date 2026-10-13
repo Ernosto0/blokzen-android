@@ -1,15 +1,13 @@
 import { MUTE_KEY, N } from '../core/constants.js';
-import { mode } from '../modes/registry.js';
+import { canUndo, doRevive, doUndo, mode } from '../modes/registry.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $, cv } from '../ui/dom.js';
 import { state } from '../core/state.js';
-import { LEVELS } from '../modes/puzzle-levels.js';
-import { canUndo } from '../modes/classic.js';
 import { clamp01, lerp, outCubic } from '../core/util.js';
 import { L } from '../render/layout.js';
-import { classicRevive, doUndo, newGame, placePiece, startLevel } from './flow.js';
+import { newGame, placePiece } from './flow.js';
 import { openLevels } from '../ui/levels.js';
 import { syncSettings } from '../ui/settings.js';
 import { tut, TUT, tutPlace } from '../ui/tutorial.js';
@@ -108,12 +106,11 @@ $('restart').addEventListener('click', () => {
 });
 $('again').addEventListener('click', () => {
   Sfx.unlock();
-  if (state.mode === 'puzzle' && state.puz.won) { if (state.puz.li + 1 < LEVELS.length) startLevel(state.puz.li + 1); else openLevels(); return; }
-  newGame();
+  if (!(mode().again && mode().again())) newGame();
 });
 $('puzRetry').addEventListener('click', () => { Sfx.unlock(); Sfx.pick(); newGame(); });
 $('puzLevels').addEventListener('click', () => openLevels());
 $('puzUndo').addEventListener('click', () => { Sfx.unlock(); doUndo(); });
 $('undo').addEventListener('click', () => { Sfx.unlock(); if (canUndo()) doUndo(); else Sfx.bad(); });
-$('revive').addEventListener('click', () => { Sfx.unlock(); classicRevive(); });
+$('revive').addEventListener('click', () => { Sfx.unlock(); doRevive(); });
 $('puzTitle').addEventListener('click', () => openLevels());

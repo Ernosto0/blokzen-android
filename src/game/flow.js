@@ -10,10 +10,10 @@ import { $ } from '../ui/dom.js';
 import { state, discovered, emptyGrid, freshCls, pop, settings, theme } from '../core/state.js';
 import { autoTheme, checkUnlocks, dayKey, DONE_KEY, playHeldUnlock, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
 import { curStreak, dailyProgress, dailySeed, dailyStart, dayBest, dayRec, fmtDay, saveDaily, starsFor } from '../modes/daily.js';
-import { mode, MODE_KEY, MODES, saveKey } from '../modes/registry.js';
+import { canRevive, canUndo, mode, MODE_KEY, MODES, saveKey } from '../modes/registry.js';
 import { LEVELS, PUZ_SAVE_KEY } from '../modes/puzzle-levels.js';
-import { bestStars, countGems, goalText, levelOpen, nextLevelIndex, puzCollect, puzDeal, puzGoal, puzLevel, puzLoad, puzProg, puzRemember, puzStarsFor, savePuzzle } from '../modes/puzzle.js';
-import { canRevive, canUndo, clsRemember, readCls, readPrev, REC_KEYS } from '../modes/classic.js';
+import { bestStars, countGems, levelOpen, nextLevelIndex, puzCollect, puzDeal, puzGoal, puzLevel, puzLoad, puzProg, puzRemember, puzStarsFor, savePuzzle } from '../modes/puzzle.js';
+import { clsRemember, readCls, readPrev } from '../modes/classic.js';
 import { L } from '../render/layout.js';
 import { burst, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
@@ -23,7 +23,7 @@ import { applyPrefs } from '../ui/settings.js';
 import { startTutorial, tut } from '../ui/tutorial.js';
 
 /* ---------- Game flow ---------- */
-function deal(now = performance.now()) {
+export function deal(now = performance.now()) {
   const set = colorize(generateSet(state.grid, state.moves));
   state.tray = set.map((piece, i) => ({ piece, appear: now + i * 70, ret: null, fits: true }));
   refreshFits();
@@ -355,7 +355,7 @@ function gameEnded() {
 let breathTimer = 0;
 function cancelBreath() { clearTimeout(breathTimer); breathTimer = 0; }
 // The fullest rows and columns drift away, one by one (at least two, at most five), until a waiting piece fits again. No points.
-function clearFullest(now) {
+export function clearFullest(now) {
   const g = state.grid.map(row => row.slice());
   const lines = [];
   for (let r = 0; r < N; r++) lines.push({ cells: [...Array(N)].map((_, c) => [r, c]) });
@@ -426,129 +426,20 @@ function endClassic() {
   gameEnded();
   store.set(SAVE_KEY, null);
 }
-// Classic continue, once per game: the board breathes out like zen, the combo rests, and play goes on
-export function classicRevive() {
-  if (!state.over || !canRevive() || state.drag) return;
-  const now = performance.now();
-  state.cls.contUsed = true; state.cls.pendingEnd = false; state.cls.hist = []; // the moves before the continue cannot be undone any more
-  state.over = false; $('over').hidden = true;
-  state.texts = []; state.shake = null; state.flash = null;
-  clearFullest(now);
-  state.combo = 0; state.msc = 0;
-  state.texts.push({ text: 'İkinci şans!', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 160, dur: 1700, size: L.cell * 0.8, role: 'accent' });
-  Sfx.breath(); buzz([8, 60, 8]);
-  refreshFits();
-  if (!state.tray.some(t => t && t.fits)) deal(now + 500); // the cleared board still has no room for these pieces: new ones
-  updateHud(); save();
-}
-// Classic undo: back one move (board, tray, score, combo, level step and the records it set); three per game
-function classicUndo() {
-  if (!canUndo() || state.drag) return;
-  const p = state.cls.hist.pop(), now = performance.now();
-  state.cls.undoLeft--;
-  while (state.cls.hist.length > state.cls.undoLeft) state.cls.hist.shift();
-  state.grid = p.grid.map(r => r.slice());
-  state.tray = p.tray.map((t, i) => t ? { piece: { shape: SHAPES[t.s], color: t.c }, appear: now + i * 50, ret: null, fits: true } : null);
-  state.score = p.score; state.displayScore = state.score; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.gs = { ...p.gs };
-  theme.stage = p.stage; state.pendingTheme = null;
-  state.best = Math.min(state.best, p.best); state.newRecord = p.newRecord;
-  for (const k of REC_KEYS) stats[k] = Math.min(stats[k], p.rec[k]);
-  store.set(STATS_KEY, stats);
-  state.cls.pendingEnd = false;
-  state.over = false; $('over').hidden = true;
-  state.clearing = []; state.texts = []; state.shake = null; state.flash = null;
-  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) pop[r][c] = state.grid[r][c] ? now + (r + c) * 10 : 0;
-  state.texts.push({ text: state.cls.undoLeft ? `Geri alındı · ${state.cls.undoLeft} hak kaldı` : 'Geri alındı · son hak', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1100, size: L.cell * 0.56, role: 'fg' });
-  if (Sfx.ok()) { Sfx.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 3000, to: 600, q: 0.8 }); Sfx.pick(); }
-  buzz(12);
-  refreshFits(); updateHud(); save();
-}
-export const doUndo = () => state.mode === 'puzzle' ? puzUndo() : classicUndo();
 function showOver() {
   if (!state.over) return; // a new game started meanwhile
-  const pz = state.mode === 'puzzle';
-  $('finalScore').classList.toggle('txt', pz);
-  $('overStars').classList.toggle('big', pz);
-  $('puzRetry').hidden = $('puzLevels').hidden = $('puzUndo').hidden = !pz;
-  $('toMenu').hidden = pz;
+  const m = mode(), lvl = !!m.levelCard;
+  $('finalScore').classList.toggle('txt', lvl);
+  $('overStars').classList.toggle('big', lvl);
+  $('puzRetry').hidden = $('puzLevels').hidden = $('puzUndo').hidden = !lvl;
+  $('toMenu').hidden = lvl;
   $('puzUndo').textContent = 'Geri al';
   const rv = canRevive();
   $('revive').hidden = !rv;
   $('again').className = rv ? 'ghost' : 'cta'; // with a continue on offer, a new game is the quieter choice
-  if (pz) { showPuzzleOver(); return; }
-  const dl = state.mode === 'daily';
-  $('finalScore').textContent = fmtN(state.score);
-  $('overTitle').textContent = dl ? 'Günlük · ' + fmtDay(state.gameDay) : 'Yer kalmadı';
-  $('newRec').textContent = dl ? 'Bugünün rekoru!' : 'Yeni rekor!';
-  $('newRec').hidden = !state.newRecord;
-  $('overStars').hidden = !dl; $('share').hidden = !dl;
-  $('again').textContent = dl ? 'Tekrar dene' : 'Tekrar oyna';
-  if (dl) {
-    const tg = dailyStart(state.gameDay).targets, st = starsFor(state.score, tg), dayStars = dayRec(state.gameDay).stars;
-    paintStars($('overStars'), st, tg);
-    const next = tg.find(t => t > state.score);
-    $('overSub').textContent = `Bugünün en iyisi: ${fmtN(dayBest(state.gameDay))}` + (dayStars > st ? ` · ${dayStars} yıldız` : '');
-    const sk = curStreak();
-    $('overNote').textContent = next ? `Sonraki yıldız ${fmtN(next)} puanda.` + (sk ? ` Seri: ${sk} gün.` : '') : (sk ? `Seri: ${sk} gün. Yarın yeni tahta!` : 'Yarın yeni tahta!');
-    $('overNote').hidden = false;
-    resetShare();
-  } else {
-    $('overSub').textContent = `En iyi: ${fmtN(state.best)}`;
-    const un = canUndo();
-    $('puzUndo').hidden = !un;
-    if (un) $('puzUndo').textContent = `Geri al · ${state.cls.undoLeft}`;
-    const note = rv ? 'Devam edersen en dolu sıralar temizlenir. Oyun başına bir kez.' : un ? `${state.cls.undoLeft} geri alma hakkın kaldı.` : '';
-    $('overNote').textContent = note;
-    $('overNote').hidden = !note;
-  }
+  m.overCard(rv); // the mode fills in its own card
   $('over').hidden = false;
   $(rv ? 'revive' : 'again').focus({ preventScroll: true });
-}
-// win: the level name, its stars and how to earn the next one; fail: what ran out, how far the goal got, and the undo if it is still there
-function showPuzzleOver() {
-  const lv = puzLevel(), won = state.puz.won, hasNext = state.puz.li + 1 < LEVELS.length;
-  $('overTitle').textContent = won ? 'Bölüm tamam' : `Bölüm ${state.puz.li + 1} · ${lv.title}`;
-  $('finalScore').textContent = won ? lv.title : state.puz.fail === 'pieces' ? 'Parçalar bitti' : 'Yer kalmadı';
-  $('overStars').hidden = !won; $('share').hidden = true;
-  $('newRec').textContent = 'Yeni en iyi!'; $('newRec').hidden = !(won && state.puz.newBest);
-  const note = $('overNote');
-  if (won) {
-    $('overStars').innerHTML = [0, 1, 2].map(i => `<span class="star${i < state.puz.stars ? ' on' : ''}">${STAR_SVG}</span>`).join('');
-    $('overStars').setAttribute('aria-label', `${state.puz.stars} / 3 yıldız`);
-    $('overSub').textContent = `Kalan parça: ${state.puz.left}`;
-    const need = state.puz.stars < 3 ? lv.stars[state.puz.stars] - state.puz.left : 0;
-    note.textContent = need > 0 ? `${state.puz.stars + 1}. yıldız için ${need} parça daha az kullan.` : hasNext ? '' : 'Bu grubun bütün bölümlerini bitirdin!';
-    if (state.puz.opened.length) note.textContent = `Yeni tema açıldı: ${state.puz.opened.join(', ')}!` + (note.textContent ? ' ' + note.textContent : '');
-    $('again').textContent = hasNext ? 'Sonraki bölüm' : 'Bölümler';
-    $('puzLevels').hidden = !hasNext;
-    $('puzRetry').hidden = false; $('puzUndo').hidden = true;
-  } else {
-    $('overSub').textContent = `Hedef: ${goalText(lv)} · ` + puzGoal().label.replace(/ /g, '\u00a0'); // the progress stays on one line
-    const undo = canUndo();
-    note.textContent = undo ? 'Son hamleni bir kez geri alabilirsin.' : '';
-    if (state.puz.opened.length) note.textContent = `Yeni tema açıldı: ${state.puz.opened.join(', ')}!` + (note.textContent ? ' ' + note.textContent : '');
-    $('again').textContent = 'Tekrar dene';
-    $('puzRetry').hidden = true; $('puzUndo').hidden = !undo; $('puzLevels').hidden = false;
-  }
-  note.hidden = !note.textContent;
-  $('over').hidden = false;
-  $('again').focus({ preventScroll: true });
-}
-// back one move: board, gems, tray, score, combo and the place in the piece list; once per attempt
-function puzUndo() {
-  if (!canUndo() || state.drag) return;
-  const p = state.puz.prev, now = performance.now();
-  state.grid = p.grid.map(r => r.slice()); state.puz.gems = p.gems.map(r => r.slice());
-  state.tray = p.tray.map((t, i) => t ? { piece: { shape: SHAPES[t.s], color: t.c }, appear: now + i * 50, ret: null, fits: true } : null);
-  state.score = p.score; state.displayScore = state.score; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.puz.seq = p.seq;
-  state.puz.prev = null; state.puz.undoUsed = true; state.puz.fail = '';
-  state.over = false; $('over').hidden = true;
-  state.clearing = []; state.texts = []; state.shake = null; state.flash = null;
-  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) pop[r][c] = state.grid[r][c] ? now + (r + c) * 10 : 0;
-  state.texts.push({ text: 'Geri alındı', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1000, size: L.cell * 0.6, role: 'fg' });
-  if (Sfx.ok()) { Sfx.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 3000, to: 600, q: 0.8 }); Sfx.pick(); }
-  buzz(12);
-  refreshFits(); updateHud(); save();
 }
 
 // three stars, each labelled with its target score; filled up to n

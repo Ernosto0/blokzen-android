@@ -1,6 +1,5 @@
 // Shapes and drawing helpers that more than one theme uses. A helper only one theme uses lives in that theme's folder.
 
-import { Sfx } from '../../audio/sfx.js';
 import { hexRgb, shade } from '../../core/color.js';
 import { rr } from '../../render/sprites.js';
 import { seeded } from '../../render/blocks.js';

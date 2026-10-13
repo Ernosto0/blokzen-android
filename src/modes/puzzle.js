@@ -1,15 +1,18 @@
-import { SHAPES } from '../core/constants.js';
+import { N, SHAPES } from '../core/constants.js';
 import { Sfx } from '../audio/sfx.js';
 import { store } from '../core/store.js';
 import { state, emptyGrid, pop } from '../core/state.js';
 import { stats } from '../themes/progress.js';
 import { GEM_COLOR, LEVELS, PUZ_KEY, PUZ_SAVE_KEY } from './puzzle-levels.js';
-import { defineMode, hudInfo } from './registry.js';
+import { canUndo, defineMode, hudInfo } from './registry.js';
 import { $ } from '../ui/dom.js';
-import { STAR_SVG } from '../game/flow.js';
-import { updateUndoBtn } from '../ui/hud.js';
-import { refreshFits } from '../game/flow.js';
+import { refreshFits, save, STAR_SVG, startLevel } from '../game/flow.js';
+import { updateHud, updateUndoBtn } from '../ui/hud.js';
 import { fmtN } from '../ui/menu.js';
+import { buzz } from '../platform/haptics.js';
+import { L } from '../render/layout.js';
+import { openLevels } from '../ui/levels.js';
+import { tut } from '../ui/tutorial.js';
 
 // best stars per level id; levels that have been lost once, and those later won with three stars (chalkboard theme) (saved)
 // clean: levels solved with three stars in one attempt that never ran out and never used the undo (cipher theme)
@@ -116,4 +119,66 @@ defineMode({
   hud: () => hudInfo({ best: `${state.puz.li + 1}/${LEVELS.length}`, bestTitle: 'Bölüm', icon: 'puz', puzRow: true, undo: true }),
   updateHud: updatePuzzleHud,
   undoInfo: { left: () => state.puz.undoUsed ? 0 : 1, spent: 'Geri alma hakkı kullanıldı' },
+});
+
+// win: the level name, its stars and how to earn the next one; fail: what ran out, how far the goal got, and the undo if it is still there
+function puzzleOverCard() {
+  const lv = puzLevel(), won = state.puz.won, hasNext = state.puz.li + 1 < LEVELS.length;
+  $('overTitle').textContent = won ? 'Bölüm tamam' : `Bölüm ${state.puz.li + 1} · ${lv.title}`;
+  $('finalScore').textContent = won ? lv.title : state.puz.fail === 'pieces' ? 'Parçalar bitti' : 'Yer kalmadı';
+  $('overStars').hidden = !won; $('share').hidden = true;
+  $('newRec').textContent = 'Yeni en iyi!'; $('newRec').hidden = !(won && state.puz.newBest);
+  const note = $('overNote');
+  if (won) {
+    $('overStars').innerHTML = [0, 1, 2].map(i => `<span class="star${i < state.puz.stars ? ' on' : ''}">${STAR_SVG}</span>`).join('');
+    $('overStars').setAttribute('aria-label', `${state.puz.stars} / 3 yıldız`);
+    $('overSub').textContent = `Kalan parça: ${state.puz.left}`;
+    const need = state.puz.stars < 3 ? lv.stars[state.puz.stars] - state.puz.left : 0;
+    note.textContent = need > 0 ? `${state.puz.stars + 1}. yıldız için ${need} parça daha az kullan.` : hasNext ? '' : 'Bu grubun bütün bölümlerini bitirdin!';
+    if (state.puz.opened.length) note.textContent = `Yeni tema açıldı: ${state.puz.opened.join(', ')}!` + (note.textContent ? ' ' + note.textContent : '');
+    $('again').textContent = hasNext ? 'Sonraki bölüm' : 'Bölümler';
+    $('puzLevels').hidden = !hasNext;
+    $('puzRetry').hidden = false; $('puzUndo').hidden = true;
+  } else {
+    $('overSub').textContent = `Hedef: ${goalText(lv)} · ` + puzGoal().label.replace(/ /g, '\u00a0'); // the progress stays on one line
+    const undo = canUndo();
+    note.textContent = undo ? 'Son hamleni bir kez geri alabilirsin.' : '';
+    if (state.puz.opened.length) note.textContent = `Yeni tema açıldı: ${state.puz.opened.join(', ')}!` + (note.textContent ? ' ' + note.textContent : '');
+    $('again').textContent = 'Tekrar dene';
+    $('puzRetry').hidden = true; $('puzUndo').hidden = !undo; $('puzLevels').hidden = false;
+  }
+  note.hidden = !note.textContent;
+}
+// back one move: board, gems, tray, score, combo and the place in the piece list; once per attempt
+function puzUndo() {
+  if (!canUndo() || state.drag) return;
+  const p = state.puz.prev, now = performance.now();
+  state.grid = p.grid.map(r => r.slice()); state.puz.gems = p.gems.map(r => r.slice());
+  state.tray = p.tray.map((t, i) => t ? { piece: { shape: SHAPES[t.s], color: t.c }, appear: now + i * 50, ret: null, fits: true } : null);
+  state.score = p.score; state.displayScore = state.score; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.puz.seq = p.seq;
+  state.puz.prev = null; state.puz.undoUsed = true; state.puz.fail = '';
+  state.over = false; $('over').hidden = true;
+  state.clearing = []; state.texts = []; state.shake = null; state.flash = null;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) pop[r][c] = state.grid[r][c] ? now + (r + c) * 10 : 0;
+  state.texts.push({ text: 'Geri alındı', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1000, size: L.cell * 0.6, role: 'fg' });
+  if (Sfx.ok()) { Sfx.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 3000, to: 600, q: 0.8 }); Sfx.pick(); }
+  buzz(12);
+  refreshFits(); updateHud(); save();
+}
+
+defineMode({
+  id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true,
+  levelCard: true,
+  hud: () => hudInfo({ best: `${state.puz.li + 1}/${LEVELS.length}`, bestTitle: 'Bölüm', icon: 'puz', puzRow: true, undo: true }),
+  updateHud: updatePuzzleHud,
+  undoInfo: { left: () => state.puz.undoUsed ? 0 : 1, spent: 'Geri alma hakkı kullanıldı' },
+  canUndo: () => !tut && !state.puz.won && !state.puz.undoUsed && !!state.puz.prev,
+  undo: puzUndo,
+  overCard: puzzleOverCard,
+  // a won level moves on to the next one; otherwise the card's main button starts the level again
+  again() {
+    if (!state.puz.won) return false;
+    if (state.puz.li + 1 < LEVELS.length) startLevel(state.puz.li + 1); else openLevels();
+    return true;
+  },
 });

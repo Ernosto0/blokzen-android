@@ -1,7 +1,6 @@
 import { stageAt } from '../themes/catalog.js';
 import { mode } from '../modes/registry.js';
 import { shuffle } from './dealer.js';
-import { state } from './state.js';
 
 /* ---------- Scoring: level, combo and full-clear multipliers ---------- */
 const LINE_BASE = [0, 10, 30, 60, 100, 150, 210, 280, 360, 450, 550, 660, 780, 910, 1050, 1200, 1360];

@@ -1,8 +1,7 @@
 import { comboMult, fmtMult, levelMult, levelOf } from '../core/scoring.js';
-import { mode } from '../modes/registry.js';
+import { canUndo, mode } from '../modes/registry.js';
 import { $, elBest, elCombo, elScore } from './dom.js';
 import { state } from '../core/state.js';
-import { canUndo } from '../modes/classic.js';
 import { updateRing } from '../themes/switching.js';
 import { restartLabel } from '../game/input.js';
 

@@ -7,7 +7,7 @@ import { state, emptyGrid } from '../core/state.js';
 import { dayKey, stats } from '../themes/progress.js';
 import { defineMode, hudInfo } from './registry.js';
 import { $ } from '../ui/dom.js';
-import { STAR_SVG } from '../game/flow.js';
+import { paintStars, resetShare, STAR_SVG } from '../game/flow.js';
 import { fmtN } from '../ui/menu.js';
 import { L } from '../render/layout.js';
 
@@ -127,4 +127,20 @@ defineMode({
   id: 'daily', saveKey: DAILY_SAVE_KEY, button: 'playDaily', restartLabel: 'Günlüğü baştan dene',
   hud: () => hudInfo({ best: fmtN(Math.max(dayBest(state.gameDay), state.score)), bestTitle: 'Bugünün en iyisi', goalRow: true }),
   updateHud: updateGoal,
+  overCard() {
+    $('finalScore').textContent = fmtN(state.score);
+    $('overTitle').textContent = 'Günlük · ' + fmtDay(state.gameDay);
+    $('newRec').textContent = 'Bugünün rekoru!';
+    $('newRec').hidden = !state.newRecord;
+    $('overStars').hidden = false; $('share').hidden = false;
+    $('again').textContent = 'Tekrar dene';
+    const tg = dailyStart(state.gameDay).targets, st = starsFor(state.score, tg), dayStars = dayRec(state.gameDay).stars;
+    paintStars($('overStars'), st, tg);
+    const next = tg.find(t => t > state.score);
+    $('overSub').textContent = `Bugünün en iyisi: ${fmtN(dayBest(state.gameDay))}` + (dayStars > st ? ` · ${dayStars} yıldız` : '');
+    const sk = curStreak();
+    $('overNote').textContent = next ? `Sonraki yıldız ${fmtN(next)} puanda.` + (sk ? ` Seri: ${sk} gün.` : '') : (sk ? `Seri: ${sk} gün. Yarın yeni tahta!` : 'Yarın yeni tahta!');
+    $('overNote').hidden = false;
+    resetShare();
+  },
 });

@@ -19,13 +19,18 @@
 //   hud()          what the top bar shows, as hudInfo({ best, bestTitle, icon, goalRow, puzRow, undo })
 //   updateHud()    extra HUD work only this mode has (the daily goal bar, the puzzle row, the undo badge)
 //   undoInfo       { left(), spent } for the undo badge: moves left and what to announce when none are
+//   canUndo(), undo()        the undo button
+//   canRevive(), revive()    a second chance on the game-over card
+//   overCard(rv)   fills in the game-over card (rv: a second chance is on offer); a mode that never ends has none
+//   levelCard      the card is a level result (puzzle) rather than a game result
+//   again()        the card's main button; return true when the mode handled it, else a new game starts
 import { state } from '../core/state.js';
 
 export const MODE_KEY = 'blokzen.mode'; // which mode was played last
 export const MODES = {};
 
 const BASE = {
-  volume: 1, levels: true, shake: true, records: true, countsGame: true, themeLocked: false, endless: false, fullCap: Infinity,
+  levelCard: false, volume: 1, levels: true, shake: true, records: true, countsGame: true, themeLocked: false, endless: false, fullCap: Infinity,
 };
 export const defineMode = def => (MODES[def.id] = { ...BASE, ...def });
 
@@ -33,3 +38,8 @@ export const mode = () => MODES[state.mode];
 // the top bar's best box and which rows are shown; icon is 'best' | 'zen' | 'puz'
 export const hudInfo = o => ({ icon: 'best', goalRow: false, puzRow: false, undo: false, ...o });
 export const saveKey = () => mode().saveKey;
+// the hooks below are optional, so these answer "no" / do nothing for a mode without them
+export const canUndo = () => { const m = mode(); return !!(m.canUndo && m.canUndo()); };
+export const canRevive = () => { const m = mode(); return !!(m.canRevive && m.canRevive()); };
+export const doUndo = () => { const m = mode(); if (m.undo) m.undo(); };
+export const doRevive = () => { const m = mode(); if (m.revive) m.revive(); };
