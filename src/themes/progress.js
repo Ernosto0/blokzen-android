@@ -12,6 +12,8 @@ import { t } from '../i18n/index.js';
    (games, total score, blocks, lines) mean steady play always moves some bar forward. ---------- */
 export const STATS_KEY = 'blokzen.stats';
 export const UNLOCKS = Object.fromEntries(THEMES.filter(t => t.unlock).map(t => [t.id, t.unlock]));
+// which collection a theme belongs to: the mode its task is played in (the first theme has no task and is classic)
+export const collectionOf = th => th.unlock?.daily ? 'daily' : th.unlock?.zen ? 'zen' : th.unlock?.puzzle ? 'puzzle' : 'classic';
 // the last theme of a collection gets a bigger moment when it opens
 export const FINALES = Object.fromEntries(THEMES.filter(t => t.finale).map(t => [t.id, t.finale]));
 // themes that were open from the start before version 2 of the theme meta; older saves lose them until the task is done
