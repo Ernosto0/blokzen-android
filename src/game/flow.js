@@ -8,11 +8,11 @@ import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $ } from '../ui/dom.js';
 import { state, discovered, emptyGrid, freshCls, pop, settings, theme } from '../core/state.js';
-import { autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
+import { autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, TH, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
 import { curStreak, dailyStart, fmtDay, starsFor } from '../modes/daily.js';
 import { canRevive, leaveGame, mode, MODE_KEY, modeFor, MODES, saveKey, stopTimers } from '../modes/registry.js';
 import { L } from '../render/layout.js';
-import { burst, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
+import { burst, edgeBurst, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
 import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
@@ -164,6 +164,7 @@ export function placePiece(slot, r0, c0) {
       state.grid[r][c] = 0; pop[r][c] = 0;
       gemHit += gem;
     }
+    edgeBurst(rows, cols);
     if (m.cleared) m.cleared({ gemHit, rows: rows.length, cols: cols.length });
     const boardClean = state.grid.every(row => row.every(v => !v));
     const sc = scoreMove(shape.size, lines, state.combo, boardClean, state.fulls, state.score);
@@ -175,6 +176,7 @@ export function placePiece(slot, r0, c0) {
     let praise = boardClean ? (state.fulls ? t('Tertemiz ×{n}!', { n: state.fulls + 1 }) : t('Tahta tertemiz!')) : lines >= 4 ? t('Muhteşem!') : lines === 3 ? t('Harika!') : lines === 2 ? t('Güzel!') : null;
     if (gemHit && !boardClean && m.gemPraise) praise = m.gemPraise(gemHit);
     if (praise) state.texts.push({ text: praise, x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: boardClean ? 1500 : 1100, size: L.cell * (boardClean ? 1.0 : 0.82), role: 'accent' });
+    if (rows.length && cols.length && TH().fx.edge) state.texts.push({ text: t('Fiyonk!'), x: pcx, y: pcy - L.cell * 0.9, t0: now + 160, dur: 1000, size: L.cell * 0.7, role: 'accent' });
     if (state.combo >= 2) state.texts.push({ text: t('Kombo {c} · Puan {m}', { c: state.combo, m: fmtMult(comboMult(state.combo)) }), x: midX, y: L.gy + L.cell * (praise ? (boardClean ? 3.8 : 3.6) : 2.8), t0: now + 200, dur: 1050, size: L.cell * 0.5 * Math.min(1.45, 1 + state.combo * 0.05), role: 'fg' });
     if (boardClean) {
       state.fulls++;
@@ -227,6 +229,7 @@ export function placePiece(slot, r0, c0) {
   touchDay();
   if (lines >= 2 && oneGame) { state.gs.multi++; stats.bestMulti = Math.max(stats.bestMulti, state.gs.multi); }
   if (lines >= 3) stats.total3++;
+  if (rows.length && cols.length) stats.crossMoves++;
   if (!state.gs.broke && oneGame) { if (cellsOf(...bitsOf(state.grid)) > 32) state.gs.broke = true; else { state.gs.calm = state.moves; stats.bestCalm = Math.max(stats.bestCalm, state.gs.calm); } }
   store.set(STATS_KEY, stats);
   checkUnlocks(now);

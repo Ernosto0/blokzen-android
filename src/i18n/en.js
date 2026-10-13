@@ -352,6 +352,8 @@ export default {
   'Mavi Kopya': 'Blueprint',
   'Simya Atölyesi': 'Alchemy Lab',
   'Satranç': 'Chess',
+  'Kawaii Kedi': 'Kawaii Kitty',
+  'Fiyonk!': 'Bow!',
 
   /* ---- theme unlock tasks ---- */
   'Tek oyunda 2.500 puan yap': 'Score 2,500 points in one game',
@@ -390,6 +392,7 @@ export default {
   'Tahta yarıyı geçmeden tek oyunda 100 hamle yap': 'Make 100 moves in one game without the board passing half full',
   'Toplam 5.000 blok yerleştir': 'Place 5,000 blocks in total',
   'Tahtayı toplam 25 kez temizle': 'Clear the board 25 times in total',
+  'Fiyonk yap: aynı hamlede hem satırı hem sütunu temizle (7 kez)': 'Tie a bow: clear a row and a column in the same move (7 times)',
   'Toplamda 3.000.000 puan topla': 'Earn 3,000,000 points in total',
   "Bir oyunda 10'lu kombo yap": 'Make a 10x combo in one game',
   'Toplam 2.500 sıra temizle': 'Clear 2,500 rows in total',

@@ -54,6 +54,21 @@ export function burst(now) {
       size: L.cell * rand(0.12, 0.24), rot: Math.random() * 6, vr: rand(-8, 8), color: i % 3 ? th.blocks[i % 7] : th.accent }));
   }
 }
+// themes with fx.edge celebrate a finished row or column from the board's edges: confetti shoots out of both ends of every line
+export function edgeBurst(rows, cols) {
+  const th = TH();
+  if (!th.fx.edge || state.REDUCED) return;
+  const n = Math.min(7, 4 + rows.length + cols.length), c = L.cell;
+  const shoot = (x, y, ang) => {
+    for (let i = 0; i < n; i++) {
+      const a = ang + rand(-0.55, 0.55), v = rand(1.2, 2.6) * c * 4;
+      state.particles.push(fxParticle(th.fx, { x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - c * 2, life: -rand(0.05, 0.3), max: rand(0.9, 1.5),
+        size: c * rand(0.22, 0.38), rot: Math.random() * 6, vr: rand(-4, 4), color: i % 3 ? th.blocks[(Math.random() * 7) | 0] : th.accent }));
+    }
+  };
+  for (const r of rows) { const y = L.gy + (r + 0.5) * c; shoot(L.bx, y, Math.PI); shoot(L.bx + L.B, y, 0); }
+  for (const k of cols) { const x = L.gx + (k + 0.5) * c; shoot(x, L.by, -Math.PI / 2); shoot(x, L.by + L.B, Math.PI / 2); }
+}
 export function pickStartTheme() {
   if (!settings.auto) return settings.fixed;
   const pool = [...discovered];

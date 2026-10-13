@@ -22,7 +22,8 @@ export let stats = { bestScore: 0, bestCombo: 0, bestLines: 0, totalFulls: 0, to
   dailyGames: 0, dailyDays: 0, dailyStars: 0, dailyThree: 0, dailyBestStreak: 0, dailyMorning: 0, dailyFirst3: 0, dailyBeat: 0, dailyWeekend: 0, dailyNight: 0, dailyBestFulls: 0,
   zenMoves: 0, zenLines: 0, zenBreaths: 0, zenSec: 0, zenSessions: 0, zenFulls: 0, zenMorningSec: 0, zenEveningSec: 0, zenBestCalm: 0, zenBestRun: 0,
   puzzlePlaced: 0, puzzleLines: 0, puzzleSec: 0, puzzleWins: 0, puzzleTries: 0, // puzzle keeps its own counters: they move only the puzzle collection's tasks
-  puzzleBack: 0, puzzleBestGems: 0, puzzleTypes3: 0, puzzleLast: 0, puzzleClean: 0, puzzleCross: 0, puzzleClear3: 0, puzzleGemsTotal: 0, puzzleStars: 0 };
+  puzzleBack: 0, puzzleBestGems: 0, puzzleTypes3: 0, puzzleLast: 0, puzzleClean: 0, puzzleCross: 0, puzzleClear3: 0, puzzleGemsTotal: 0, puzzleStars: 0,
+  crossMoves: 0 }; // moves that cleared a row and a column at once (the kawaii theme's bow)
 // per-game counters for tasks measured inside one game (saved with the game). Zen only: lines cleared this session,
 // zcalm: moves in a row with the board at most half full, zrun: moves since the board last took a breath
 
