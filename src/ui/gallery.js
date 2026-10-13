@@ -26,7 +26,11 @@ function drawPreview(c, i, known) {
   const cpx = Math.ceil(cs * dpr);
   PREVIEW.forEach((row, r) => row.forEach((v, cc) => g.drawImage(sprite(i, v, cpx), pad + cc * cs, pad + r * cs, cs, cs)));
   if (known) return;
-  // locked: a faded glimpse of the theme under a padlock, so players see what they are working toward
+  // locked: a blurred, faded glimpse of the theme under a padlock: players see roughly what is coming, not the surprise
+  const snap = document.createElement('canvas'); snap.width = snap.height = px; snap.getContext('2d').drawImage(c, 0, 0);
+  g.setTransform(1, 0, 0, 1, 0, 0); // the sharp copy stays under the blur so the edges do not fade out
+  g.filter = `blur(${Math.round(size * 0.06 * dpr)}px)`; g.drawImage(snap, 0, 0); g.filter = 'none';
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.globalAlpha = 0.58; g.fillStyle = TH().board; g.fillRect(0, 0, size, size);
   const lw = size * 0.26, lh = size * 0.2, lx = (size - lw) / 2, ly = size * 0.5;
   g.globalAlpha = 0.92; g.strokeStyle = g.fillStyle = TH().fg;
@@ -52,7 +56,7 @@ export function renderGallery() {
     b.className = 'tcard' + (cur ? ' cur' : '') + (known ? '' : ' locked');
     if (!known) b.setAttribute('aria-disabled', 'true');
     const c = document.createElement('canvas');
-    const n = document.createElement('span'); n.className = 'tname'; n.textContent = th.name;
+    const n = document.createElement('span'); n.className = 'tname'; n.textContent = known ? th.name : '???'; // a locked theme keeps its name a surprise
     const s = document.createElement('span'); s.className = 'tstate' + (fresh.has(i) && !cur ? ' new' : '');
     s.textContent = cur ? (settings.auto ? 'Şu an' : 'Seçili') : fresh.has(i) ? 'Yeni!' : !known ? 'Kilitli' : state.devMode && !earned.has(i) ? 'Test' : 'Uygula';
     b.append(c, n, s);
@@ -64,7 +68,7 @@ export function renderGallery() {
       const fill = document.createElement('i'); fill.style.width = (100 * have / u.goal) + '%'; bar.appendChild(fill);
       const pr = document.createElement('span'); pr.className = 'tprog'; pr.textContent = u.fmt ? u.fmt(have, u.goal) : have.toLocaleString('tr-TR') + ' / ' + u.goal.toLocaleString('tr-TR');
       b.append(t, bar, pr);
-      b.setAttribute('aria-label', th.name + ', kilitli tema. ' + u.text + '. ' + pr.textContent);
+      b.setAttribute('aria-label', 'Kilitli tema. ' + u.text + '. ' + pr.textContent);
     }
     wrap.appendChild(b);
     b.addEventListener('click', () => { if (known) chooseTheme(i); });
