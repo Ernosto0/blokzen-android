@@ -19,6 +19,16 @@
 //   hud()          what the top bar shows, as hudInfo({ best, bestTitle, icon, goalRow, puzRow, undo })
 //   updateHud()    extra HUD work only this mode has (the daily goal bar, the puzzle row, the undo badge)
 //   undoInfo       { left(), spent } for the undo badge: moves left and what to announce when none are
+//   setup(now)     lays out a new game's board and dealer (default: nothing special)
+//   start(now)     the rest of starting a game, when the mode does it its own way (return true)
+//   started()      a new game has started
+//   snapshot()     extra fields for the saved game
+//   restore(d)     checks and takes over a saved game; return false if it cannot be used
+//   canResume(d)   whether a save can be picked up now (daily: only on its own day)
+//   dealTray(now)  deals a tray when a restored game has none (default: random pieces)
+//   stale()        the running game is out of date and should start over (a daily from yesterday)
+//   beforeFresh()  runs before a new game starts because no save was found (the puzzle picks its level)
+//   leave()        the game is being left or replaced; stop()  stop timers
 //   remember()     called before a piece is placed (what undo will restore)
 //   cellCleared(r, c)  a cell is cleared: return 1 if it held something special (a gem) and take it off
 //   cleared({ gemHit, rows, cols }), gemPraise(gemHit)   what a clear means to the mode
@@ -42,11 +52,23 @@ export const MODE_KEY = 'blokzen.mode'; // which mode was played last
 export const MODES = {};
 
 const BASE = {
+  // starting a game: lay out the board and the dealer
+  setup() { state.dealRng = null; },
+  // a saved game of this mode: check it and take it over; false if it cannot be used
+  restore() { state.mode = this.id; state.dealRng = null; return true; },
+  // is this save a game of this mode that can be picked up now?
+  canResume(d) { return (d.mode || 'classic') === this.id; },
   levelCard: false, volume: 1, levels: true, shake: true, records: true, countsGame: true, themeLocked: false, endless: false, fullCap: Infinity,
 };
 export const defineMode = def => (MODES[def.id] = { ...BASE, ...def });
 
 export const mode = () => MODES[state.mode];
+// the mode for a saved game's id; a missing or unknown one is classic
+export const modeFor = id => (Object.hasOwn(MODES, id) ? MODES[id] : MODES.classic);
+// the game on the board is being left or replaced: a mode may settle it (classic counts a game that offered a second chance)
+export const leaveGame = () => { for (const m of Object.values(MODES)) if (m.leave) m.leave(); };
+// stop anything a mode has timed (the zen breath)
+export const stopTimers = () => { for (const m of Object.values(MODES)) if (m.stop) m.stop(); };
 // the top bar's best box and which rows are shown; icon is 'best' | 'zen' | 'puz'
 export const hudInfo = o => ({ icon: 'best', goalRow: false, puzRow: false, undo: false, ...o });
 export const saveKey = () => mode().saveKey;

@@ -51,6 +51,14 @@ export function readPrev(p, lv) {
   };
 }
 
+// A classic game whose game-over card offered a second chance is counted as finished once the player moves on without it
+function endClassic() {
+  if (!state.cls.pendingEnd) return;
+  state.cls.pendingEnd = false;
+  gameEnded();
+  store.set(SAVE_KEY, null);
+}
+
 defineMode({
   id: 'classic', saveKey: SAVE_KEY, button: 'play', restartLabel: 'Yeni oyun',
   hud: () => hudInfo({ best: fmtN(state.best), bestTitle: 'En iyi skor', undo: true }),
@@ -106,6 +114,9 @@ defineMode({
   undo: classicUndo,
   revive: classicRevive,
   remember: clsRemember,
+  snapshot: () => ({ cls: { u: state.cls.undoLeft, c: state.cls.contUsed, h: state.cls.hist } }),
+  restore(d) { state.mode = 'classic'; state.dealRng = null; state.cls = readCls(d.cls); return true; },
+  leave: endClassic,
   afterMove() {
     if (state.score > state.best) { if (!state.newRecord && state.best > 0) state.newRecord = true; state.best = state.score; }
   },

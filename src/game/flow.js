@@ -1,27 +1,22 @@
 import { stageAt, T, THEMES } from '../themes/catalog.js';
-import { BEST_KEY, N, OLD_COLORS, SAVE_KEY, SHAPES, TUT_KEY } from '../core/constants.js';
+import { BEST_KEY, N, OLD_COLORS, SHAPES } from '../core/constants.js';
 import { bitsOf, fitsAnywhere } from '../core/bitboard.js';
-import { cellsOf, dealStream, generateSet } from '../core/dealer.js';
+import { cellsOf, generateSet } from '../core/dealer.js';
 import { colorize, comboMult, fmtMult, levelMult, levelOf, scoreMove } from '../core/scoring.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $ } from '../ui/dom.js';
 import { state, discovered, emptyGrid, freshCls, pop, settings, theme } from '../core/state.js';
-import { autoTheme, checkUnlocks, dayKey, DONE_KEY, playHeldUnlock, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
-import { curStreak, dailySeed, dailyStart, dayRec, fmtDay, saveDaily, starsFor } from '../modes/daily.js';
-import { canRevive, mode, MODE_KEY, MODES, saveKey } from '../modes/registry.js';
-import { LEVELS } from '../modes/puzzle-levels.js';
-import { levelOpen, nextLevelIndex, puzDeal, puzLevel, puzLoad } from '../modes/puzzle.js';
-import { readCls, readPrev } from '../modes/classic.js';
+import { autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
+import { curStreak, dailyStart, fmtDay, starsFor } from '../modes/daily.js';
+import { canRevive, leaveGame, mode, MODE_KEY, modeFor, MODES, saveKey, stopTimers } from '../modes/registry.js';
 import { L } from '../render/layout.js';
 import { burst, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
-import { closeMenu, fmtN } from '../ui/menu.js';
-import { closeLevels } from '../ui/levels.js';
+import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
-import { startTutorial, tut } from '../ui/tutorial.js';
-import { cancelBreath } from '../modes/zen.js';
+import { tut } from '../ui/tutorial.js';
 
 /* ---------- Game flow ---------- */
 export function deal(now = performance.now()) {
@@ -42,46 +37,27 @@ function countGame() {
   stats.todayGames++; stats.bestDayGames = Math.max(stats.bestDayGames, stats.todayGames); stats.games++;
 }
 export function newGame() {
-  endClassic();
+  leaveGame();
   if (state.grid && !state.over && !tut) countGame(); // the game on the board is given up: it counts if a piece was placed
   const now = performance.now();
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     if (state.grid && state.grid[r][c]) state.clearing.push({ r, c, v: state.grid[r][c], t0: now, delay: (r + c) * 18, spawned: true });
   }
   state.grid = emptyGrid();
-  const pz = state.mode === 'puzzle';
-  if (pz) { puzLoad(now); state.dealRng = null; }
-  else if (state.mode === 'daily') {
-    state.gameDay = dayKey();
-    const info = dailyStart(state.gameDay);
-    state.dealRng = dealStream(dailySeed(state.gameDay));
-    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (info.grid[r][c]) { state.grid[r][c] = info.grid[r][c]; pop[r][c] = now + 260 + (r + c) * 24; }
-    const rec = dayRec(state.gameDay);
-    if (!rec.tries) stats.dailyDays++;
-    rec.tries++; stats.dailyGames++;
-    saveDaily();
-  } else state.dealRng = null;
+  const m = mode();
+  m.setup(now);
   state.score = 0; state.displayScore = 0; state.combo = 0; state.msc = 0; state.moves = 0; state.fulls = 0; state.over = false; state.newRecord = false; state.pendingTheme = null;
   state.cls = freshCls();
   $('over').hidden = true;
-  cancelBreath();
+  stopTimers();
   state.gs = { multi: 0, calm: 0, broke: false, stars: 0, lines: 0, zcalm: 0, zrun: 0 };
-  if (pz) { // a level keeps the theme the player is in, and counts nowhere but in the puzzle stats
-    theme.stage = 0;
-    puzDeal(now + 200);
-    stats.puzzleTries++;
-    store.set(STATS_KEY, stats);
-    playHeldUnlock(now + 200);
-    updateHud();
-    save();
-    return;
-  }
+  if (m.start && m.start(now)) return;
   const start = pickStartTheme();
   theme.start = start; theme.stage = 0;
   if (start !== theme.cur) setTheme(start, now + 150, { show: true, sound: false });
   deal(now + 200);
   touchDay();
-  if (state.mode === 'zen') stats.zenSessions++; // a zen session never ends, so it does not count as a played game
+  if (m.started) m.started(); // zen counts a session here: it never ends, so it is not a played game
   // classic and daily games are counted when they end (countGame), not here
   store.set(STATS_KEY, stats);
   checkUnlocks(now + 400);
@@ -95,31 +71,19 @@ export function save() {
 }
 export function snapshot() {
   return {
-    mode: state.mode, day: state.mode === 'daily' ? state.gameDay : 0, rs: state.dealRng ? state.dealRng.s : null,
+    mode: state.mode, day: 0, rs: state.dealRng ? state.dealRng.s : null,
     grid: state.grid, score: state.score, combo: state.combo, msc: state.msc, moves: state.moves, fulls: state.fulls, gs: state.gs,
     tray: state.tray.map(t => t ? { s: t.piece.shape.id, c: t.piece.color } : null),
     th: { cur: theme.cur, start: theme.start, stage: theme.stage },
-    ...(state.mode === 'classic' ? { cls: { u: state.cls.undoLeft, c: state.cls.contUsed, h: state.cls.hist } } : {}),
-    ...(state.mode === 'puzzle' && state.puz.gems ? { puz: { id: puzLevel().id, n: puzLevel().pieces.length, seq: state.puz.seq, gems: state.puz.gems, undoUsed: state.puz.undoUsed, prev: state.puz.prev, failed: state.puz.failed } } : {}),
+    ...(mode().snapshot ? mode().snapshot() : {}), // the mode's own part: the day, the undo history, the puzzle level
   };
 }
 // keepTheme: entering puzzle from another mode keeps the theme on screen instead of the one saved with the level
 export function restore(d, keepTheme = false) {
   if (!d || !Array.isArray(d.grid) || !Array.isArray(d.tray)) return false;
-  if (d.mode === 'puzzle') {
-    const p = d.puz, li = p ? LEVELS.findIndex(l => l.id === p.id) : -1;
-    if (li < 0 || p.n !== LEVELS[li].pieces.length || !Array.isArray(p.gems) || p.gems.length !== N) return false; // a level that changed since the save starts fresh
-    state.mode = 'puzzle'; state.dealRng = null;
-    state.puz = { li, seq: Math.min(LEVELS[li].pieces.length, p.seq | 0), gems: p.gems.map(row => [...Array(N)].map((_, c) => row && row[c] ? 1 : 0)), gemTotal: 0,
-      prev: null, undoUsed: !!p.undoUsed, won: false, fail: '', stars: 0, left: 0, newBest: false, failed: !!p.failed, opened: [] };
-    state.puz.gemTotal = LEVELS[li].board.join('').split('G').length - 1;
-    state.puz.prev = state.puz.undoUsed ? null : readPrev(p.prev, LEVELS[li]);
-  } else if (d.mode === 'daily') {
-    if (!(d.day > 20000000) || typeof d.rs !== 'number') return false;
-    state.mode = 'daily'; state.gameDay = d.day | 0; state.dealRng = dealStream(d.rs);
-  } else { state.mode = d.mode === 'zen' ? 'zen' : 'classic'; state.dealRng = null; }
-  if (state.mode === 'classic') state.cls = readCls(d.cls);
-  cancelBreath();
+  const m = modeFor(d.mode); // anything unknown is a classic game
+  if (m.restore(d) === false) return false; // the mode checks its own part and takes over
+  stopTimers();
   state.goalShown = 0; // stars of a restored game light up without the pop
   // v1 saves stored hex colors; map them to color slots
   const conv = v => typeof v === 'string' ? (OLD_COLORS.indexOf(v) + 1 || 1) : (v | 0);
@@ -129,7 +93,7 @@ export function restore(d, keepTheme = false) {
   state.gs = d.gs && typeof d.gs === 'object' ? { multi: d.gs.multi | 0, calm: d.gs.calm | 0, broke: !!d.gs.broke, stars: d.gs.stars | 0, lines: d.gs.lines | 0, zcalm: d.gs.zcalm | 0, zrun: d.gs.zrun | 0 } : { multi: 0, calm: 0, broke: true, stars: 0, lines: 0, zcalm: 0, zrun: 0 };
   const now = performance.now();
   state.tray = [0, 1, 2].map(i => { const t = d.tray[i]; return t && SHAPES[t.s] ? { piece: { shape: SHAPES[t.s], color: conv(t.c) }, appear: now + i * 70, ret: null, fits: true } : null; });
-  if (state.tray.every(t => !t)) { if (state.mode === 'puzzle') puzDeal(now); else deal(now); }
+  if (state.tray.every(t => !t)) { if (m.dealTray) m.dealTray(now); else deal(now); }
   const open = i => discovered.has(i) ? i : 0;
   if (mode().themeLocked && keepTheme) { if (!settings.auto && settings.fixed !== theme.cur) snapTheme(settings.fixed); }
   else if (d.th) { theme.start = open(d.th.start | 0); theme.stage = d.th.stage | 0; snapTheme(settings.auto ? open((d.th.cur | 0) % T) : settings.fixed); }
@@ -141,47 +105,28 @@ export function restore(d, keepTheme = false) {
 
 // Move between classic and daily. Each mode has its own save, so the game being left is kept and the other one is picked up.
 export function switchMode(m) {
+  const target = MODES[m];
   if (m === state.mode) {
-    if (m === 'daily' && state.gameDay !== dayKey()) newGame(); // a daily from an earlier day: today's board instead
+    if (target.stale && target.stale()) newGame(); // a daily from an earlier day: today's board instead
     return;
   }
-  endClassic();
+  leaveGame();
   if (!state.over && state.grid) save();
   state.mode = m; store.set(MODE_KEY, m);
   state.pendingTheme = null; state.banner = null; state.texts = []; state.shake = null; state.flash = null; state.drag = null;
   state.over = false; $('over').hidden = true;
-  cancelBreath();
+  stopTimers();
   const d = store.get(saveKey());
-  if (d && (d.mode || 'classic') === m && (m !== 'daily' || d.day === dayKey()) && restore(d, MODES[m].themeLocked)) { refreshFits(); updateHud(); checkOver(performance.now()); }
+  if (d && target.canResume(d) && restore(d, target.themeLocked)) { refreshFits(); updateHud(); checkOver(performance.now()); }
   else {
     state.mode = m;
     state.moves = 0; // the board still in memory is the game of the mode just left: it was saved, not given up, so newGame must not count it
-    if (m === 'puzzle') { const n = nextLevelIndex(); state.puz.li = n < 0 ? 0 : n; }
+    if (target.beforeFresh) target.beforeFresh();
     newGame();
   }
   if (!state.over) playHeldUnlock(performance.now() + 300);
   applyPrefs(); // zen plays a little quieter
 }
-// Start a puzzle level from the level list, the menu or the win card. A half-played level of another number is dropped.
-export function startLevel(li) {
-  if (!levelOpen(li)) return;
-  Sfx.unlock(); Sfx.pick(); buzz(10);
-  const firstRun = !store.get(TUT_KEY);
-  if (state.mode !== 'puzzle') {
-    endClassic();
-    if (!state.over && state.grid) save();
-    state.mode = 'puzzle'; store.set(MODE_KEY, 'puzzle');
-    state.pendingTheme = null; state.banner = null; state.shake = null; state.flash = null; state.drag = null;
-    cancelBreath();
-  }
-  state.texts = []; state.over = false; $('over').hidden = true;
-  state.puz.li = li;
-  newGame();
-  applyPrefs();
-  closeLevels(); closeMenu();
-  if (firstRun) startTutorial();
-}
-
 export function placePiece(slot, r0, c0) {
   const now = performance.now();
   const m = mode();
@@ -343,13 +288,6 @@ export function checkOver(now) {
   setTimeout(showOver, 450 + N * 70 + 350);
   if (!(m.keepSave && m.keepSave())) store.set(saveKey(), null); // classic keeps the game while a second chance is on offer
   store.set(BEST_KEY, state.best);
-}
-// A classic game whose game-over card offered a second chance is counted as finished once the player moves on without it
-function endClassic() {
-  if (!state.cls.pendingEnd) return;
-  state.cls.pendingEnd = false;
-  gameEnded();
-  store.set(SAVE_KEY, null);
 }
 export function showOver() {
   if (!state.over) return; // a new game started meanwhile

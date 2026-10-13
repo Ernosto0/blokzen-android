@@ -5,11 +5,9 @@ import { prefs } from './platform/haptics.js';
 import { store } from './core/store.js';
 import { stage } from './ui/dom.js';
 import { state, DEV_KEY, discovered, earned, fresh, settings, syncOpen, theme } from './core/state.js';
-import { checkUnlocks, dayKey, DONE_KEY, META_V, NEW_TASKS, stats, STATS_KEY, themesDone, UNLOCKS } from './themes/progress.js';
-import { daily, DAILY_SAVE_KEY, loadDaily } from './modes/daily.js';
-import { MODE_KEY } from './modes/registry.js';
-import { ZEN_SAVE_KEY } from './modes/zen.js';
-import { PUZ_SAVE_KEY } from './modes/puzzle-levels.js';
+import { checkUnlocks, DONE_KEY, META_V, NEW_TASKS, stats, STATS_KEY, themesDone, UNLOCKS } from './themes/progress.js';
+import { daily, loadDaily } from './modes/daily.js';
+import { MODE_KEY, MODES } from './modes/registry.js';
 import { loadPuzzle } from './modes/puzzle.js';
 import { layout } from './render/layout.js';
 import { saveMeta, snapTheme } from './themes/switching.js';
@@ -62,11 +60,8 @@ export function start(data) {
   const oldSave = store.get(OLD_SAVE_KEY);
   if (oldSave) store.set(OLD_SAVE_KEY, null); // migrate once, never resurrect later
   // a live reload keeps its game; otherwise pick up the mode played last (a daily only on its own day)
-  const lastMode = store.get(MODE_KEY);
-  const dsave = lastMode === 'daily' ? store.get(DAILY_SAVE_KEY) : null;
-  const zsave = lastMode === 'zen' ? store.get(ZEN_SAVE_KEY) : null;
-  const psave = lastMode === 'puzzle' ? store.get(PUZ_SAVE_KEY) : null;
-  const ok = restore(data && data.grid ? data : null) || (dsave && dsave.day === dayKey() && restore(dsave)) || (zsave && zsave.mode === 'zen' && restore(zsave)) || (psave && psave.mode === 'puzzle' && restore(psave)) || restore(store.get(SAVE_KEY)) || restore(oldSave);
+  const last = store.get(MODE_KEY), lm = Object.hasOwn(MODES, last) ? MODES[last] : null, lsave = lm ? store.get(lm.saveKey) : null;
+  const ok = restore(data && data.grid ? data : null) || (lsave && lm.canResume(lsave) && restore(lsave)) || restore(store.get(SAVE_KEY));
   if (!ok) { state.grid = null; state.tray = []; state.score = 0; state.mode = 'classic'; newGame(); }
   else { refreshFits(); checkOver(performance.now()); }
   applyPrefs(); // the volume depends on the mode that was picked up

@@ -1,19 +1,21 @@
-import { N, SHAPES } from '../core/constants.js';
+import { N, SHAPES, TUT_KEY } from '../core/constants.js';
 import { Sfx } from '../audio/sfx.js';
 import { store } from '../core/store.js';
-import { state, emptyGrid, pop } from '../core/state.js';
-import { checkUnlocks, stats, STATS_KEY } from '../themes/progress.js';
+import { state, emptyGrid, pop, theme } from '../core/state.js';
+import { checkUnlocks, playHeldUnlock, stats, STATS_KEY } from '../themes/progress.js';
 import { GEM_COLOR, LEVELS, PUZ_KEY, PUZ_SAVE_KEY } from './puzzle-levels.js';
-import { canUndo, defineMode, hudInfo } from './registry.js';
+import { canUndo, defineMode, hudInfo, leaveGame, MODE_KEY, stopTimers } from './registry.js';
 import { $ } from '../ui/dom.js';
-import { checkOver, refreshFits, save, showOver, STAR_SVG, startLevel } from '../game/flow.js';
+import { checkOver, newGame, refreshFits, save, showOver, STAR_SVG } from '../game/flow.js';
 import { updateHud, updateUndoBtn } from '../ui/hud.js';
-import { fmtN } from '../ui/menu.js';
+import { closeMenu, fmtN } from '../ui/menu.js';
 import { buzz } from '../platform/haptics.js';
 import { L } from '../render/layout.js';
-import { openLevels } from '../ui/levels.js';
-import { tut } from '../ui/tutorial.js';
+import { closeLevels, openLevels } from '../ui/levels.js';
+import { startTutorial, tut } from '../ui/tutorial.js';
 import { burst } from '../themes/switching.js';
+import { readPrev } from './classic.js';
+import { applyPrefs } from '../ui/settings.js';
 
 // best stars per level id; levels that have been lost once, and those later won with three stars (chalkboard theme) (saved)
 // clean: levels solved with three stars in one attempt that never ran out and never used the undo (cipher theme)
@@ -138,6 +140,26 @@ function puzWin(now) {
   setTimeout(showOver, state.REDUCED ? 800 : 1500);
 }
 
+// Start a puzzle level from the level list, the menu or the win card. A half-played level of another number is dropped.
+export function startLevel(li) {
+  if (!levelOpen(li)) return;
+  Sfx.unlock(); Sfx.pick(); buzz(10);
+  const firstRun = !store.get(TUT_KEY);
+  if (state.mode !== 'puzzle') {
+    leaveGame();
+    if (!state.over && state.grid) save();
+    state.mode = 'puzzle'; store.set(MODE_KEY, 'puzzle');
+    state.pendingTheme = null; state.banner = null; state.shake = null; state.flash = null; state.drag = null;
+    stopTimers();
+  }
+  state.texts = []; state.over = false; $('over').hidden = true;
+  state.puz.li = li;
+  newGame();
+  applyPrefs();
+  closeLevels(); closeMenu();
+  if (firstRun) startTutorial();
+}
+
 defineMode({
   id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true,
   hud: () => hudInfo({ best: `${state.puz.li + 1}/${LEVELS.length}`, bestTitle: 'Bölüm', icon: 'puz', puzRow: true, undo: true }),
@@ -193,6 +215,31 @@ function puzUndo() {
 defineMode({
   id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true,
   levelCard: true, bodyClass: 'puzzle',
+  setup(now) { puzLoad(now); state.dealRng = null; },
+  // a level keeps the theme the player is in, and counts nowhere but in the puzzle stats
+  start(now) {
+    theme.stage = 0;
+    puzDeal(now + 200);
+    stats.puzzleTries++;
+    store.set(STATS_KEY, stats);
+    playHeldUnlock(now + 200);
+    updateHud();
+    save();
+    return true;
+  },
+  snapshot: () => state.puz.gems ? { puz: { id: puzLevel().id, n: puzLevel().pieces.length, seq: state.puz.seq, gems: state.puz.gems, undoUsed: state.puz.undoUsed, prev: state.puz.prev, failed: state.puz.failed } } : {},
+  restore(d) {
+    const p = d.puz, li = p ? LEVELS.findIndex(l => l.id === p.id) : -1;
+    if (li < 0 || p.n !== LEVELS[li].pieces.length || !Array.isArray(p.gems) || p.gems.length !== N) return false; // a level that changed since the save starts fresh
+    state.mode = 'puzzle'; state.dealRng = null;
+    state.puz = { li, seq: Math.min(LEVELS[li].pieces.length, p.seq | 0), gems: p.gems.map(row => [...Array(N)].map((_, c) => row && row[c] ? 1 : 0)), gemTotal: 0,
+      prev: null, undoUsed: !!p.undoUsed, won: false, fail: '', stars: 0, left: 0, newBest: false, failed: !!p.failed, opened: [] };
+    state.puz.gemTotal = LEVELS[li].board.join('').split('G').length - 1;
+    state.puz.prev = state.puz.undoUsed ? null : readPrev(p.prev, LEVELS[li]);
+    return true;
+  },
+  dealTray: puzDeal,
+  beforeFresh() { const n = nextLevelIndex(); state.puz.li = n < 0 ? 0 : n; },
   remember: puzRemember,
   // gems sit on board cells; a cleared gem comes off the list and counts
   cellCleared(r, c) { if (!state.puz.gems[r][c]) return 0; state.puz.gems[r][c] = 0; return 1; },

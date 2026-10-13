@@ -3,7 +3,7 @@ import { dealStream } from '../core/dealer.js';
 import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
-import { state, emptyGrid } from '../core/state.js';
+import { state, emptyGrid, pop } from '../core/state.js';
 import { dayKey, stats } from '../themes/progress.js';
 import { defineMode, hudInfo } from './registry.js';
 import { $ } from '../ui/dom.js';
@@ -126,6 +126,25 @@ function updateGoal() {
 defineMode({
   id: 'daily', saveKey: DAILY_SAVE_KEY, button: 'playDaily', restartLabel: 'Günlüğü baştan dene',
   bodyClass: 'daily',
+  // the day's prepared board and seeded dealer; each start counts a try
+  setup(now) {
+    state.gameDay = dayKey();
+    const info = dailyStart(state.gameDay);
+    state.dealRng = dealStream(dailySeed(state.gameDay));
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (info.grid[r][c]) { state.grid[r][c] = info.grid[r][c]; pop[r][c] = now + 260 + (r + c) * 24; }
+    const rec = dayRec(state.gameDay);
+    if (!rec.tries) stats.dailyDays++;
+    rec.tries++; stats.dailyGames++;
+    saveDaily();
+  },
+  snapshot: () => ({ day: state.gameDay }),
+  restore(d) {
+    if (!(d.day > 20000000) || typeof d.rs !== 'number') return false;
+    state.mode = 'daily'; state.gameDay = d.day | 0; state.dealRng = dealStream(d.rs);
+    return true;
+  },
+  canResume: d => d.mode === 'daily' && d.day === dayKey(),
+  stale: () => state.gameDay !== dayKey(),
   hud: () => hudInfo({ best: fmtN(Math.max(dayBest(state.gameDay), state.score)), bestTitle: 'Bugünün en iyisi', goalRow: true }),
   afterMove({ now, midX }) {
     const db = dayBest(state.gameDay);

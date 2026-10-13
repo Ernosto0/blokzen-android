@@ -36,6 +36,8 @@ function zenBreath(now) {
 defineMode({
   id: 'zen', saveKey: ZEN_SAVE_KEY, button: 'playZen', restartLabel: 'Zen tahtasını sıfırla', bodyClass: 'zen',
   hud: () => hudInfo({ best: fmtN(state.gs.lines), bestTitle: 'Bu oturumda temizlenen sıra', icon: 'zen' }),
+  started() { stats.zenSessions++; },
+  stop: cancelBreath,
   volume: 0.75, levels: false, shake: false, records: false, countsGame: false, endless: true, fullCap: 5,
   afterMove({ lines }) {
     state.gs.lines += lines; stats.zenLines += lines; stats.zenMoves++;
