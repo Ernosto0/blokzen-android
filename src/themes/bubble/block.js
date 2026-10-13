@@ -12,8 +12,8 @@ const kindOf = c => Math.max(0, BUBBLE_BLOCKS.indexOf(c));
 Object.assign(STYLES, {
   bubble: { // a glossy, bubbly tile with a bright rim and a creature on it
     block(g, s, c) {
-      rr(g, s * 0.04, s * 0.07, s * 0.92, s * 0.9, s * 0.28); g.fillStyle = shade(c, -0.3); g.fill();
-      rr(g, s * 0.04, s * 0.04, s * 0.92, s * 0.9, s * 0.28); g.fillStyle = '#ffffff'; g.fill();
+      rr(g, s * 0.03, s * 0.07, s * 0.94, s * 0.91, s * 0.28); g.fillStyle = '#0b2e45'; g.fill(); // a bold cartoon outline
+      rr(g, s * 0.06, s * 0.05, s * 0.88, s * 0.87, s * 0.25); g.fillStyle = '#ffffff'; g.fill();
       const gr = g.createLinearGradient(0, s * 0.1, 0, s * 0.9); gr.addColorStop(0, mixHex(c, '#ffffff', 0.5)); gr.addColorStop(1, c);
       rr(g, s * 0.09, s * 0.09, s * 0.82, s * 0.8, s * 0.23); g.fillStyle = gr; g.fill();
       g.save(); rr(g, s * 0.09, s * 0.09, s * 0.82, s * 0.8, s * 0.23); g.clip();
@@ -28,7 +28,7 @@ Object.assign(TEX, {
     g.strokeStyle = `rgba(255,255,255,${0.7 * k})`; g.lineWidth = Math.max(1, s * 0.02);
     for (const [x, y, r] of [[0.2, 0.2, 0.05], [0.82, 0.3, 0.035], [0.18, 0.8, 0.03], [0.84, 0.82, 0.05]]) { g.beginPath(); g.arc(s * x, s * y, s * r, 0, Math.PI * 2); g.stroke(); }
     g.globalAlpha = Math.min(1, k + 0.15);
-    seaChar(g, kindOf(c), s * 0.5, s * 0.52, s * 0.3);
+    seaChar(g, kindOf(c), s * 0.5, s * 0.52, s * 0.35);
     g.globalAlpha = 1;
   },
 });
