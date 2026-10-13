@@ -1,5 +1,6 @@
 import { THEMES } from '../themes/catalog.js';
 import { rand } from '../core/util.js';
+import { KITS } from '../themes/registry.js';
 
 /* ---------- Sound (synthesized, timbre follows the theme) ---------- */
 export const Sfx = {
@@ -146,118 +147,29 @@ Object.assign(Sfx, {
   thud({ when = 0, vol = 0.3, f = 120 } = {}) { this.tone(f, { dur: 0.16, vol, to: f * 0.45, when }); },
 });
 // per-theme sound kits; each one replaces pick / place / deal and the noise layer of a clear (the melody always plays)
-export const KITS = (S => ({
-  honey: {
-    pick() { S.plop(330, { vol: 0.09, dur: 0.06 }); },
-    place() { S.plop(170, { vol: 0.34, dur: 0.12 }); S.tone(120, { dur: 0.18, vol: 0.28, to: 55 }); S.goo({ vol: 0.12, dur: 0.14, when: 0.01 }); },
-    clear(n) {
-      S.hiss({ dur: 0.6, vol: 0.09, type: 'lowpass', freq: 1100, to: 260, when: 0.02, q: 3 });
-      for (let i = 0; i < n + 1; i++) S.plop(rand(420, 760), { when: 0.08 + i * 0.075 + Math.random() * 0.03, vol: 0.11 });
-      S.tone(120, { dur: 0.26, vol: 0.28, to: 50 });
-    },
-    deal() { S.goo({ vol: 0.07, dur: 0.22 }); },
+
+// Longer-lived or filtered sounds some kits need
+Object.assign(Sfx, {
+  // like hiss(), but the noise loops so a sound can outlast the half-second buffer (thunder, waves)
+  hissL({ dur = 1, vol = 0.1, type = 'lowpass', freq = 1200, to = null, when = 0, q = 0.7 } = {}) {
+    const c = this.ctx, t = c.currentTime + when;
+    const s = c.createBufferSource(); s.buffer = this.noise; s.loop = true;
+    const f = c.createBiquadFilter(); f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(freq, t);
+    if (to) f.frequency.exponentialRampToValueAtTime(to, t + dur);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.08, dur * 0.2)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(this.out);
+    s.start(t); s.stop(t + dur + 0.02);
   },
-  gold: {
-    pick() { S.tink(2400, { vol: 0.05, dur: 0.12 }); },
-    place() { S.thud({ vol: 0.25, f: 150 }); S.tink(rand(1900, 2300), { vol: 0.12 }); S.tink(rand(2600, 3000), { vol: 0.07, when: 0.04 }); },
-    clear(n) { for (let i = 0; i < n * 3 + 2; i++) S.tink(rand(1800, 3400), { when: 0.04 + i * 0.045 + Math.random() * 0.02, vol: 0.07, dur: 0.18 }); S.thud({ vol: 0.25, f: 110 }); },
-    deal() { S.tink(2600, { vol: 0.04, dur: 0.1 }); S.tink(3100, { vol: 0.03, dur: 0.1, when: 0.05 }); },
+  // a sawtooth through a sweeping band-pass: the funk guitar "wah"
+  wah(f, { when = 0, vol = 0.05, dur = 0.5 } = {}) {
+    const c = this.ctx, t = c.currentTime + when;
+    const o = c.createOscillator(), bp = c.createBiquadFilter(), g = c.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t);
+    bp.type = 'bandpass'; bp.Q.value = 6; bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(2200, t + dur * 0.35); bp.frequency.exponentialRampToValueAtTime(500, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(bp); bp.connect(g); g.connect(this.out);
+    o.start(t); o.stop(t + dur + 0.05);
   },
-  glass: {
-    pick() { S.tink(3200, { vol: 0.05, dur: 0.1 }); },
-    place() { S.thud({ vol: 0.2, f: 180 }); S.tink(rand(2600, 3200), { vol: 0.1, dur: 0.3 }); },
-    clear(n) {
-      S.hiss({ dur: 0.35, vol: 0.12, type: 'highpass', freq: 4000, to: 9000 });
-      for (let i = 0; i < n * 3 + 3; i++) S.tink(rand(2500, 5200), { when: 0.02 + Math.random() * 0.35, vol: 0.06, dur: 0.15 });
-      S.thud({ vol: 0.2, f: 140 });
-    },
-    deal() { S.tink(4200, { vol: 0.03, dur: 0.2 }); },
-  },
-  choco: {
-    pick() { S.crunch({ vol: 0.05, n: 2 }); },
-    place() { S.thud({ vol: 0.3, f: 110 }); S.crunch({ vol: 0.1, n: 3 }); },
-    clear(n) {
-      for (let i = 0; i < Math.min(n + 1, 4); i++) S.crunch({ when: i * 0.11, vol: 0.13, n: 6 });
-      S.hiss({ dur: 0.5, vol: 0.06, type: 'lowpass', freq: 800, to: 300, when: 0.1, q: 2 });
-    },
-    deal() { S.rustle({ vol: 0.05 }); },
-  },
-  slime: {
-    pick() { S.squelch({ vol: 0.06, dur: 0.1 }); },
-    place() { S.squelch({ vol: 0.14, dur: 0.2 }); S.thud({ vol: 0.2, f: 90 }); },
-    clear(n) { for (let i = 0; i < n + 1; i++) S.squelch({ when: i * 0.08, vol: 0.12, dur: 0.16 }); S.plop(300, { when: 0.1, vol: 0.1 }); },
-    deal() { S.squelch({ vol: 0.05, dur: 0.14 }); },
-  },
-  wood: {
-    pick() { S.knock(900, { vol: 0.08 }); },
-    place() { S.knock(rand(520, 620), { vol: 0.3 }); S.thud({ vol: 0.2, f: 130 }); },
-    clear(n) { for (let i = 0; i < n + 2; i++) S.knock(500 + i * 90, { when: i * 0.06, vol: 0.18 }); },
-    deal() { S.knock(1100, { vol: 0.06 }); S.knock(1300, { vol: 0.05, when: 0.06 }); },
-  },
-  gum: {
-    pick() { S.pop({ vol: 0.06, f: 900 }); },
-    place() { S.thud({ vol: 0.22, f: 160 }); S.hiss({ dur: 0.08, vol: 0.08, type: 'lowpass', freq: 900 }); },
-    clear(n) { for (let i = 0; i < n + 2; i++) S.pop({ when: 0.04 + i * 0.07, vol: 0.18, f: rand(500, 900) }); },
-    deal() { S.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 400, to: 1800, q: 2 }); },
-  },
-  chip: {
-    pick() { S.blip(880, { to: 1320, dur: 0.05, vol: 0.05 }); },
-    place() { S.blip(330, { to: 110, dur: 0.1, vol: 0.09 }); S.hiss({ dur: 0.04, vol: 0.06, type: 'highpass', freq: 3000 }); },
-    clear(n) { S.hiss({ dur: 0.3, vol: 0.1, type: 'lowpass', freq: 3000, to: 200, q: 1 }); S.blip(220, { to: 55, dur: 0.25, vol: 0.08 }); for (let i = 0; i < n; i++) S.blip(1760, { when: 0.3 + i * 0.05, dur: 0.03, vol: 0.04 }); },
-    deal() { S.blip(660, { to: 990, dur: 0.06, vol: 0.04 }); },
-  },
-  crystal: {
-    pick() { S.tink(1760, { vol: 0.05, dur: 0.3 }); },
-    place() { S.thud({ vol: 0.22, f: 130 }); S.tink(rand(1200, 1600), { vol: 0.1, dur: 0.6 }); },
-    clear(n) { for (let i = 0; i < n * 2 + 3; i++) S.tink(rand(2000, 4000), { when: 0.05 + i * 0.05, vol: 0.05, dur: 0.5 }); S.thud({ vol: 0.2, f: 100 }); },
-    deal() { S.tink(2350, { vol: 0.035, dur: 0.4 }); },
-  },
-  cup: {
-    pick() { S.tink(1500, { vol: 0.05, dur: 0.12 }); },
-    place() { S.thud({ vol: 0.22, f: 140 }); S.tink(rand(1300, 1500), { vol: 0.12, dur: 0.25 }); },
-    clear(n) {
-      for (let i = 0; i < n + 3; i++) S.tink(i % 2 ? 1900 : 1600, { when: 0.03 + i * 0.07, vol: 0.07, dur: 0.12 });
-      S.hiss({ dur: 0.5, vol: 0.07, type: 'lowpass', freq: 1200, to: 400, q: 1, when: 0.05 });
-    },
-    deal() { S.tink(1700, { vol: 0.04, dur: 0.15 }); },
-  },
-  spooky: {
-    pick() { S.tone(240, { dur: 0.1, vol: 0.06, to: 180 }); },
-    place() { S.thud({ vol: 0.32, f: 80 }); S.tone(95, { type: 'sawtooth', dur: 0.14, vol: 0.025, to: 70, when: 0.02 }); },
-    clear() {
-      S.tone(660, { dur: 0.7, vol: 0.08, to: 392, wet: true, attack: 0.05 });
-      S.tone(664, { dur: 0.7, vol: 0.06, to: 396, attack: 0.05 });
-      S.hiss({ dur: 0.9, vol: 0.07, type: 'bandpass', freq: 400, to: 900, q: 3 });
-      S.thud({ vol: 0.25, f: 70 });
-    },
-    deal() { S.hiss({ dur: 0.4, vol: 0.05, type: 'bandpass', freq: 500, to: 300, q: 3 }); },
-  },
-  jingle: {
-    pick() { S.tink(2800, { vol: 0.04, dur: 0.1 }); },
-    place() { S.thud({ vol: 0.22, f: 150 }); for (let i = 0; i < 4; i++) S.tink(rand(2500, 4200), { when: i * 0.025, vol: 0.04, dur: 0.12 }); },
-    clear(n) { for (let i = 0; i < n * 4 + 4; i++) S.tink(rand(2500, 4500), { when: Math.random() * 0.5, vol: 0.04, dur: 0.14 }); },
-    deal() { S.tink(3000, { vol: 0.03, dur: 0.1 }); S.tink(3600, { vol: 0.03, dur: 0.1, when: 0.04 }); },
-  },
-  stone: {
-    pick() { S.knock(1400, { vol: 0.05 }); },
-    place() { S.knock(rand(380, 450), { vol: 0.3 }); S.hiss({ dur: 0.04, vol: 0.08, type: 'bandpass', freq: 2000, q: 1.5 }); },
-    clear(n) { S.hiss({ dur: 0.7, vol: 0.05, type: 'highpass', freq: 6000, to: 10000, when: 0.05 }); for (let i = 0; i < n + 1; i++) S.knock(700 - i * 60, { when: i * 0.07, vol: 0.14 }); },
-    deal() { S.knock(1600, { vol: 0.04 }); },
-  },
-  paper: {
-    pick() { S.rustle({ vol: 0.04, dur: 0.06 }); },
-    place() { S.rustle({ vol: 0.09 }); S.thud({ vol: 0.12, f: 200 }); },
-    clear() { S.hiss({ dur: 0.3, vol: 0.1, type: 'bandpass', freq: 600, to: 4000, q: 1 }); S.rustle({ vol: 0.08, dur: 0.3, when: 0.1 }); },
-    deal() { S.rustle({ vol: 0.05, dur: 0.2 }); },
-  },
-  juicy: {
-    pick() { S.plop(400, { vol: 0.06, dur: 0.06 }); },
-    place() { S.squelch({ vol: 0.09, dur: 0.12 }); S.crunch({ vol: 0.07, n: 2 }); S.thud({ vol: 0.18, f: 140 }); },
-    clear(n) {
-      S.crunch({ vol: 0.12, n: 5 });
-      S.hiss({ dur: 0.35, vol: 0.09, type: 'lowpass', freq: 2200, to: 500, q: 2, when: 0.05 });
-      for (let i = 0; i < n + 1; i++) S.plop(rand(500, 800), { when: 0.12 + i * 0.07, vol: 0.09 });
-    },
-    deal() { S.plop(520, { vol: 0.05, dur: 0.05 }); },
-  },
-}))(Sfx);
+});

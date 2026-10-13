@@ -1,11 +1,8 @@
 import './styles/fonts.css';
 import './styles/main.css';
 
-// Theme collections add their block looks, textures, backgrounds, particles and sounds to the shared registries.
-import './themes/collections/third.js';
-import './themes/collections/daily.js';
-import './themes/collections/zen.js';
-import './themes/collections/puzzle.js';
+// Every theme registers its blocks, backgrounds, particles and sounds.
+import './themes/register.js';
 
 // Screens wire up their buttons when loaded.
 import './game/input.js';

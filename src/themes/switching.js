@@ -9,8 +9,8 @@ import { state, discovered, earned, fresh, settings, theme, THEME_DUR } from '..
 import { FINALES, META_V, TH } from './progress.js';
 import { clamp01, inOut, rand } from '../core/util.js';
 import { L } from '../render/layout.js';
-import { AMBIENTS } from '../render/backgrounds.js';
 import { fxParticle } from '../render/render.js';
+import { AMBIENTS } from './registry.js';
 
 /* ---------- Theme switching ---------- */
 export function applyDomColors(now) {

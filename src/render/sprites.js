@@ -3,9 +3,9 @@ import { hexOf, mixHex, rgba, shade } from '../core/color.js';
 import { GREY } from '../core/constants.js';
 import { theme } from '../core/state.js';
 import { DPR, L } from './layout.js';
-import { seeded, STYLES } from './blocks.js';
-import { TEX, texIn } from './textures.js';
-import { GEM_LOOKS } from '../themes/collections/puzzle.js';
+import { seeded } from './blocks.js';
+import { texIn } from './textures.js';
+import { GEM_LOOKS, STYLES, TEX } from '../themes/registry.js';
 
 /* ---------- Block sprites (one look per theme style) ---------- */
 export const sprites = new Map();

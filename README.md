@@ -7,13 +7,20 @@ The Blokzen web game, built with Vite and wrapped as a native Android app with C
 ```
 src/
   index.html       markup
-  main.js          entry: styles, theme collections, screens, then boot
+  main.js          entry: styles, themes, screens, then boot
   boot.js          start(): load saves and settings, first frame
   core/            board, pieces, dealing, scoring, storage, shared state
   modes/           daily, puzzle (+ level data), classic
   game/            game flow, input
   render/          layout, block sprites, textures, backgrounds, frame loop
-  themes/          theme list, effects, unlocks, switching, collections/
+  themes/          one folder per theme, plus the shared pieces:
+    <id>/          theme.js (colours, unlock task, clear effect), block.js, ambient.js,
+                   particles.js, sound.js, gem.js (only what the theme has), index.js
+    shared/        shapes, particles and sound helpers that several themes use
+    catalog.js     the ordered theme list (the order is what saves refer to)
+    registry.js    STYLES / TEX / AMBIENTS / PARTS / KITS / GEM_LOOKS, filled by the theme folders
+    register.js    loads every theme folder
+    progress.js, switching.js   unlocks, theme changes
   audio/           synthesized sound
   platform/        haptics
   ui/              HUD, menu, dialogs, gallery, tutorial
@@ -22,6 +29,12 @@ src/
 tests/             Playwright smoke tests
 android/           Capacitor Android project
 ```
+
+## Adding a theme
+
+1. Create `src/themes/<id>/theme.js` (copy an existing one) and add it to the end of the list in `themes/catalog.js`.
+2. Add `block.js`, `ambient.js`, `sound.js`… next to it; each one registers itself with `Object.assign(STYLES, { ... })` and so on.
+3. Add `import './<id>/index.js'` to `themes/register.js`, then run `npm test`: it plays every theme.
 
 Shared mutable game state lives in `core/state.js` as `state.x`; a variable with a single writer is exported from the module that writes it.
 

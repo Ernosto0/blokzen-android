@@ -1,8 +1,9 @@
 // Smoke tests: boot, every mode, every theme (both block looks) with a line clear, every dialog.
 // They don't compare pixels; they catch runtime errors and check that the game still plays.
 import { test, expect } from '@playwright/test';
+import { THEMES } from '../src/themes/catalog.js'; // pure data: the test follows the list
 
-const THEME_COUNT = 78, N = 8;
+const THEME_COUNT = THEMES.length, N = 8;
 
 // Collect uncaught errors and console errors for the whole test.
 function watchErrors(page) {
@@ -100,6 +101,22 @@ for (const block of ['classic', 'soft']) {
       expect(saved.grid[0].every(v => v === 0)).toBe(true);
     });
   }
+}
+
+// Puzzle mode draws each theme's own gem and plays its sound kit on a placement.
+for (const t of allThemes) {
+  test(`theme ${t}: puzzle level draws and takes a move`, async ({ page }) => {
+    const errors = watchErrors(page);
+    await seed(page, baseSeed(t));
+    await page.goto('/');
+    await page.click('#playPuzzle');
+    await expect(page.locator('#menu')).toBeHidden();
+    await page.waitForTimeout(500);
+    const g = await geometry(page);
+    for (const [i, spot] of [[0, [3, 3]], [1, [0, 0]], [2, [5, 0]]]) await drag(page, g.slot(i), g.cell(...spot));
+    await page.waitForTimeout(700);
+    expect(errors).toEqual([]);
+  });
 }
 
 test('dialogs open and close', async ({ page }) => {

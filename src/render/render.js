@@ -8,12 +8,13 @@ import { checkUnlocks, hourNow, stats, STATS_KEY, TH } from '../themes/progress.
 import { clamp01, inOut, lerp, outBack, outCubic } from '../core/util.js';
 import { DPR, H, L, W } from './layout.js';
 import { drawGemOn, rr, sprite } from './sprites.js';
-import { batShape, drawBg } from './backgrounds.js';
+import { drawBg } from './backgrounds.js';
 import { applyDomColors, setTheme } from '../themes/switching.js';
 import { save } from '../game/flow.js';
 import { liftFor } from '../game/input.js';
 import { drawLogo, menuOpen } from '../ui/menu.js';
 import { drawTutHand, tut, TUT, tutFinish, tutGo } from '../ui/tutorial.js';
+import { PARTS } from '../themes/registry.js';
 
 /* ---------- Rendering ---------- */
 function drawSprite(spr, x, y, size, scale = 1) {
@@ -81,51 +82,6 @@ function glowSprite(color) {
   return c;
 }
 // clear-effect particles for the newer themes; drawn on ctx already moved to the particle
-export const PARTS = {
-  coin(p, s) {
-    ctx.rotate(p.rot * 0.2); ctx.scale(Math.abs(Math.cos(p.life * 12 + p.ph)) + 0.08, 1);
-    ctx.beginPath(); ctx.arc(0, 0, s * 0.6, 0, Math.PI * 2); ctx.fillStyle = shade(p.color, 0.1); ctx.fill();
-    ctx.lineWidth = Math.max(1, s * 0.12); ctx.strokeStyle = shade(p.color, -0.3); ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, s * 0.32, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,245,200,.8)'; ctx.lineWidth = Math.max(1, s * 0.08); ctx.stroke();
-  },
-  shard(p, s) {
-    ctx.rotate(p.rot);
-    ctx.beginPath(); ctx.moveTo(0, -s * 0.8); ctx.lineTo(s * 0.45, s * 0.4); ctx.lineTo(-s * 0.3, s * 0.55); ctx.closePath();
-    ctx.fillStyle = rgba(p.color, 0.5); ctx.fill(); ctx.lineWidth = Math.max(1, s * 0.08); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.stroke();
-  },
-  crumb(p, s) {
-    ctx.rotate(p.rot);
-    ctx.beginPath(); ctx.moveTo(-s * 0.4, -s * 0.3); ctx.lineTo(s * 0.35, -s * 0.4); ctx.lineTo(s * 0.45, s * 0.25); ctx.lineTo(-s * 0.2, s * 0.42); ctx.closePath();
-    ctx.fillStyle = shade(p.color, -0.1); ctx.fill();
-    ctx.fillStyle = 'rgba(255,220,190,.35)'; ctx.fillRect(-s * 0.3, -s * 0.3, s * 0.3, s * 0.15);
-  },
-  chip(p, s) {
-    ctx.rotate(p.rot); ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(0, 0, s * 0.5, 0.2, 2.6);
-    ctx.lineWidth = Math.max(1.5, s * 0.28); ctx.strokeStyle = shade(p.color, 0.15); ctx.stroke();
-    ctx.lineWidth = Math.max(1, s * 0.08); ctx.strokeStyle = shade(p.color, -0.25); ctx.stroke();
-  },
-  ring(p, s, k) {
-    const r = p.size * (0.4 + (1 - k) * 1.8);
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.lineWidth = Math.max(1, p.size * 0.2 * k); ctx.strokeStyle = shade(p.color, 0.25); ctx.stroke();
-    ctx.beginPath(); ctx.arc(-r * 0.4, -r * 0.4, Math.max(0.8, r * 0.12), 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fill();
-  },
-  pixel(p, s) {
-    const q = Math.max(2, Math.round(s * 0.7));
-    ctx.fillStyle = p.color; ctx.fillRect(-q / 2, -q / 2, q, q);
-    ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(-q / 2, -q / 2, q / 2, q / 2);
-  },
-  bat(p, s) { batShape(ctx, 0, 0, s * 0.9, Math.sin(p.life * 28 + p.ph), shade(p.color, -0.6), p.vx < 0); },
-  fleck(p, s) {
-    ctx.rotate(p.rot); const k = Math.abs(Math.cos(p.life * 9 + p.ph));
-    ctx.fillStyle = mixHex('#e8c45a', '#fff6d0', k * 0.7); ctx.fillRect(-s * 0.35, -s * 0.35 * (0.2 + 0.8 * k), s * 0.7, s * 0.7 * (0.2 + 0.8 * k));
-  },
-  paper(p, s) {
-    ctx.rotate(p.rot * 0.5); ctx.scale(1, 0.15 + 0.85 * Math.abs(Math.sin(p.life * 6 + p.ph)));
-    ctx.fillStyle = mixHex(p.color, '#ffffff', 0.15); ctx.fillRect(-s * 0.55, -s * 0.4, s * 1.1, s * 0.8);
-    ctx.strokeStyle = 'rgba(0,0,0,.15)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-s * 0.55, -s * 0.4); ctx.lineTo(s * 0.55, s * 0.4); ctx.stroke();
-  },
-};
 function drawParticle(p, k, light) {
   const s = p.size * (0.4 + 0.6 * k);
   const a = Math.min(1, k * 1.5);

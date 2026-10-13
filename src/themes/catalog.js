@@ -1,174 +1,167 @@
 import { mixHex } from '../core/color.js';
-import { FX } from './effects.js';
+import dusk from './dusk/theme.js';
+import ocean from './ocean/theme.js';
+import forest from './forest/theme.js';
+import sunset from './sunset/theme.js';
+import snow from './snow/theme.js';
+import neon from './neon/theme.js';
+import sakura from './sakura/theme.js';
+import volcano from './volcano/theme.js';
+import space from './space/theme.js';
+import honey from './honey/theme.js';
+import gold from './gold/theme.js';
+import glass from './glass/theme.js';
+import choco from './choco/theme.js';
+import slime from './slime/theme.js';
+import wood from './wood/theme.js';
+import gum from './gum/theme.js';
+import retro from './retro/theme.js';
+import amethyst from './amethyst/theme.js';
+import coffee from './coffee/theme.js';
+import halloween from './halloween/theme.js';
+import xmas from './xmas/theme.js';
+import marble from './marble/theme.js';
+import origami from './origami/theme.js';
+import fruit from './fruit/theme.js';
+import aurora from './aurora/theme.js';
+import coral from './coral/theme.js';
+import tomb from './tomb/theme.js';
+import iznik from './iznik/theme.js';
+import balloon from './balloon/theme.js';
+import ebru from './ebru/theme.js';
+import clock from './clock/theme.js';
+import storm from './storm/theme.js';
+import zen from './zen/theme.js';
+import lavalamp from './lavalamp/theme.js';
+import cloud from './cloud/theme.js';
+import factory from './factory/theme.js';
+import tropic from './tropic/theme.js';
+import fossil from './fossil/theme.js';
+import musicbox from './musicbox/theme.js';
+import autumn from './autumn/theme.js';
+import sushi from './sushi/theme.js';
+import graffiti from './graffiti/theme.js';
+import carnival from './carnival/theme.js';
+import gelato from './gelato/theme.js';
+import news from './news/theme.js';
+import calendar from './calendar/theme.js';
+import tea from './tea/theme.js';
+import spice from './spice/theme.js';
+import desert from './desert/theme.js';
+import letter from './letter/theme.js';
+import picnic from './picnic/theme.js';
+import library from './library/theme.js';
+import stained from './stained/theme.js';
+import observatory from './observatory/theme.js';
+import train from './train/theme.js';
+import moon from './moon/theme.js';
+import zeugma from './zeugma/theme.js';
+import comet from './comet/theme.js';
+import zellige from './zellige/theme.js';
+import bojagi from './bojagi/theme.js';
+import rangoli from './rangoli/theme.js';
+import kente from './kente/theme.js';
+import talavera from './talavera/theme.js';
+import andes from './andes/theme.js';
+import batik from './batik/theme.js';
+import santorini from './santorini/theme.js';
+import persian from './persian/theme.js';
+import inkmount from './inkmount/theme.js';
+import jigsaw from './jigsaw/theme.js';
+import chalk from './chalk/theme.js';
+import domino from './domino/theme.js';
+import tangram from './tangram/theme.js';
+import detective from './detective/theme.js';
+import cipher from './cipher/theme.js';
+import cube from './cube/theme.js';
+import blueprint from './blueprint/theme.js';
+import alchemy from './alchemy/theme.js';
+import chess from './chess/theme.js';
 
 /* ---------- Themes ---------- */
-// blocks: 7 block colors; style: block look; amb: living background; snd: sound timbre
+// The order is the index that saved games, unlock records and the gallery refer to: add new themes at the end.
 export const THEMES = [
-  { id: 'dusk', name: 'Alacakaranlık', bg: '#1a1330', glow: '#3a2766', board: '#0f0b1d', cell: '#241b3e', fg: '#f4eeff', muted: '#a597c7', accent: '#ffcb57', ink: '#0f0b1d', btn: '#2a2046', grey: '#5d5576',
-    blocks: ['#ff6b5b', '#ffb23f', '#9ad94f', '#2ec4b6', '#4aa8ff', '#a77bff', '#ff6fb5'], style: 'gloss', amb: 'orbs', snd: { wave: 'triangle', root: 523.25 } },
-  { id: 'ocean', name: 'Okyanus', bg: '#062236', glow: '#0d5876', board: '#03141f', cell: '#0b2f47', fg: '#e6fbff', muted: '#7fb5c9', accent: '#5ef2d6', ink: '#03141f', btn: '#0d3a55', grey: '#4b6878',
-    blocks: ['#ff7a6b', '#ffd166', '#7ae582', '#2ee6d6', '#36a9ff', '#7d8cff', '#f78fd8'], style: 'jelly', amb: 'bubbles', snd: { wave: 'sine', root: 587.33, echo: true } },
-  { id: 'forest', name: 'Ateşböceği Ormanı', bg: '#0c1c14', glow: '#21452f', board: '#07120c', cell: '#15301f', fg: '#eef7e4', muted: '#93b49a', accent: '#d8f36a', ink: '#07120c', btn: '#1a3826', grey: '#4f6455',
-    blocks: ['#d9573b', '#eaa53a', '#a8d24a', '#43b97a', '#3aa7b8', '#9a86e0', '#d85f8f'], style: 'leaf', amb: 'fireflies', snd: { wave: 'sine', root: 440, marimba: true } },
-  { id: 'sunset', name: 'Gün Batımı', bg: '#4a1d3c', glow: '#c4566a', board: '#24091d', cell: '#441a36', fg: '#fff3e8', muted: '#f0b9a8', accent: '#ffe08a', ink: '#24091d', btn: '#5e2549', grey: '#7a5560',
-    blocks: ['#ff5e57', '#ff9f43', '#ffd23f', '#3ddc97', '#38b6ff', '#8c7bff', '#ff6fb7'], style: 'gem', amb: 'dust', snd: { wave: 'triangle', root: 493.88 } },
-  { id: 'snow', name: 'Kar Vadisi', light: true, bg: '#8db6db', glow: '#f0f8ff', board: '#5f8fbd', cell: '#79a4cc', fg: '#132c48', muted: '#3d5f82', accent: '#1d6ad0', ink: '#ffffff', btn: '#cfe2f3', grey: '#8a9db0', stroke: '#f2f8ff',
-    blocks: ['#ee6f80', '#f4ad5f', '#86cf78', '#38c3c3', '#4f97ee', '#9a82f0', '#e07fc4'], style: 'frost', amb: 'snow', snd: { wave: 'sine', root: 659.25, bell: true, echo: true } },
-  { id: 'neon', name: 'Neon Şehir', bg: '#07060f', glow: '#2c0c40', board: '#050409', cell: '#120f22', fg: '#f2f0ff', muted: '#8f86b8', accent: '#ff3dc8', ink: '#07060f', btn: '#1a1430', grey: '#3e3a55',
-    blocks: ['#ff3b6b', '#ff9e2c', '#e8ff3a', '#2bffb8', '#2ad4ff', '#8a5cff', '#ff4fd8'], style: 'neon', amb: 'grid', snd: { wave: 'square', root: 523.25, gain: 0.45 } },
-  { id: 'sakura', name: 'Sakura', light: true, bg: '#efbccc', glow: '#fff4f7', board: '#cf8ca3', cell: '#e2a9bb', fg: '#4a1f30', muted: '#8a5065', accent: '#c93a68', ink: '#ffffff', btn: '#f8dbe4', grey: '#b89aa4', stroke: '#fff5f8',
-    blocks: ['#e8506a', '#f39c5a', '#a3c955', '#43b89c', '#5a9be0', '#9a7ad8', '#e070ae'], style: 'candy', amb: 'petals', snd: { wave: 'triangle', root: 698.46, pluck: true } },
-  { id: 'volcano', name: 'Volkan', bg: '#1a0806', glow: '#5a160a', board: '#0e0403', cell: '#2a0e09', fg: '#fff0e6', muted: '#c08a76', accent: '#ff8a2a', ink: '#1a0806', btn: '#3a140c', grey: '#5a403a',
-    blocks: ['#ff3d2e', '#ff7f1f', '#ffcc33', '#8fe05a', '#36c2d6', '#a66bff', '#ff4f9a'], style: 'lava', amb: 'embers', snd: { wave: 'triangle', root: 392 } },
-  { id: 'space', name: 'Derin Uzay', bg: '#050a1f', glow: '#1b2c6e', board: '#030616', cell: '#0f1a3a', fg: '#eef2ff', muted: '#8e9bd0', accent: '#8fd3ff', ink: '#030616', btn: '#121f48', grey: '#3f4a6e',
-    blocks: ['#ff6b9d', '#ffb86b', '#d6f56b', '#5cf0d0', '#5aa2ff', '#9d7dff', '#e47dff'], style: 'cosmic', amb: 'stars', snd: { wave: 'sine', root: 523.25, echo: true, bell: true } },
-  // one-colour theme: every block is the same honey, only the light inside it shifts a touch
-  { id: 'honey', name: 'Bal Kovanı', bg: '#2a1703', glow: '#7a4a0a', board: '#170c01', cell: '#3a2307', fg: '#fff4dc', muted: '#d8b277', accent: '#ffc23a', ink: '#1d0f02', btn: '#43280a', grey: '#6b5a44',
-    blocks: ['#f2a516', '#f5ab1c', '#efa013', '#f6b022', '#eea415', '#f4a81a', '#f0a518'], style: 'honey', amb: 'hive', snd: { wave: 'sine', root: 440, kit: 'honey' } },
-  { id: 'gold', name: 'Altın Hazine', bg: '#1d1405', glow: '#6b4a0c', board: '#120c03', cell: '#2b1f0a', fg: '#fff6dc', muted: '#cdb27a', accent: '#ffd54a', ink: '#1d1405', btn: '#3a2a0c', grey: '#6a6050',
-    blocks: ['#f5c542', '#f2bd37', '#f7cb4d', '#efb52e', '#f4c03f', '#f9d157', '#f0ba33'], style: 'gold', amb: 'coins', snd: { wave: 'triangle', root: 659.25, bell: true, kit: 'gold' } },
-  { id: 'glass', name: 'Cam Kristal', bg: '#0b1a24', glow: '#2a5a72', board: '#07121a', cell: '#122a38', fg: '#eefaff', muted: '#8fb8cc', accent: '#9ff0ff', ink: '#07121a', btn: '#163444', grey: '#4a5c66',
-    blocks: ['#ff8fa3', '#ffc48a', '#fff08a', '#9df5b5', '#8ae8ff', '#a3b5ff', '#e3a3ff'], style: 'glass', amb: 'prism', snd: { wave: 'sine', root: 783.99, bell: true, echo: true, kit: 'glass' } },
-  { id: 'choco', name: 'Çikolata Dükkânı', bg: '#1e0f08', glow: '#5a2e18', board: '#0d0603', cell: '#22120a', fg: '#fff0e2', muted: '#c49a80', accent: '#ffb070', ink: '#1e0f08', btn: '#3a1f10', grey: '#5c4a40',
-    blocks: ['#8b4a24', '#94532a', '#874622', '#9a5a2e', '#82431f', '#915028', '#8e4c25'], style: 'choco', amb: 'cocoa', snd: { wave: 'triangle', root: 440, kit: 'choco' } },
-  { id: 'slime', name: 'Slime', bg: '#0b1a0c', glow: '#2c5e1c', board: '#061006', cell: '#132a12', fg: '#efffe6', muted: '#9cc48c', accent: '#9dff4a', ink: '#061006', btn: '#18361a', grey: '#4c5c48',
-    blocks: ['#7ee03a', '#86e842', '#74d632', '#8cee4c', '#78dc36', '#82e43e', '#7ad838'], style: 'slime', amb: 'ooze', snd: { wave: 'sine', root: 392, kit: 'slime' } },
-  { id: 'wood', name: 'Ahşap Oyuncak', bg: '#2a1a10', glow: '#6e4422', board: '#1a0f08', cell: '#2e1d12', fg: '#fff3e2', muted: '#c8a484', accent: '#ffc46a', ink: '#1a0f08', btn: '#3e2816', grey: '#5e5248',
-    blocks: ['#d9a066', '#c98f55', '#e0aa70', '#cf9660', '#d39a5e', '#dca468', '#c88c52'], style: 'wood', amb: 'workshop', snd: { wave: 'sine', root: 523.25, marimba: true, kit: 'wood' } },
-  { id: 'gum', name: 'Sakız Balonu', light: true, bg: '#ffc2dc', glow: '#fff0f6', board: '#e88ab4', cell: '#f3a8c8', fg: '#5a1035', muted: '#a04870', accent: '#e0287a', ink: '#ffffff', btn: '#ffe0ee', grey: '#c0a0b0', stroke: '#fff3f8',
-    blocks: ['#ff5fa2', '#ff6fae', '#ff539a', '#ff7bb6', '#ff66a8', '#ff5a9e', '#ff74b2'], style: 'gum', amb: 'gumballs', snd: { wave: 'triangle', root: 622.25, pluck: true, kit: 'gum' } },
-  { id: 'retro', name: 'Retro Arcade', bg: '#0a0820', glow: '#241a5e', board: '#05040f', cell: '#151236', fg: '#ffffff', muted: '#9a94d0', accent: '#3dff7a', ink: '#05040f', btn: '#1c1846', grey: '#4a4866',
-    blocks: ['#ff3355', '#ff9922', '#ffee33', '#33ee55', '#33ccff', '#5566ff', '#cc44ff'], style: 'pixel', amb: 'arcade', snd: { wave: 'square', root: 523.25, gain: 0.4, kit: 'chip' } },
-  { id: 'amethyst', name: 'Ametist Mağarası', bg: '#140a24', glow: '#4a2276', board: '#0b0516', cell: '#1f1236', fg: '#f6eeff', muted: '#ad94d6', accent: '#d59bff', ink: '#0b0516', btn: '#2a1846', grey: '#4f4462',
-    blocks: ['#a35cff', '#b06bff', '#9550f0', '#bb7aff', '#9c58f8', '#a965ff', '#8f4ae8'], style: 'crystal', amb: 'cave', snd: { wave: 'sine', root: 587.33, bell: true, echo: true, kit: 'crystal' } },
-  { id: 'coffee', name: 'Kahve Dükkânı', bg: '#1c120c', glow: '#5c3a22', board: '#110a06', cell: '#2a1c13', fg: '#fff3e6', muted: '#c8a888', accent: '#f2c48d', ink: '#1c120c', btn: '#382518', grey: '#5c5048',
-    blocks: ['#c48a5a', '#b97d4e', '#d29a68', '#a86f43', '#c99060', '#bd8452', '#d6a272'], style: 'bean', amb: 'steam', snd: { wave: 'sine', root: 493.88, kit: 'cup' } },
-  { id: 'halloween', name: 'Cadılar Bayramı', bg: '#120a1c', glow: '#3a1a4a', board: '#0a0610', cell: '#1e1328', fg: '#fff0e0', muted: '#b49ab8', accent: '#ff8a1e', ink: '#0a0610', btn: '#2a1a36', grey: '#4a4250',
-    blocks: ['#ff7a12', '#ff8420', '#f8700c', '#ff8e2a', '#fa7616', '#ff801c', '#f46e10'], style: 'pumpkin', amb: 'night', snd: { wave: 'triangle', root: 349.23, echo: true, kit: 'spooky' } },
-  { id: 'xmas', name: 'Yılbaşı Şekeri', bg: '#0d2418', glow: '#2a5a3a', board: '#07160e', cell: '#143222', fg: '#fff8f0', muted: '#a8c8b0', accent: '#ffd25a', ink: '#07160e', btn: '#18402a', grey: '#4c5a50',
-    blocks: ['#e8283c', '#ee3446', '#e02034', '#f0404e', '#e42a3e', '#ea3242', '#de2232'], style: 'cane', amb: 'lights', snd: { wave: 'sine', root: 659.25, bell: true, kit: 'jingle' } },
-  { id: 'marble', name: 'Mermer & Altın', bg: '#0c1612', glow: '#244236', board: '#060c0a', cell: '#152620', fg: '#fbf7ee', muted: '#a8b8ae', accent: '#e2c56b', ink: '#060c0a', btn: '#1a3028', grey: '#5a6460',
-    blocks: ['#f2efe8', '#ece8df', '#f5f2ec', '#e8e4da', '#f0ece4', '#eeeae2', '#e6e2d8'], style: 'marble', amb: 'luxe', snd: { wave: 'triangle', root: 523.25, kit: 'stone' } },
-  { id: 'origami', name: 'Kâğıt Origami', light: true, bg: '#f3ead8', glow: '#fffaf0', board: '#d8c8a8', cell: '#e6d8bc', fg: '#3a2e20', muted: '#7a6a52', accent: '#e2553a', ink: '#ffffff', btn: '#fbf4e6', grey: '#b0a898', stroke: '#fffaf0',
-    blocks: ['#f26b5b', '#f5a04a', '#f2d25a', '#7cc77a', '#55aee0', '#8c7ee0', '#e47ab4'], style: 'paper', amb: 'cranes', snd: { wave: 'triangle', root: 587.33, pluck: true, kit: 'paper' } },
-  { id: 'fruit', name: 'Meyve Bahçesi', light: true, bg: '#bfe9d4', glow: '#f6fff6', board: '#7cc8a4', cell: '#9ad8b8', fg: '#123a28', muted: '#3a6a52', accent: '#ff4a5a', ink: '#ffffff', btn: '#e2f7ec', grey: '#9ab0a4', stroke: '#f2fff8',
-    blocks: ['#ff4d5e', '#ff9a2a', '#ffe14a', '#8ccf3a', '#ff5ab4', '#8a4ad8', '#3fbf6a'], style: 'fruit', amb: 'summer', snd: { wave: 'triangle', root: 554.37, pluck: true, kit: 'juicy' } },
-  // ---- third set: each one locked behind its own task ----
-  { id: 'aurora', name: 'Kuzey Işıkları', bg: '#071526', glow: '#1d4a5a', board: '#040d18', cell: '#0e2236', fg: '#eafcff', muted: '#8fb4c4', accent: '#7dffc4', ink: '#04121c', btn: '#123048', grey: '#3e5260',
-    blocks: ['#3dffa8', '#2ee0d0', '#4ab0ff', '#7a84ff', '#b47aff', '#ff7ad8', '#a8ff6a'], style: 'aurora', amb: 'aurora', snd: { wave: 'sine', root: 587.33, bell: true, echo: true, kit: 'aurora' } },
-  { id: 'coral', name: 'Mercan Resifi', bg: '#083444', glow: '#16707e', board: '#041e28', cell: '#0c3e4c', fg: '#eafffb', muted: '#86c2c6', accent: '#ff8a6a', ink: '#041e28', btn: '#0e4a58', grey: '#4a666c',
-    blocks: ['#ff6a5a', '#ff9f4a', '#ffd25a', '#ff6f9e', '#c47aff', '#4ad8c8', '#7ae07a'], style: 'coral', amb: 'reef', snd: { wave: 'sine', root: 493.88, echo: true, kit: 'reef' } },
-  { id: 'tomb', name: 'Firavun Mezarı', bg: '#26170a', glow: '#74451a', board: '#150d05', cell: '#30200e', fg: '#fff1d6', muted: '#cdab78', accent: '#ffc24a', ink: '#1a0f05', btn: '#3c2811', grey: '#6a5a48',
-    blocks: ['#d9a65a', '#2f7fc0', '#2fb0a2', '#c8583a', '#e8c470', '#8a5ac0', '#7aa04a'], style: 'tomb', amb: 'tomb', snd: { wave: 'triangle', root: 392, kit: 'tomb' } },
-  { id: 'iznik', name: 'İznik Çinisi', bg: '#0e2a50', glow: '#2a5a98', board: '#081c38', cell: '#13335e', fg: '#f4f8ff', muted: '#9fb6d8', accent: '#ff6a52', ink: '#081c38', btn: '#183a68', grey: '#5a6a80',
-    blocks: ['#1f5fc8', '#1aa0b8', '#d8402e', '#2a9a5a', '#4a3ab0', '#d89a2a', '#b0306a'], style: 'iznik', amb: 'iznik', snd: { wave: 'triangle', root: 523.25, pluck: true, kit: 'iznik' } },
-  { id: 'balloon', name: 'Kapadokya Balonları', light: true, bg: '#f2c4a2', glow: '#fff2dc', board: '#c48466', cell: '#d89c7e', fg: '#4a2418', muted: '#8a5440', accent: '#d8442a', ink: '#ffffff', btn: '#fbe2cf', grey: '#b8a090', stroke: '#fff4ea',
-    blocks: ['#e8443a', '#f5962a', '#f2c83a', '#3aa86a', '#3a86d8', '#8a56d0', '#e8569a'], style: 'balloon', amb: 'cappadocia', snd: { wave: 'triangle', root: 587.33, kit: 'balloon' } },
-  { id: 'ebru', name: 'Ebru', bg: '#122030', glow: '#2e4a6a', board: '#0a131d', cell: '#18283a', fg: '#f6f2ea', muted: '#a8b4c4', accent: '#ffb84a', ink: '#0a131d', btn: '#1e3246', grey: '#4c5866',
-    blocks: ['#e8485a', '#f5a03a', '#f0d84a', '#3ab87a', '#3a96d8', '#7a58d0', '#e868b8'], style: 'ebru', amb: 'ebru', snd: { wave: 'sine', root: 440, echo: true, kit: 'ebru' } },
-  { id: 'clock', name: 'Saat Kulesi', bg: '#1a140e', glow: '#5a4020', board: '#0e0a06', cell: '#2a2016', fg: '#fff2dc', muted: '#c8aa84', accent: '#e8b84a', ink: '#1a140e', btn: '#3a2a18', grey: '#5a5044',
-    blocks: ['#d4a040', '#b86e34', '#e8c868', '#8c9caa', '#5a9a8a', '#a85a3a', '#c8b088'], style: 'gear', amb: 'clockwork', snd: { wave: 'triangle', root: 440, bell: true, kit: 'clock' } },
-  { id: 'storm', name: 'Fırtına', bg: '#121822', glow: '#323e56', board: '#090d13', cell: '#18202c', fg: '#eef2fa', muted: '#97a4ba', accent: '#9fd8ff', ink: '#090d13', btn: '#202a3a', grey: '#3e4552',
-    blocks: ['#8090c0', '#4f9ad8', '#9a7ad8', '#4fb0b0', '#c08ad0', '#5f78d8', '#8ac4e8'], style: 'storm', amb: 'storm', snd: { wave: 'sine', root: 392, echo: true, kit: 'storm' } },
-  { id: 'zen', name: 'Zen Bahçesi', light: true, bg: '#dbe3d6', glow: '#f8fbf4', board: '#a2ac96', cell: '#b8c2ac', fg: '#24302a', muted: '#5a6a5e', accent: '#c8442e', ink: '#ffffff', btn: '#eef2ea', grey: '#a0a69a', stroke: '#f8fbf4',
-    blocks: ['#6f8fa8', '#a8846a', '#6a9a7a', '#b8a07a', '#5a6f9a', '#9a7aa0', '#c08a7a'], style: 'stone', amb: 'zen', snd: { wave: 'sine', root: 440, kit: 'zen' } },
-  { id: 'lavalamp', name: 'Lav Lambası', bg: '#28120a', glow: '#86381a', board: '#160904', cell: '#2e160a', fg: '#fff0e0', muted: '#d8a880', accent: '#ff8a2a', ink: '#160904', btn: '#3e1e0e', grey: '#5a4a40',
-    blocks: ['#ff6a3a', '#ffb03a', '#e8d84a', '#d04a8a', '#8a4ac8', '#3aa8a8', '#ff4a6a'], style: 'lamp', amb: 'lavalamp', snd: { wave: 'triangle', root: 392, kit: 'funk' } },
-  { id: 'cloud', name: 'Pamuk Bulutlar', light: true, bg: '#bcdcf6', glow: '#ffffff', board: '#88b4dc', cell: '#a2c8e8', fg: '#1a3450', muted: '#4a6a8a', accent: '#f0558e', ink: '#ffffff', btn: '#e6f3fd', grey: '#a8b8c8', stroke: '#f4faff',
-    blocks: ['#ff8fb0', '#ffb07a', '#ffd86a', '#7ad8a0', '#6ab8ff', '#a890ff', '#f08ad8'], style: 'cloud', amb: 'sky', snd: { wave: 'sine', root: 659.25, bell: true, kit: 'cloud' } },
-  { id: 'factory', name: 'Robot Fabrikası', bg: '#14171b', glow: '#383e46', board: '#0a0c0f', cell: '#1b1f25', fg: '#eef2f6', muted: '#9aa4b0', accent: '#ffc21a', ink: '#0a0c0f', btn: '#252b33', grey: '#4a5058',
-    blocks: ['#e04a3a', '#f5a01a', '#f2d21a', '#4ab85a', '#3a8ae0', '#8a6ad8', '#a8b4c0'], style: 'metal', amb: 'factory', snd: { wave: 'square', root: 392, gain: 0.35, kit: 'factory' } },
-  { id: 'tropic', name: 'Tropik Ada', light: true, bg: '#98dcd4', glow: '#fff8e0', board: '#d8b47c', cell: '#e6c896', fg: '#143a36', muted: '#3a6a64', accent: '#f0602e', ink: '#ffffff', btn: '#e6f8f4', grey: '#b8b0a0', stroke: '#fffaf0',
-    blocks: ['#e8503a', '#f59a2a', '#f0c83a', '#4aa84a', '#22a8b8', '#3a72d0', '#e0569a'], style: 'tiki', amb: 'island', snd: { wave: 'triangle', root: 523.25, pluck: true, kit: 'ukulele' } },
-  { id: 'fossil', name: 'Fosil Kazısı', bg: '#221912', glow: '#583824', board: '#130d09', cell: '#291f17', fg: '#f6ece0', muted: '#bca890', accent: '#ff9a3a', ink: '#130d09', btn: '#32251b', grey: '#5a5048',
-    blocks: ['#c08a5a', '#a86e4a', '#d4ae74', '#8c8474', '#b4785a', '#9a8a68', '#cc9c7c'], style: 'fossil', amb: 'prehistoric', snd: { wave: 'triangle', root: 349.23, kit: 'fossil' } },
-  { id: 'musicbox', name: 'Müzik Kutusu', bg: '#280d19', glow: '#682943', board: '#17070f', cell: '#2d1120', fg: '#fff0f4', muted: '#d0a0b4', accent: '#ffd27a', ink: '#17070f', btn: '#3d1929', grey: '#5a4650',
-    blocks: ['#d8304a', '#e8902a', '#e8c840', '#2a9a6a', '#2a6ac8', '#7a3ab0', '#c83a8a'], style: 'lacquer', amb: 'musicbox', snd: { wave: 'sine', root: 783.99, bell: true, kit: 'musicbox' } },
-  { id: 'autumn', name: 'Sonbahar', bg: '#281508', glow: '#763810', board: '#160b04', cell: '#2d190b', fg: '#fff2e2', muted: '#d4a882', accent: '#ffa53a', ink: '#160b04', btn: '#3d210e', grey: '#5a4c40',
-    blocks: ['#d8402a', '#e8782a', '#f0b030', '#b8a02a', '#7a9a3a', '#a03a2a', '#d86a4a'], style: 'maple', amb: 'autumn', snd: { wave: 'triangle', root: 440, marimba: true, kit: 'autumn' } },
-  { id: 'sushi', name: 'Sushi Bar', bg: '#1a1414', glow: '#4a2a24', board: '#0e0a0a', cell: '#221a18', fg: '#fff6ee', muted: '#c4aa9a', accent: '#ff5a3a', ink: '#0e0a0a', btn: '#2e2220', grey: '#504644',
-    blocks: ['#ff8a5a', '#d8344a', '#f2c84a', '#6ab84a', '#f2e8da', '#c8607a', '#3a6a4a'], style: 'sushi', amb: 'sushibar', snd: { wave: 'triangle', root: 523.25, pluck: true, kit: 'sushi' } },
-  { id: 'graffiti', name: 'Graffiti Duvarı', bg: '#1e1a1c', glow: '#4a3a40', board: '#121012', cell: '#242024', fg: '#ffffff', muted: '#b0a8ac', accent: '#c8ff3a', ink: '#121012', btn: '#2e282c', grey: '#555055',
-    blocks: ['#ff3d5a', '#ff9a1a', '#ffe81a', '#3dff7a', '#1ad8ff', '#8a5aff', '#ff4ad8'], style: 'spray', amb: 'graffiti', snd: { wave: 'square', root: 392, gain: 0.3, kit: 'spray' } },
-  { id: 'carnival', name: 'Lunapark', bg: '#1a0a2a', glow: '#4a1a6a', board: '#0e0618', cell: '#22103a', fg: '#fff6e0', muted: '#c0a0d8', accent: '#ffd23a', ink: '#0e0618', btn: '#2e1846', grey: '#4e4460',
-    blocks: ['#ff3a4a', '#ff9a2a', '#ffd83a', '#3ad86a', '#3aa8ff', '#a85aff', '#ff5ac8'], style: 'marquee', amb: 'carnival', snd: { wave: 'square', root: 523.25, gain: 0.35, kit: 'carnival' } },
-  { id: 'gelato', name: 'Gelato', light: true, bg: '#fbe4d6', glow: '#fffaf4', board: '#dcae84', cell: '#e8c4a0', fg: '#4a2a1a', muted: '#8a5a44', accent: '#e2447a', ink: '#ffffff', btn: '#fff2ea', grey: '#c0b0a4', stroke: '#fffaf4',
-    blocks: ['#ff8fa0', '#ffb47a', '#ffe48a', '#9ad890', '#8acaf0', '#bea0ea', '#8a5a3a'], style: 'gelato', amb: 'gelateria', snd: { wave: 'triangle', root: 659.25, pluck: true, kit: 'gelato' } },
-  // ---- daily collection: each one opens by playing the daily challenge ----
-  { id: 'news', name: 'Sabah Gazetesi', light: true, bg: '#e6e0d2', glow: '#fbf8f0', board: '#b9b19f', cell: '#d0c8b6', fg: '#1e1c18', muted: '#5e594e', accent: '#c8321e', ink: '#ffffff', btn: '#f6f2e8', grey: '#a8a294', stroke: '#fbf8f0',
-    blocks: ['#d0473a', '#e09a38', '#e2c640', '#5a9a5a', '#3a86c0', '#7a62b0', '#c4508a'], style: 'news', amb: 'newsroom', snd: { wave: 'triangle', root: 523.25, kit: 'news' } },
-  { id: 'calendar', name: 'Takvim Yaprağı', bg: '#1f3a3c', glow: '#3e6a68', board: '#13282a', cell: '#24403f', fg: '#fdf8ee', muted: '#a9c2bc', accent: '#ff5a4a', ink: '#13282a', btn: '#2a4a4a', grey: '#4f6462',
-    blocks: ['#f26b5b', '#f5a24a', '#f2d25a', '#8cc87a', '#5aaee0', '#9a86e0', '#f08ab4'], style: 'leaflet', amb: 'tearoff', snd: { wave: 'triangle', root: 587.33, pluck: true, kit: 'calendar' } },
-  { id: 'tea', name: 'Çay Bahçesi', bg: '#2c4a5e', glow: '#e8a878', board: '#1a2e3c', cell: '#2a4456', fg: '#fff6ea', muted: '#b8c6cc', accent: '#f0a03a', ink: '#1a2e3c', btn: '#33536a', grey: '#556a74',
-    blocks: ['#c84a24', '#e08a2a', '#e8bc4a', '#8cb040', '#d4405a', '#9a5a9a', '#3a9a8a'], style: 'teaglass', amb: 'bosphorus', snd: { wave: 'sine', root: 493.88, echo: true, kit: 'tea' } },
-  { id: 'spice', name: 'Baharat Çarşısı', bg: '#2a160c', glow: '#7a3a14', board: '#170b05', cell: '#33190c', fg: '#fff0dc', muted: '#d4a47c', accent: '#ffb43a', ink: '#170b05', btn: '#40220f', grey: '#5e4a3c',
-    blocks: ['#b02a36', '#e8a81c', '#d84a22', '#b07a34', '#6e9a40', '#ee7a2a', '#8a6aa8'], style: 'spice', amb: 'bazaar', snd: { wave: 'triangle', root: 440, kit: 'spice' } },
-  { id: 'desert', name: 'Kum Saati Çölü', bg: '#3a2414', glow: '#c47a3a', board: '#22140a', cell: '#3e2614', fg: '#fff3e0', muted: '#dcb48a', accent: '#ffc65a', ink: '#22140a', btn: '#4a2e18', grey: '#6a5440',
-    blocks: ['#e8b450', '#e07a38', '#c4503a', '#f0d890', '#a8743e', '#9aa85a', '#6a8ac0'], style: 'dune', amb: 'hourglass', snd: { wave: 'sine', root: 392, echo: true, kit: 'sand' } },
-  { id: 'letter', name: 'Mektup ve Mühür', bg: '#1e2433', glow: '#4a5470', board: '#121722', cell: '#232b3c', fg: '#f6f0e6', muted: '#a8b0c4', accent: '#e85a4a', ink: '#121722', btn: '#2a3346', grey: '#4a5266',
-    blocks: ['#c83a3a', '#e08a2a', '#e8c24a', '#4a9a6a', '#3a7ac8', '#7a5ab8', '#c85a9a'], style: 'envelope', amb: 'post', snd: { wave: 'triangle', root: 523.25, kit: 'letter' } },
-  { id: 'picnic', name: 'Hafta Sonu Pikniği', light: true, bg: '#bfe0a8', glow: '#f4fbe8', board: '#8ab070', cell: '#a4c88a', fg: '#1e3a1a', muted: '#4a6a3e', accent: '#d8402e', ink: '#ffffff', btn: '#eaf6e0', grey: '#a8b49a', stroke: '#f4fbe8',
-    blocks: ['#e0453a', '#f0943a', '#f0c83a', '#4aa84a', '#3a8ad0', '#9a6ac8', '#e86aa0'], style: 'gingham', amb: 'park', snd: { wave: 'triangle', root: 587.33, pluck: true, kit: 'picnic' } },
-  { id: 'library', name: 'Gece Yarısı Kütüphanesi', bg: '#1e140e', glow: '#5a3418', board: '#120b07', cell: '#24170f', fg: '#f8ecd8', muted: '#c8a880', accent: '#f0b860', ink: '#120b07', btn: '#33221a', grey: '#54463a',
-    blocks: ['#b03a3a', '#3a8a4a', '#3a62a8', '#b8802e', '#8a447a', '#c8a050', '#3a8a8a'], style: 'book', amb: 'library', snd: { wave: 'sine', root: 440, echo: true, kit: 'library' } },
-  { id: 'stained', name: 'Vitray', bg: '#16121c', glow: '#3a2a4a', board: '#0c0910', cell: '#1e1826', fg: '#f4eefc', muted: '#a89cbc', accent: '#ffd25a', ink: '#0c0910', btn: '#261e30', grey: '#4a4256',
-    blocks: ['#e0283c', '#f08a1e', '#f2cc2a', '#28a858', '#2a72d8', '#7a3ac8', '#d83a9a'], style: 'vitray', amb: 'cathedral', snd: { wave: 'sine', root: 392, echo: true, kit: 'organ' } },
-  { id: 'observatory', name: 'Rasathane', bg: '#0a1020', glow: '#1e2a50', board: '#060a14', cell: '#121c32', fg: '#eef2ff', muted: '#94a2c8', accent: '#e8c06a', ink: '#060a14', btn: '#16223e', grey: '#3e4866',
-    blocks: ['#d85a4a', '#e8a040', '#e8d070', '#5ab88a', '#4a90e0', '#8a70d8', '#d070b0'], style: 'astrolabe', amb: 'starchart', snd: { wave: 'sine', root: 523.25, bell: true, echo: true, kit: 'brass' } },
-  { id: 'train', name: 'Gece Treni', bg: '#141628', glow: '#2e2e58', board: '#0b0c18', cell: '#1c1e34', fg: '#f2f0ff', muted: '#a0a0c8', accent: '#ffb84a', ink: '#0b0c18', btn: '#22243e', grey: '#46485e',
-    blocks: ['#c83a3a', '#e08a2a', '#e8c84a', '#3a9a5a', '#3a6ac0', '#7a4aa8', '#3a9aa8'], style: 'carriage', amb: 'nighttrain', snd: { wave: 'triangle', root: 440, kit: 'train' } },
-  { id: 'moon', name: 'Ay Evreleri', bg: '#0a1426', glow: '#2a4466', board: '#060c18', cell: '#122036', fg: '#eef4ff', muted: '#9ab0cc', accent: '#dfe8f6', ink: '#060c18', btn: '#16263e', grey: '#3e4a60',
-    blocks: ['#e8a0a0', '#e8c08a', '#ecdc9a', '#a8d8b0', '#9ac0ec', '#b8a8ec', '#e8b0d8'], style: 'lunar', amb: 'tides', snd: { wave: 'sine', root: 587.33, bell: true, echo: true, kit: 'moon' } },
-  { id: 'zeugma', name: 'Zeugma Mozaiği', bg: '#2e1a12', glow: '#7a4428', board: '#1a0e09', cell: '#352016', fg: '#fbefe2', muted: '#d4b098', accent: '#e8b46a', ink: '#1a0e09', btn: '#3e2619', grey: '#5e4c40',
-    blocks: ['#b84a32', '#d8963e', '#e8cc8a', '#6a8a4a', '#4a7a9a', '#7a5a7a', '#e6dccb'], style: 'tesserae', amb: 'mosaicfloor', snd: { wave: 'triangle', root: 440, kit: 'mosaic' } },
-  { id: 'comet', name: 'Kuyruklu Yıldız', bg: '#070a1e', glow: '#22285a', board: '#04061a', cell: '#10143a', fg: '#f2f4ff', muted: '#98a0d8', accent: '#7ef0ff', ink: '#04061a', btn: '#141a46', grey: '#3a3e66',
-    blocks: ['#ff7a9a', '#ffb06a', '#ffe07a', '#7af0b0', '#6ad0ff', '#9a8aff', '#e88aff'], style: 'cometcore', amb: 'comet', snd: { wave: 'sine', root: 659.25, bell: true, echo: true, kit: 'comet' } },
-  // ---- zen collection: ten cultures of the world, each one opened by playing Zen ----
-  { id: 'zellige', name: 'Fas Zellige', bg: '#0f2a2a', glow: '#2a5a52', board: '#081a1a', cell: '#123432', fg: '#f4f0e4', muted: '#9cc0b4', accent: '#e8b84a', ink: '#081a1a', btn: '#16403c', grey: '#4a5c58',
-    blocks: ['#1e8a5a', '#2a5ab8', '#c8502e', '#d8a63a', '#e8e2d0', '#2aa8a0', '#8a4a8a'], style: 'zellige', amb: 'riad', snd: { wave: 'triangle', root: 440, echo: true, kit: 'oud' } },
-  { id: 'bojagi', name: 'Bojagi', light: true, bg: '#efe4e8', glow: '#fffaf8', board: '#c4aab4', cell: '#d8c4cc', fg: '#3a2430', muted: '#7a5a68', accent: '#c83a5a', ink: '#ffffff', btn: '#fbf2f5', grey: '#b8a8ae', stroke: '#fffaf8',
-    blocks: ['#e8506a', '#f0b040', '#3a9a7a', '#4a78c8', '#a85ac0', '#ec8a5a', '#4ab8c0'], style: 'bojagi', amb: 'hanok', snd: { wave: 'sine', root: 587.33, pluck: true, kit: 'gayageum' } },
-  { id: 'rangoli', name: 'Rangoli', bg: '#2a0e1e', glow: '#7a1e48', board: '#1a0812', cell: '#3a1428', fg: '#fff2e8', muted: '#d8a0b8', accent: '#ffb030', ink: '#1a0812', btn: '#46182e', grey: '#5a4450',
-    blocks: ['#ff3a6a', '#ff9a1a', '#ffd83a', '#2ac0a0', '#3a7aff', '#a050e0', '#ff5a2a'], style: 'rangoli', amb: 'diya', snd: { wave: 'triangle', root: 493.88, kit: 'sitar' } },
-  { id: 'kente', name: 'Kente', bg: '#1a1408', glow: '#5a4210', board: '#0e0b04', cell: '#2a2010', fg: '#fff6dc', muted: '#d4b878', accent: '#ffc21a', ink: '#0e0b04', btn: '#3a2c10', grey: '#5a5040',
-    blocks: ['#e8b818', '#2a9a3a', '#d8302a', '#3a5ad0', '#e8781a', '#b8d03a', '#a03a9a'], style: 'kente', amb: 'loom', snd: { wave: 'triangle', root: 440, marimba: true, kit: 'djembe' } },
-  { id: 'talavera', name: 'Talavera', bg: '#1e3a78', glow: '#4a7ad0', board: '#122650', cell: '#1e3666', fg: '#fff8ec', muted: '#a8c0e8', accent: '#ffc83a', ink: '#122650', btn: '#264684', grey: '#5a6a8a',
-    blocks: ['#1e4fb8', '#e8a81a', '#e86a1a', '#2a9a5a', '#c83a3a', '#6a4ab0', '#1aa0b0'], style: 'talavera', amb: 'plaza', snd: { wave: 'triangle', root: 523.25, pluck: true, kit: 'mariachi' } },
-  { id: 'andes', name: 'And Teraslar', bg: '#2a1a12', glow: '#7a4a2a', board: '#160d08', cell: '#30201a', fg: '#fff2e4', muted: '#d0aa8a', accent: '#e8503a', ink: '#160d08', btn: '#3e2a1e', grey: '#5e4e44',
-    blocks: ['#e8303a', '#f0a020', '#e8d040', '#2a9a6a', '#2a6ac8', '#d04a9a', '#8a4ac0'], style: 'andean', amb: 'terraces', snd: { wave: 'sine', root: 440, echo: true, kit: 'panflute' } },
-  { id: 'batik', name: 'Batik', bg: '#1a140e', glow: '#4a3420', board: '#0e0a06', cell: '#261c12', fg: '#fff2dc', muted: '#c8a880', accent: '#e8a040', ink: '#0e0a06', btn: '#33261a', grey: '#54483c',
-    blocks: ['#3a5aa8', '#a8642a', '#d8a03a', '#b03a2a', '#3a8a6a', '#8a4a7a', '#d8c8a0'], style: 'batik', amb: 'paddy', snd: { wave: 'sine', root: 392, echo: true, bell: true, kit: 'gamelan' } },
-  { id: 'santorini', name: 'Santorini', light: true, bg: '#d6eaf6', glow: '#ffffff', board: '#5a8ec4', cell: '#78a6d4', fg: '#14304e', muted: '#40648a', accent: '#1e5ec8', ink: '#ffffff', btn: '#eef6fc', grey: '#9ab0c4', stroke: '#f6fbff',
-    blocks: ['#1e5ec8', '#f4f2ec', '#e8a83a', '#d84a6a', '#2aa8a0', '#8a6ad0', '#f07a3a'], style: 'cycladic', amb: 'caldera', snd: { wave: 'triangle', root: 587.33, pluck: true, kit: 'bouzouki' } },
-  { id: 'persian', name: 'Pers Bahçesi', bg: '#14182e', glow: '#3a3060', board: '#0a0d1c', cell: '#1a1e36', fg: '#fbf2e2', muted: '#b8aec8', accent: '#e8c06a', ink: '#0a0d1c', btn: '#222844', grey: '#4a4c60',
-    blocks: ['#b8283e', '#2a5ab0', '#e8c06a', '#2a8a7a', '#ece4d0', '#d0702a', '#7a4a9a'], style: 'carpet', amb: 'charbagh', snd: { wave: 'sine', root: 523.25, echo: true, kit: 'santur' } },
-  { id: 'inkmount', name: 'Mürekkep Dağları', light: true, bg: '#ece6d6', glow: '#faf7ef', board: '#bfb6a2', cell: '#d4ccb8', fg: '#1e1c18', muted: '#5e5a50', accent: '#c42a22', ink: '#ffffff', btn: '#f6f2e8', grey: '#a8a294', stroke: '#faf7ef',
-    blocks: ['#3a3a40', '#c42a22', '#3a7a62', '#4a5a9a', '#9a7034', '#7a4a7a', '#4a8aa0'], style: 'inkwash', amb: 'shanshui', snd: { wave: 'sine', root: 392, echo: true, kit: 'guqin' } },
-  // ---- puzzle collection: thinking games and the tools of a solver, each one opened by solving levels ----
-  { id: 'jigsaw', name: 'Yapboz', light: true, bg: '#e9dcc4', glow: '#fbf3e3', board: '#c4ad86', cell: '#d8c6a2', fg: '#3a2c1c', muted: '#76603f', accent: '#d2502a', ink: '#ffffff', btn: '#f6eddc', grey: '#b3a58c', stroke: '#fbf3e3',
-    blocks: ['#e4604f', '#ee9f3e', '#e6c548', '#6fb25e', '#4f9fd4', '#8a72cc', '#de6fa2'], style: 'jigsaw', amb: 'jigsawtable', snd: { wave: 'triangle', root: 523.25, pluck: true, kit: 'jigsaw' } },
-  { id: 'chalk', name: 'Kara Tahta', bg: '#1c3a2d', glow: '#2e5845', board: '#12261c', cell: '#1f3d2e', fg: '#f3f1e6', muted: '#a6bfae', accent: '#ffe27a', ink: '#12261c', btn: '#284e3b', grey: '#4d6356',
-    blocks: ['#f28b82', '#f7b267', '#f3df78', '#9be08f', '#8ecdf0', '#c3a6f0', '#f5a3cf'], style: 'chalk', amb: 'blackboard', snd: { wave: 'triangle', root: 440, kit: 'chalk' } },
-  { id: 'domino', name: 'Domino', bg: '#3a1420', glow: '#6a2434', board: '#22080e', cell: '#481a25', fg: '#fff3ea', muted: '#d4a3ad', accent: '#f2c14e', ink: '#22080e', btn: '#4f1f2c', grey: '#6a4f55',
-    blocks: ['#d23440', '#e5852a', '#d9a826', '#2f9a5a', '#2f6fc8', '#7a46b8', '#26232a'], style: 'domino', amb: 'dominorun', snd: { wave: 'triangle', root: 493.88, kit: 'domino' } },
-  { id: 'tangram', name: 'Tangram', light: true, bg: '#efe7d6', glow: '#fbf6ec', board: '#c6b99d', cell: '#dbcfb6', fg: '#2b2620', muted: '#6c6250', accent: '#c8402d', ink: '#ffffff', btn: '#f8f2e6', grey: '#b3aa98', stroke: '#fbf6ec',
-    blocks: ['#e04b3a', '#f29b2e', '#efc23a', '#3aa86a', '#2f86c8', '#6a52b8', '#e0609a'], style: 'tangram', amb: 'tans', snd: { wave: 'triangle', root: 587.33, pluck: true, kit: 'tangram' } },
-  { id: 'detective', name: 'Dedektif Panosu', bg: '#3a2a1c', glow: '#6b4a2c', board: '#22170e', cell: '#45311f', fg: '#fbf1e2', muted: '#cdb08c', accent: '#e0393a', ink: '#ffffff', btn: '#4c3624', grey: '#6e6052',
-    blocks: ['#f2cf45', '#efe9dc', '#ef98ae', '#8cc2e6', '#9cd187', '#f2a058', '#c8a274'], style: 'memo', amb: 'corkboard', snd: { wave: 'sine', root: 392, kit: 'detective' } },
-  { id: 'cipher', name: 'Şifre Makinesi', bg: '#171b1d', glow: '#2e3739', board: '#0c0f10', cell: '#1d2427', fg: '#f0ece0', muted: '#a2a9a3', accent: '#ffb43a', ink: '#0c0f10', btn: '#262e31', grey: '#4c5452',
-    blocks: ['#d8483a', '#e89a3a', '#d8c25a', '#4aa078', '#3a86c8', '#8a64c0', '#e8e2d0'], style: 'cipherkey', amb: 'enigma', snd: { wave: 'triangle', root: 440, kit: 'cipher' } },
-  { id: 'cube', name: 'Sihirli Küp', bg: '#1a1d2e', glow: '#353b5e', board: '#0e1020', cell: '#232741', fg: '#f2f4ff', muted: '#a3a9c8', accent: '#ffd23a', ink: '#0e1020', btn: '#2a2f4c', grey: '#4f5470',
-    blocks: ['#f4f4f0', '#ffd23a', '#e8333a', '#ff8a1e', '#2a6ce8', '#22b04a', '#9a5ae0'], style: 'cubeface', amb: 'cubes', snd: { wave: 'triangle', root: 523.25, kit: 'cube' } },
-  { id: 'blueprint', name: 'Mavi Kopya', bg: '#1b4f8c', glow: '#2f6db0', board: '#123b6c', cell: '#1c4b82', fg: '#f2f8ff', muted: '#acc8ea', accent: '#ffd75e', ink: '#123b6c', btn: '#245a98', grey: '#5a7598',
-    blocks: ['#ff8a7a', '#ffb760', '#ffe27a', '#7ee0a0', '#7fd4ff', '#c3a6ff', '#f2f6ff'], style: 'draft', amb: 'drafting', snd: { wave: 'sine', root: 587.33, kit: 'blueprint' } },
-  { id: 'alchemy', name: 'Simya Atölyesi', bg: '#1e1428', glow: '#42295c', board: '#120b1a', cell: '#271a35', fg: '#f6eedc', muted: '#bba8cc', accent: '#86f0a8', ink: '#120b1a', btn: '#2f2140', grey: '#584a66',
-    blocks: ['#e8434a', '#f2913a', '#f2d24a', '#52d07a', '#3ab0e0', '#9a62e8', '#e85ab0'], style: 'flask', amb: 'alchemylab', snd: { wave: 'sine', root: 466.16, echo: true, kit: 'alchemy' } },
-  { id: 'chess', name: 'Satranç', bg: '#2a2420', glow: '#5a4430', board: '#16110d', cell: '#3a2e24', fg: '#fbf3e4', muted: '#cbb497', accent: '#e8c35a', ink: '#16110d', btn: '#3c3027', grey: '#6a5c50',
-    blocks: ['#e8e0cc', '#c8503a', '#e0a040', '#4a9a6a', '#3a78b8', '#8a5ab0', '#b88a5a'], style: 'chesstile', amb: 'chessboard', snd: { wave: 'triangle', root: 392, echo: true, kit: 'chess' } },
+  dusk,
+  ocean,
+  forest,
+  sunset,
+  snow,
+  neon,
+  sakura,
+  volcano,
+  space,
+  honey,
+  gold,
+  glass,
+  choco,
+  slime,
+  wood,
+  gum,
+  retro,
+  amethyst,
+  coffee,
+  halloween,
+  xmas,
+  marble,
+  origami,
+  fruit,
+  aurora,
+  coral,
+  tomb,
+  iznik,
+  balloon,
+  ebru,
+  clock,
+  storm,
+  zen,
+  lavalamp,
+  cloud,
+  factory,
+  tropic,
+  fossil,
+  musicbox,
+  autumn,
+  sushi,
+  graffiti,
+  carnival,
+  gelato,
+  news,
+  calendar,
+  tea,
+  spice,
+  desert,
+  letter,
+  picnic,
+  library,
+  stained,
+  observatory,
+  train,
+  moon,
+  zeugma,
+  comet,
+  zellige,
+  bojagi,
+  rangoli,
+  kente,
+  talavera,
+  andes,
+  batik,
+  santorini,
+  persian,
+  inkmount,
+  jigsaw,
+  chalk,
+  domino,
+  tangram,
+  detective,
+  cipher,
+  cube,
+  blueprint,
+  alchemy,
+  chess,
 ];
 // derived fields: clear effect, outline and surface colors
 THEMES.forEach(th => {
-  th.fx = FX[th.id];
   th.stroke = th.stroke || th.board;
   th.surface = th.light ? mixHex(th.glow, th.bg, 0.25) : mixHex(th.bg, th.fg, 0.07);
 });
