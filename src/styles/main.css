@@ -362,6 +362,9 @@ body.tut-on .top, body.tut-on .scorebox { visibility: hidden; }
 /* Settings sheet */
 #settings { position: fixed; z-index: 6; display: flex; justify-content: center; align-items: flex-start; padding-inline: 16px; padding-block: 16px; overflow-y: auto; }
 .set-group { display: grid; gap: 8px; }
+.about { margin: 0 2px; color: var(--muted); font-size: .85rem; }
+.about-links { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 2px; }
+.about-links a { padding: 8px 0; color: var(--fg); font-size: .9rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .set-group h3 { margin: 4px 2px 0; color: var(--muted); font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .range { padding: 10px 12px 8px; border-radius: 14px; background: var(--btn); display: grid; gap: 4px; transition: opacity .2s; }
 .range-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }

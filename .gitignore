@@ -2,6 +2,9 @@ node_modules/
 build/
 *.apk
 *.aab
+*.jks
+*.keystore
+android/keystore.properties
 .DS_Store
 android/.gradle/
 android/app/build/
@@ -11,3 +14,4 @@ android/local.properties
 test-results/
 playwright-report/
 dist/
+dist-test/

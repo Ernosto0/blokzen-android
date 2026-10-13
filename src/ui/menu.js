@@ -13,7 +13,7 @@ import { startTutorial } from './tutorial.js';
 import { fmtNum } from '../i18n/index.js';
 
 /* ---------- Main menu ---------- */
-const LOGO = [[1, 1, 0, 0, 5], [0, 1, 3, 3, 5], [2, 2, 3, 3, 5]];
+export const LOGO = [[1, 1, 0, 0, 5], [0, 1, 3, 3, 5], [2, 2, 3, 3, 5]];
 export let menuOpen = false;
 export const inProgress = () => !state.over && state.moves > 0;
 export const fmtN = n => fmtNum(n | 0);

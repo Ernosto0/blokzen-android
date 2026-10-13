@@ -2,7 +2,7 @@ import { Sfx } from '../audio/sfx.js';
 import { buzz } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $ } from './dom.js';
-import { state, DEV_KEY, discovered, settings, syncOpen, theme } from '../core/state.js';
+import { state, DEV_KEY, DEV_TOOLS, discovered, settings, syncOpen, theme } from '../core/state.js';
 import { autoTheme } from '../themes/progress.js';
 import { saveMeta, setTheme } from '../themes/switching.js';
 import { syncSettings } from './settings.js';
@@ -26,7 +26,7 @@ function devMsg(text) {
   const el = $('menuTag'); el.textContent = text;
   clearTimeout(devMsgTimer); devMsgTimer = setTimeout(() => { el.textContent = ''; }, 2200);
 }
-$('menuTitle').addEventListener('click', () => {
+if (DEV_TOOLS) $('menuTitle').addEventListener('click', () => {
   const now = performance.now();
   devTaps = now - devLast < 1200 ? devTaps + 1 : 1; devLast = now;
   if (devTaps >= 7) { devTaps = 0; setDev(!state.devMode); devMsg(state.devMode ? t('Geliştirici modu açık: tüm temalar görünüyor') : t('Geliştirici modu kapandı')); buzz([12, 50, 12]); Sfx.unlock(); Sfx.pick(); }

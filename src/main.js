@@ -16,6 +16,8 @@ import './ui/settings.js';
 import './ui/devmode.js';
 import './ui/gallery.js';
 import './ui/tutorial.js';
+import './ui/back.js';
+import './platform/backbutton.js';
 
 import { bindModeButtons } from './ui/menu.js';
 import { start } from './boot.js';

@@ -29,8 +29,12 @@ jobs:
       - name: Install
         run: npm ci
 
+      # This APK is for testing on a phone, so it keeps the developer mode (7 taps on the menu title).
+      # The Play build (release.yml) is made without it.
       - name: Build the web game
         run: npm run build
+        env:
+          VITE_DEV_TOOLS: '1'
 
       - name: Smoke tests
         run: npx playwright install --with-deps chromium && npx playwright test

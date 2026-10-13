@@ -6,11 +6,6 @@ import { stats, TH, UNLOCKS } from '../themes/progress.js';
 import { rr, sprite } from '../render/sprites.js';
 import { paintBase } from '../render/backgrounds.js';
 import { saveMeta, setBlockMode, setTheme, updateRing } from '../themes/switching.js';
-import { closeMenu, inProgress, menuOpen, openMenu } from './menu.js';
-import { closeLevels } from './levels.js';
-import { closeInfo } from './info.js';
-import { closeSettings } from './settings.js';
-import { endTutorial, tut } from './tutorial.js';
 import { t, fmtNum, tUnit } from '../i18n/index.js';
 
 /* ---------- Theme gallery ---------- */
@@ -104,20 +99,10 @@ function chooseTheme(i) {
   updateRing();
 }
 export function openGallery() { Sfx.unlock(); renderGallery(); $('gallery').hidden = false; $('galClose').focus({ preventScroll: true }); }
-function closeGallery() { $('gallery').hidden = true; if (fresh.size) { fresh.clear(); saveMeta(); } }
+export function closeGallery() { $('gallery').hidden = true; if (fresh.size) { fresh.clear(); saveMeta(); } }
 $('themeBtn').addEventListener('click', openGallery);
 $('galClose').addEventListener('click', closeGallery);
 $('gallery').addEventListener('click', e => { if (e.target.id === 'gallery') closeGallery(); });
-document.addEventListener('keydown', e => {
-  if (e.key !== 'Escape') return;
-  if (tut) { endTutorial(); return; }
-  if (!$('levels').hidden) closeLevels();
-  else if (!$('info').hidden) closeInfo();
-  else if (!$('settings').hidden) closeSettings();
-  else if (!$('gallery').hidden) closeGallery();
-  else if (menuOpen) { if (inProgress()) closeMenu(); }
-  else openMenu();
-});
 $('autoTheme').addEventListener('change', e => {
   settings.auto = e.target.checked;
   if (settings.auto) {

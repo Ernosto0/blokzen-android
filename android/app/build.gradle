@@ -1,23 +1,45 @@
 apply plugin: 'com.android.application'
 
+// Version: versionName comes from package.json (the same number Settings → About shows); versionCode must grow with
+// every upload to Play, so CI passes its run number (the release workflow is the only one that uploads).
+def pkg = new groovy.json.JsonSlurper().parse(file('../../package.json'))
+
+// Release signing: android/keystore.properties (storeFile, storePassword, keyAlias, keyPassword) on a developer machine,
+// or the BLOKZEN_* environment variables in CI. Without them the release build is simply left unsigned.
+def keystoreProps = new Properties()
+def keystoreFile = rootProject.file('keystore.properties')
+if (keystoreFile.exists()) keystoreFile.withInputStream { keystoreProps.load(it) }
+def secret = { String key, String env -> keystoreProps[key] ?: System.getenv(env) }
+
 android {
-    namespace "com.cinaraksoy.blokzen"
-    compileSdk rootProject.ext.compileSdkVersion
+    namespace = "com.cinaraksoy.blokzen"
+    compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.cinaraksoy.blokzen"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "1")
+        versionName = pkg.version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
-            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        release {
+            if (secret("storeFile", "BLOKZEN_KEYSTORE")) {
+                storeFile = file(secret("storeFile", "BLOKZEN_KEYSTORE"))
+                storePassword = secret("storePassword", "BLOKZEN_KEYSTORE_PASSWORD")
+                keyAlias = secret("keyAlias", "BLOKZEN_KEY_ALIAS")
+                keyPassword = secret("keyPassword", "BLOKZEN_KEY_PASSWORD")
+            }
         }
     }
     buildTypes {
         release {
+            if (secret("storeFile", "BLOKZEN_KEYSTORE")) signingConfig = signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

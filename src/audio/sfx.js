@@ -30,6 +30,7 @@ export const Sfx = {
       this.ctx = ctx; this.out = g; this.send = send; this.noise = buf;
     } catch (e) { this.ctx = null; }
   },
+  suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); }, // app in the background: stop the audio clock and any tail still playing
   ok() { return this.ctx && !this.muted; },
   tone(freq, { type = 'sine', dur = 0.15, vol = 0.2, attack = 0.004, to = null, when = 0, detune = 0, wet = false } = {}) {
     const c = this.ctx, t = c.currentTime + when;
