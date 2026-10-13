@@ -189,6 +189,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .tcard canvas { width: 100%; aspect-ratio: 1; max-width: 100%; display: block; border-radius: 11px; }
 .tcard.cur { border-color: var(--accent); }
 .tcard.locked { cursor: default; }
+.tcard.locked .tname { color: var(--muted); }
 .tname { font-weight: 700; font-size: .9rem; line-height: 1.1; text-wrap: balance; padding-top: 3px; min-width: 0; overflow: hidden; }
 .tcard { min-width: 0; }
 .tstate.new { color: var(--accent); font-weight: 800; }
@@ -4803,17 +4804,20 @@ function drawPreview(c, i, known) {
   c.width = c.height = px;
   const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
   const th = THEMES[i];
-  if (!known) {
-    g.fillStyle = TH().board; g.fillRect(0, 0, size, size);
-    g.fillStyle = TH().muted; g.font = `800 ${size * 0.42}px "Baloo 2", sans-serif`;
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', size / 2, size * 0.54);
-    return;
-  }
   paintBase(g, th, size, size, 1);
   const pad = size * 0.12, bs = size - 2 * pad, cs = bs / 5;
   rr(g, pad - 3, pad - 3, bs + 6, bs + 6, size * 0.06); g.fillStyle = th.board; g.fill();
   const cpx = Math.ceil(cs * dpr);
   PREVIEW.forEach((row, r) => row.forEach((v, cc) => g.drawImage(sprite(i, v, cpx), pad + cc * cs, pad + r * cs, cs, cs)));
+  if (known) return;
+  // locked: a faded glimpse of the theme under a padlock, so players see what they are working toward
+  g.globalAlpha = 0.58; g.fillStyle = TH().board; g.fillRect(0, 0, size, size);
+  const lw = size * 0.26, lh = size * 0.2, lx = (size - lw) / 2, ly = size * 0.5;
+  g.globalAlpha = 0.92; g.strokeStyle = g.fillStyle = TH().fg;
+  g.lineWidth = size * 0.045; g.lineCap = 'round';
+  g.beginPath(); g.arc(size / 2, ly, lw * 0.32, Math.PI, 0); g.lineTo(size / 2 + lw * 0.32, ly + 1); g.moveTo(size / 2 - lw * 0.32, ly + 1); g.lineTo(size / 2 - lw * 0.32, ly); g.stroke();
+  rr(g, lx, ly, lw, lh, size * 0.035); g.fill();
+  g.globalAlpha = 1;
 }
 function renderGallery() {
   const wrap = $('cards'); wrap.textContent = '';
@@ -4832,7 +4836,7 @@ function renderGallery() {
     b.className = 'tcard' + (cur ? ' cur' : '') + (known ? '' : ' locked');
     if (!known) b.setAttribute('aria-disabled', 'true');
     const c = document.createElement('canvas');
-    const n = document.createElement('span'); n.className = 'tname'; n.textContent = known ? th.name : 'Gizli tema';
+    const n = document.createElement('span'); n.className = 'tname'; n.textContent = th.name;
     const s = document.createElement('span'); s.className = 'tstate' + (fresh.has(i) && !cur ? ' new' : '');
     s.textContent = cur ? (settings.auto ? 'Şu an' : 'Seçili') : fresh.has(i) ? 'Yeni!' : !known ? 'Kilitli' : devMode && !earned.has(i) ? 'Test' : 'Uygula';
     b.append(c, n, s);
@@ -4844,7 +4848,7 @@ function renderGallery() {
       const fill = document.createElement('i'); fill.style.width = (100 * have / u.goal) + '%'; bar.appendChild(fill);
       const pr = document.createElement('span'); pr.className = 'tprog'; pr.textContent = u.fmt ? u.fmt(have, u.goal) : have.toLocaleString('tr-TR') + ' / ' + u.goal.toLocaleString('tr-TR');
       b.append(t, bar, pr);
-      b.setAttribute('aria-label', 'Kilitli tema. ' + u.text + '. ' + pr.textContent);
+      b.setAttribute('aria-label', th.name + ', kilitli tema. ' + u.text + '. ' + pr.textContent);
     }
     wrap.appendChild(b);
     b.addEventListener('click', () => { if (known) chooseTheme(i); });
