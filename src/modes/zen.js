@@ -13,6 +13,7 @@ import { updateHud } from '../ui/hud.js';
 import { tut } from '../ui/tutorial.js';
 import { rr, sprite } from '../render/sprites.js';
 import { $ } from '../ui/dom.js';
+import { t } from '../i18n/index.js';
 
 /* Zen: an endless, calm game with its own save. The dealer stays generous, there are no levels, and when no piece fits
    the board breathes out (its fullest lines clear quietly, no points) instead of ending. */
@@ -27,7 +28,7 @@ function zenBreath(now) {
   state.combo = 0; state.msc = 0; state.gs.zrun = 0;
   stats.zenBreaths++; store.set(STATS_KEY, stats);
   checkUnlocks(now);
-  state.texts.push({ text: 'Nefes al, devam et', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 160, dur: 1900, size: L.cell * 0.66, role: 'accent' });
+  state.texts.push({ text: t('Nefes al, devam et'), x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 160, dur: 1900, size: L.cell * 0.66, role: 'accent' });
   Sfx.breath(); buzz([8, 60, 8]);
   refreshFits();
   if (!state.tray.some(t => t && t.fits)) deal(now + 500); // the cleared board still has no room for these pieces: new ones
@@ -44,13 +45,13 @@ function zenStatus() {
 let newTimer = 0;
 function resetNew() {
   clearTimeout(newTimer);
-  const z = $('zenNew'); z.classList.remove('confirm'); z.textContent = 'Sıfırla';
+  const z = $('zenNew'); z.classList.remove('confirm'); z.textContent = t('Sıfırla');
 }
 $('zenNew').addEventListener('click', () => {
   Sfx.unlock();
   const b = $('zenNew');
   if (b.classList.contains('confirm')) { resetNew(); switchMode('zen'); newGame(); closeMenu(); return; }
-  b.classList.add('confirm'); b.textContent = 'Silinecek · Onayla';
+  b.classList.add('confirm'); b.textContent = t('Silinecek · Onayla');
   newTimer = setTimeout(resetNew, 3000);
 });
 
@@ -71,10 +72,10 @@ defineMode({
   },
   renderCard() {
   const zs = zenStatus();
-  $('zenLbl').textContent = zs.prog ? 'Devam et' : 'Oyna';
-  $('zenSub').textContent = 'Bitmez, acele yok';
+  $('zenLbl').textContent = zs.prog ? t('Devam et') : t('Oyna');
+  $('zenSub').textContent = t('Bitmez, acele yok');
   $('zenFoot').hidden = !zs.prog;
-  if (zs.prog) $('zenInfo').textContent = `${fmtN(zs.lines)} sıra · ${fmtN(zs.score)} puan`;
+  if (zs.prog) $('zenInfo').textContent = t('{l} sıra · {s} puan', { l: fmtN(zs.lines), s: fmtN(zs.score) });
   },
   resetNew,
   started() { stats.zenSessions++; },

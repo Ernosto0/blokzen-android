@@ -15,6 +15,7 @@ import { resetConfirm } from '../game/input.js';
 import { closeMenu } from './menu.js';
 import { closeInfo } from './info.js';
 import { drawPiece } from '../render/render.js';
+import { t } from '../i18n/index.js';
 
 /* ---------- First-run guide: three scripted boards, a hand shows each move ---------- */
 const tutCol = (r, c) => 1 + ((r * 3 + c * 2) % 7);
@@ -49,8 +50,8 @@ export function tutGo(i, now) {
   for (const [r, c] of st.fill) { state.grid[r][c] = tutCol(r, c); pop[r][c] = now + 220 + (r + c) * 22; }
   state.tray = [null, { piece: { shape: SHAPES[st.piece], color: st.color }, appear: now + 420, ret: null, fits: true }, null];
   $('tutStep').textContent = `${i + 1}/${TUT.length}`;
-  $('tutTitle').textContent = st.title;
-  $('tutText').textContent = st.text;
+  $('tutTitle').textContent = t(st.title);
+  $('tutText').textContent = t(st.text);
   const tip = $('tutTip'); tip.hidden = false; tip.style.animation = 'none'; void tip.offsetWidth; tip.style.animation = '';
 }
 export function tutPlace(slot, r0, c0) {
@@ -73,7 +74,7 @@ export function tutPlace(slot, r0, c0) {
     }
     const clean = state.grid.every(row => row.every(v => !v));
     const midX = L.gx + L.B / 2 - L.pad;
-    state.texts.push({ text: clean ? 'Tahta tertemiz!' : lines >= 2 ? 'Harika!' : 'Güzel!', x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: 1300, size: L.cell * (clean ? 0.95 : 0.82), role: 'accent' });
+    state.texts.push({ text: clean ? t('Tahta tertemiz!') : lines >= 2 ? t('Harika!') : t('Güzel!'), x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: 1300, size: L.cell * (clean ? 0.95 : 0.82), role: 'accent' });
     if (clean) { state.flash = { t0: now + 80 }; burst(now + 60); Sfx.fullClear(); buzz([30, 40, 30, 40, 60]); }
     if (!state.REDUCED) state.shake = { amp: Math.min(3 + lines * 3 + (clean ? 8 : 0), 20), t0: now + 60 };
     Sfx.clear(lines, 1);

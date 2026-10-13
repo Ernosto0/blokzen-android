@@ -11,6 +11,7 @@ import { paintStars, resetShare, STAR_SVG } from '../game/flow.js';
 import { fmtN, inProgress, prepCanvas } from '../ui/menu.js';
 import { L } from '../render/layout.js';
 import { rr, sprite } from '../render/sprites.js';
+import { t, lang } from '../i18n/index.js';
 
 /* ---------- Daily challenge ----------
    One game a day that is the same for everyone: a seeded start board, a seeded dealer and three target scores.
@@ -18,13 +19,14 @@ import { rr, sprite } from '../render/sprites.js';
    Classic and daily keep separate saves, so switching modes never loses a game. */
 export const DAILY_SAVE_KEY = 'blokzen.daily.game', DAILY_KEY = 'blokzen.daily';
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-export const WEEKDAYS = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const WEEKDAYS = lang === 'tr' ? ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAILY_BASE = [5000, 25000, 100000]; // star targets before the day's own ±15% twist
 const niceTarget = x => x < 10000 ? Math.round(x / 500) * 500 : Math.round(x / 1000) * 1000;
 export const dayDate = k => new Date((k / 10000) | 0, (((k / 100) | 0) % 100) - 1, k % 100);
 const keyOf = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
 export const dayShift = (k, n) => { const d = dayDate(k); d.setDate(d.getDate() + n); return keyOf(d); };
-export const fmtDay = k => `${k % 100} ${MONTHS[(((k / 100) | 0) % 100) - 1]}`;
+export const fmtDay = k => { const m = (((k / 100) | 0) % 100) - 1; return lang === 'tr' ? `${k % 100} ${MONTHS[m]}` : `${MONTHS_EN[m]} ${k % 100}`; };
 function hash32(n) {
   let h = (n ^ 0x9E3779B9) >>> 0;
   h = Math.imul(h ^ (h >>> 16), 0x85EBCA6B); h = Math.imul(h ^ (h >>> 13), 0xC2B2AE35);
@@ -83,7 +85,7 @@ export function dailyProgress(now, midX) {
     const hr = new Date().getHours();
     if (hr >= 5 && hr < 9) stats.dailyMorning++; // a morning star, for the tea garden theme
     if (hr >= 22 || hr < 2) stats.dailyNight++;  // a late night star, for the library theme
-    state.texts.push({ text: st === 3 ? 'Üç yıldız!' : `${st}. yıldız!`, x: midX, y: L.gy + L.cell * 1.4, t0: now + 260, dur: 1700, size: L.cell * 0.78, role: 'accent' });
+    state.texts.push({ text: st === 3 ? t('Üç yıldız!') : t('{n}. yıldız!', { n: st }), x: midX, y: L.gy + L.cell * 1.4, t0: now + 260, dur: 1700, size: L.cell * 0.78, role: 'accent' });
     setTimeout(() => { Sfx.star(st); buzz([16, 40, 16]); }, 240);
   }
   if (st > rec.stars) {
@@ -120,8 +122,8 @@ function updateGoal() {
   });
   state.goalShown = state.gameDay;
   const next = tg.find(t => t > state.score);
-  $('goalNext').textContent = next ? fmtN(next) : 'Tamam!';
-  $('goalRow').setAttribute('aria-label', `Günlük hedef: ${st} / 3 yıldız` + (next ? `, sonraki ${fmtN(next)}` : ''));
+  $('goalNext').textContent = next ? fmtN(next) : t('Tamam!');
+  $('goalRow').setAttribute('aria-label', t('Günlük hedef: {n} / 3 yıldız', { n: st }) + (next ? t(', sonraki {n}', { n: fmtN(next) }) : ''));
 }
 
 function dailyStatus() {
@@ -145,16 +147,16 @@ defineMode({
   }
   },
   renderCard() {
-  const t = dayKey(), info = dailyStart(t), rec = daily.days[t], ds = dailyStatus(), st = rec ? rec.stars : 0;
+  const day = dayKey(), info = dailyStart(day), rec = daily.days[day], ds = dailyStatus(), st = rec ? rec.stars : 0;
   const nb = x => x.replace(/ /g, '\u00a0'); // keep each half on one line; wrap only at the dot
-  $('dailySub').textContent = nb(fmtDay(t)) + ' · ' + nb(rec && rec.best ? `En iyi ${fmtN(rec.best)}` : 'Herkese aynı tahta');
-  $('dailyLbl').textContent = ds.prog ? 'Devam et' : rec && rec.tries ? 'Tekrar' : 'Başla';
+  $('dailySub').textContent = nb(fmtDay(day)) + ' · ' + nb(rec && rec.best ? t('En iyi {n}', { n: fmtN(rec.best) }) : t('Herkese aynı tahta'));
+  $('dailyLbl').textContent = ds.prog ? t('Devam et') : rec && rec.tries ? t('Tekrar') : t('Başla');
   $('playDaily').querySelector('.mode-go').classList.toggle('soft', st === 3 && !ds.prog);
   paintStars($('dailyStars'), st, info.targets);
-  const sk = curStreak(), saved = daily.last === t;
-  $('streakTxt').textContent = sk ? `${sk} gün seri` : 'Seri yok';
+  const sk = curStreak(), saved = daily.last === day;
+  $('streakTxt').textContent = sk ? t('{n} gün seri', { n: sk }) : t('Seri yok');
   $('dailyStreak').classList.toggle('off', !sk);
-  $('dailyStreak').title = sk ? (saved ? 'Bugün yıldızını aldın, seri sürüyor' : 'Seriyi korumak için bugün bir yıldız al') : 'Bir yıldız al, seri başlasın';
+  $('dailyStreak').title = sk ? (saved ? t('Bugün yıldızını aldın, seri sürüyor') : t('Seriyi korumak için bugün bir yıldız al')) : t('Bir yıldız al, seri başlasın');
   },
   // the day's prepared board and seeded dealer; each start counts a try
   setup(now) {
@@ -184,17 +186,17 @@ defineMode({
   updateHud: updateGoal,
   overCard() {
     $('finalScore').textContent = fmtN(state.score);
-    $('overTitle').textContent = 'Günlük · ' + fmtDay(state.gameDay);
-    $('newRec').textContent = 'Bugünün rekoru!';
+    $('overTitle').textContent = t('Günlük') + ' · ' + fmtDay(state.gameDay);
+    $('newRec').textContent = t('Bugünün rekoru!');
     $('newRec').hidden = !state.newRecord;
     $('overStars').hidden = false; $('share').hidden = false;
-    $('again').textContent = 'Tekrar dene';
+    $('again').textContent = t('Tekrar dene');
     const tg = dailyStart(state.gameDay).targets, st = starsFor(state.score, tg), dayStars = dayRec(state.gameDay).stars;
     paintStars($('overStars'), st, tg);
     const next = tg.find(t => t > state.score);
-    $('overSub').textContent = `Bugünün en iyisi: ${fmtN(dayBest(state.gameDay))}` + (dayStars > st ? ` · ${dayStars} yıldız` : '');
+    $('overSub').textContent = t('Bugünün en iyisi: {n}', { n: fmtN(dayBest(state.gameDay)) }) + (dayStars > st ? ' · ' + t('{n} yıldız', { n: dayStars }) : '');
     const sk = curStreak();
-    $('overNote').textContent = next ? `Sonraki yıldız ${fmtN(next)} puanda.` + (sk ? ` Seri: ${sk} gün.` : '') : (sk ? `Seri: ${sk} gün. Yarın yeni tahta!` : 'Yarın yeni tahta!');
+    $('overNote').textContent = next ? t('Sonraki yıldız {n} puanda.', { n: fmtN(next) }) + (sk ? ' ' + t('Seri: {n} gün.', { n: sk }) : '') : (sk ? t('Seri: {n} gün.', { n: sk }) + ' ' + t('Yarın yeni tahta!') : t('Yarın yeni tahta!'));
     $('overNote').hidden = false;
     resetShare();
   },

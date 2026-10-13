@@ -4,6 +4,7 @@ import { $, elBest, elCombo, elScore } from './dom.js';
 import { state } from '../core/state.js';
 import { updateRing } from '../themes/switching.js';
 import { restartLabel } from '../game/input.js';
+import { t } from '../i18n/index.js';
 
 /* ---------- HUD ---------- */
 let bumpTimer = 0;
@@ -16,7 +17,7 @@ export function bumpScore() {
 export function updateHud() {
   const m = mode(), info = m.hud();
   elBest.textContent = info.best;
-  $('bestBox').title = info.bestTitle;
+  $('bestBox').title = t(info.bestTitle);
   $('icoBest').toggleAttribute('hidden', info.icon !== 'best'); $('icoZen').toggleAttribute('hidden', info.icon !== 'zen'); $('icoPuz').toggleAttribute('hidden', info.icon !== 'puz'); // svg elements have no .hidden property
   for (const x of Object.values(MODES)) if (x.bodyClass) document.body.classList.toggle(x.bodyClass, x === m);
   $('goalRow').hidden = !info.goalRow;
@@ -26,10 +27,10 @@ export function updateHud() {
   if (!$('restart').classList.contains('confirm')) $('restart').setAttribute('aria-label', restartLabel());
   const lvl = levelOf(state.score), el = $('lvl');
   el.hidden = lvl < 2 || !mode().levels;
-  el.innerHTML = `Seviye ${lvl}<b>${fmtMult(levelMult(lvl))}</b>`;
+  el.innerHTML = `${t('Seviye {n}', { n: lvl })}<b>${fmtMult(levelMult(lvl))}</b>`;
   if (state.combo >= 2) {
     const left = 3 - state.msc;
-    elCombo.innerHTML = 'Kombo ' + state.combo + ' ' + fmtMult(comboMult(state.combo)) + ' <span class="dots">' + [0, 1, 2].map(i => `<i class="${i < left ? 'on' : ''}"></i>`).join('') + '</span>';
+    elCombo.innerHTML = t('Kombo') + ' ' + state.combo + ' ' + fmtMult(comboMult(state.combo)) + ' <span class="dots">' + [0, 1, 2].map(i => `<i class="${i < left ? 'on' : ''}"></i>`).join('') + '</span>';
     elCombo.hidden = false;
   } else elCombo.hidden = true;
   updateRing();
@@ -41,5 +42,5 @@ export function updateUndoBtn() {
   u.setAttribute('aria-disabled', String(!ok));
   $('undoBadge').hidden = !left;
   $('undoBadge').textContent = left;
-  u.setAttribute('aria-label', !left ? spent : ok ? `Son hamleyi geri al (${left} hak)` : 'Geri alınacak hamle yok');
+  u.setAttribute('aria-label', !left ? t(spent) : ok ? t('Son hamleyi geri al ({n} hak)', { n: left }) : t('Geri alınacak hamle yok'));
 }

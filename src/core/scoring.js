@@ -1,6 +1,7 @@
 import { stageAt } from '../themes/catalog.js';
 import { mode } from '../modes/registry.js';
 import { shuffle } from './dealer.js';
+import { fmtNum } from '../i18n/index.js';
 
 /* ---------- Scoring: level, combo and full-clear multipliers ---------- */
 const LINE_BASE = [0, 10, 30, 60, 100, 150, 210, 280, 360, 450, 550, 660, 780, 910, 1050, 1200, 1360];
@@ -17,7 +18,7 @@ export function scoreMove(size, lines, combo, fullClear, fullsBefore, sc) {
     full: fullClear ? Math.round(500 * Math.min(fullsBefore + 1, m.fullCap) * lm) : 0, // 500, 1000, 1500 ... per full clear in the game
   };
 }
-export const fmtMult = m => '×' + m.toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+export const fmtMult = m => '×' + fmtNum(m, { maximumFractionDigits: 2 });
 
 export function colorize(shapes) {
   const pool = shuffle([1, 2, 3, 4, 5, 6, 7]); // a real shuffle: a random sort comparator gives different results in different browsers

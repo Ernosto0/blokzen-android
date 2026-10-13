@@ -11,6 +11,7 @@ import { closeLevels } from './levels.js';
 import { closeInfo } from './info.js';
 import { closeSettings } from './settings.js';
 import { endTutorial, tut } from './tutorial.js';
+import { t, fmtNum, tUnit } from '../i18n/index.js';
 
 /* ---------- Theme gallery ---------- */
 const PREVIEW = [[0, 0, 3, 0, 0], [0, 2, 3, 4, 0], [1, 2, 5, 4, 7], [1, 6, 5, 6, 7], [0, 6, 6, 6, 0]];
@@ -42,13 +43,13 @@ function drawPreview(c, i, known) {
 export function renderGallery() {
   const wrap = $('cards'); wrap.textContent = '';
   $('autoTheme').checked = settings.auto;
-  $('galCount').textContent = `${earned.size}/${T} açık` + (state.devMode ? ' · geliştirici' : '');
+  $('galCount').textContent = t('{n}/{total} açık', { n: earned.size, total: T }) + (state.devMode ? ' · ' + t('geliştirici') : '');
   const nextAt = milestone(theme.stage + 1);
   $('galHint').textContent = (settings.auto
-    ? `Tema ${nextAt.toLocaleString('tr-TR')} puanda açık temalardan bir sonrakine geçer. `
-    : 'Seçtiğin tema sabit kalır. ') + (state.devMode ? 'Geliştirici modu açık: kilitli temalar da gösteriliyor ve "Test" yazıyor.' : 'Kilitli temalar, altlarında yazan görevi tamamlayınca açılır.');
+    ? t('Tema {n} puanda açık temalardan bir sonrakine geçer.', { n: fmtNum(nextAt) }) + ' '
+    : t('Seçtiğin tema sabit kalır.') + ' ') + (state.devMode ? t('Geliştirici modu açık: kilitli temalar da gösteriliyor ve "Test" yazıyor.') : t('Kilitli temalar, altlarında yazan görevi tamamlayınca açılır.'));
   THEMES.forEach((th, i) => {
-    const sec = { news: 'Günlük koleksiyon', zellige: 'Zen koleksiyonu', jigsaw: 'Bulmaca koleksiyonu' }[th.id];
+    const sec = { news: t('Günlük koleksiyon'), zellige: t('Zen koleksiyonu'), jigsaw: t('Bulmaca koleksiyonu') }[th.id];
     if (sec) { const h = document.createElement('h3'); h.className = 'gal-sec'; h.textContent = sec; wrap.appendChild(h); }
     const known = discovered.has(i), cur = i === theme.cur;
     const b = document.createElement('button');
@@ -56,19 +57,19 @@ export function renderGallery() {
     b.className = 'tcard' + (cur ? ' cur' : '') + (known ? '' : ' locked');
     if (!known) b.setAttribute('aria-disabled', 'true');
     const c = document.createElement('canvas');
-    const n = document.createElement('span'); n.className = 'tname'; n.textContent = known ? th.name : '???'; // a locked theme keeps its name a surprise
+    const n = document.createElement('span'); n.className = 'tname'; n.textContent = known ? t(th.name) : '???'; // a locked theme keeps its name a surprise
     const s = document.createElement('span'); s.className = 'tstate' + (fresh.has(i) && !cur ? ' new' : '');
-    s.textContent = cur ? (settings.auto ? 'Şu an' : 'Seçili') : fresh.has(i) ? 'Yeni!' : !known ? 'Kilitli' : state.devMode && !earned.has(i) ? 'Test' : 'Uygula';
+    s.textContent = cur ? (settings.auto ? t('Şu an') : t('Seçili')) : fresh.has(i) ? t('Yeni!') : !known ? t('Kilitli') : state.devMode && !earned.has(i) ? t('Test') : t('Uygula');
     b.append(c, n, s);
     const u = UNLOCKS[th.id];
     if (!known && u) {
       const have = Math.min(u.val(stats), u.goal);
-      const t = document.createElement('span'); t.className = 'tgoal'; t.textContent = u.text;
+      const g = document.createElement('span'); g.className = 'tgoal'; g.textContent = t(u.text);
       const bar = document.createElement('span'); bar.className = 'tbar';
       const fill = document.createElement('i'); fill.style.width = (100 * have / u.goal) + '%'; bar.appendChild(fill);
-      const pr = document.createElement('span'); pr.className = 'tprog'; pr.textContent = u.fmt ? u.fmt(have, u.goal) : have.toLocaleString('tr-TR') + ' / ' + u.goal.toLocaleString('tr-TR');
-      b.append(t, bar, pr);
-      b.setAttribute('aria-label', 'Kilitli tema. ' + u.text + '. ' + pr.textContent);
+      const pr = document.createElement('span'); pr.className = 'tprog'; pr.textContent = u.fmt ? tUnit(u.fmt(have, u.goal)) : fmtNum(have) + ' / ' + fmtNum(u.goal);
+      b.append(g, bar, pr);
+      b.setAttribute('aria-label', t('Kilitli tema.') + ' ' + t(u.text) + '. ' + pr.textContent);
     }
     wrap.appendChild(b);
     b.addEventListener('click', () => { if (known) chooseTheme(i); });

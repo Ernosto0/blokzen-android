@@ -17,6 +17,7 @@ import { burst } from '../themes/switching.js';
 import { readPrev } from './classic.js';
 import { applyPrefs } from '../ui/settings.js';
 import { drawGemOn, rr, sprite } from '../render/sprites.js';
+import { t, lang } from '../i18n/index.js';
 
 // best stars per level id; levels that have been lost once, and those later won with three stars (chalkboard theme) (saved)
 // clean: levels solved with three stars in one attempt that never ran out and never used the undo (cipher theme)
@@ -33,8 +34,8 @@ export const puzStarsFor = (left, th) => left >= th[2] ? 3 : left >= th[1] ? 2 :
 export const piecesLeft = () => puzLevel().pieces.length - state.moves;
 export const countGems = g => g ? g.reduce((n, row) => n + row.filter(Boolean).length, 0) : 0;
 const SUFFIX = ["'lu", "'li", "'li", "'lü", "'lü", "'li", "'lı", "'li", "'li", "'lu"];
-const comboWord = n => n + SUFFIX[n % 10];
-export const goalText = lv => { const g = lv.goal; return g.type === 'gems' ? 'Bütün taşları temizle' : g.type === 'clear' ? 'Tahtayı tamamen boşalt' : g.type === 'score' ? `${fmtN(g.target)} puana ulaş` : `${comboWord(g.n)} kombo yap`; };
+const comboWord = n => lang === 'tr' ? n + SUFFIX[n % 10] : n; // Turkish takes a suffix after the number
+export const goalText = lv => { const g = lv.goal; return g.type === 'gems' ? t('Bütün taşları temizle') : g.type === 'clear' ? t('Tahtayı tamamen boşalt') : g.type === 'score' ? t('{n} puana ulaş', { n: fmtN(g.target) }) : t('{n} kombo yap', { n: comboWord(g.n) }); };
 export const GOAL_ICON = {
   gems: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6l4.6 5.1L12 21.4 7.4 7.7z" opacity=".55"/><path d="M7.4 7.7L12 2.6 3.4 7.7l8.6 13.7zM16.6 7.7L12 2.6l8.6 5.1L12 21.4z"/></svg>',
   clear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5" stroke-dasharray="3.4 3"/></svg>',
@@ -87,10 +88,10 @@ export function puzGoal() {
   const g = puzLevel().goal;
   // word: the leading word, dropped on narrow screens where the icon says it
   const out = (done, word, rest) => ({ done, label: word + rest, html: `<span class="pw">${word}</span>${rest}` });
-  if (g.type === 'gems') { const left = countGems(state.puz.gems); return out(!left, 'Taşlar ', `${state.puz.gemTotal - left} / ${state.puz.gemTotal}`); }
-  if (g.type === 'clear') { const n = state.grid.reduce((k, row) => k + row.filter(Boolean).length, 0); return n ? out(false, 'Kalan ', `${n} blok`) : out(true, '', 'Tahta boş'); }
-  if (g.type === 'score') return out(state.score >= g.target, 'Puan ', `${fmtN(state.score)} / ${fmtN(g.target)}`);
-  return out(state.combo >= g.n, 'Kombo ', `${Math.min(state.combo, g.n)} / ${g.n}`);
+  if (g.type === 'gems') { const left = countGems(state.puz.gems); return out(!left, t('Taşlar') + ' ', `${state.puz.gemTotal - left} / ${state.puz.gemTotal}`); }
+  if (g.type === 'clear') { const n = state.grid.reduce((k, row) => k + row.filter(Boolean).length, 0); return n ? out(false, t('Kalan') + ' ', t('{n} blok', { n })) : out(true, '', t('Tahta boş')); }
+  if (g.type === 'score') return out(state.score >= g.target, t('Puan') + ' ', `${fmtN(state.score)} / ${fmtN(g.target)}`);
+  return out(state.combo >= g.n, t('Kombo') + ' ', `${Math.min(state.combo, g.n)} / ${g.n}`);
 }
 export const trayIds = () => state.tray.map(t => t ? { s: t.piece.shape.id, c: t.piece.color } : null);
 // one undo per attempt: keep the state from before the latest move while it is still available
@@ -104,16 +105,16 @@ export function puzRemember() {
 export const MINI_STAR = on => STAR_SVG.replace('<svg ', `<svg class="${on ? 'on' : ''}" `);
 function updatePuzzleHud() {
   const lv = puzLevel(), g = puzGoal(), left = piecesLeft(), pot = puzStarsFor(left, lv.stars);
-  $('puzName').textContent = `${state.puz.li + 1} · ${lv.title}`;
-  $('puzTitle').setAttribute('aria-label', `Bölüm ${state.puz.li + 1}, ${lv.title}. Bölüm listesini aç`);
+  $('puzName').textContent = `${state.puz.li + 1} · ${t(lv.title)}`;
+  $('puzTitle').setAttribute('aria-label', t('Bölüm {n}, {title}. Bölüm listesini aç', { n: state.puz.li + 1, title: t(lv.title) }));
   const goal = $('puzGoal');
   goal.innerHTML = GOAL_ICON[lv.goal.type] + `<span>${g.html}</span>`;
   goal.classList.toggle('done', g.done);
   goal.title = goalText(lv);
-  goal.setAttribute('aria-label', `Hedef: ${goalText(lv)}. ${g.label}`);
+  goal.setAttribute('aria-label', t('Hedef: {g}. {l}', { g: goalText(lv), l: g.label }));
   const lf = $('puzLeft');
-  lf.innerHTML = `<span>${left} parça</span><span class="pst">${[0, 1, 2].map(i => MINI_STAR(i < pot)).join('')}</span>`;
-  lf.title = `Kalan parça ${left}. Şimdi bitirirsen ${pot} yıldız`;
+  lf.innerHTML = `<span>${t('{n} parça', { n: left })}</span><span class="pst">${[0, 1, 2].map(i => MINI_STAR(i < pot)).join('')}</span>`;
+  lf.title = t('Kalan parça {n}. Şimdi bitirirsen {s} yıldız', { n: left, s: pot });
   lf.setAttribute('aria-label', lf.title);
   updateUndoBtn();
 }
@@ -136,7 +137,7 @@ function puzWin(now) {
   state.drag = null;
   refreshFits(); updateHud();
   const midX = L.gx + L.B / 2 - L.pad;
-  state.texts.push({ text: 'Bölüm tamam!', x: midX, y: L.gy + L.cell * 4.1, t0: now + 380, dur: 1500, size: L.cell * 0.9, role: 'accent' });
+  state.texts.push({ text: t('Bölüm tamam!'), x: midX, y: L.gy + L.cell * 4.1, t0: now + 380, dur: 1500, size: L.cell * 0.9, role: 'accent' });
   setTimeout(() => { if (!state.puz.won) return; burst(performance.now()); Sfx.star(st); buzz([16, 40, 16, 40, 30]); }, 420);
   setTimeout(showOver, state.REDUCED ? 800 : 1500);
 }
@@ -179,27 +180,27 @@ defineMode({
 // win: the level name, its stars and how to earn the next one; fail: what ran out, how far the goal got, and the undo if it is still there
 function puzzleOverCard() {
   const lv = puzLevel(), won = state.puz.won, hasNext = state.puz.li + 1 < LEVELS.length;
-  $('overTitle').textContent = won ? 'Bölüm tamam' : `Bölüm ${state.puz.li + 1} · ${lv.title}`;
-  $('finalScore').textContent = won ? lv.title : state.puz.fail === 'pieces' ? 'Parçalar bitti' : 'Yer kalmadı';
+  $('overTitle').textContent = won ? t('Bölüm tamam') : t('Bölüm {n}', { n: state.puz.li + 1 }) + ' · ' + t(lv.title);
+  $('finalScore').textContent = won ? t(lv.title) : state.puz.fail === 'pieces' ? t('Parçalar bitti') : t('Yer kalmadı');
   $('overStars').hidden = !won; $('share').hidden = true;
-  $('newRec').textContent = 'Yeni en iyi!'; $('newRec').hidden = !(won && state.puz.newBest);
+  $('newRec').textContent = t('Yeni en iyi!'); $('newRec').hidden = !(won && state.puz.newBest);
   const note = $('overNote');
   if (won) {
     $('overStars').innerHTML = [0, 1, 2].map(i => `<span class="star${i < state.puz.stars ? ' on' : ''}">${STAR_SVG}</span>`).join('');
-    $('overStars').setAttribute('aria-label', `${state.puz.stars} / 3 yıldız`);
-    $('overSub').textContent = `Kalan parça: ${state.puz.left}`;
+    $('overStars').setAttribute('aria-label', t('{n} / 3 yıldız', { n: state.puz.stars }));
+    $('overSub').textContent = t('Kalan parça: {n}', { n: state.puz.left });
     const need = state.puz.stars < 3 ? lv.stars[state.puz.stars] - state.puz.left : 0;
-    note.textContent = need > 0 ? `${state.puz.stars + 1}. yıldız için ${need} parça daha az kullan.` : hasNext ? '' : 'Bu grubun bütün bölümlerini bitirdin!';
-    if (state.puz.opened.length) note.textContent = `Yeni tema açıldı: ${state.puz.opened.join(', ')}!` + (note.textContent ? ' ' + note.textContent : '');
-    $('again').textContent = hasNext ? 'Sonraki bölüm' : 'Bölümler';
+    note.textContent = need > 0 ? t('{s}. yıldız için {n} parça daha az kullan.', { s: state.puz.stars + 1, n: need }) : hasNext ? '' : t('Bu grubun bütün bölümlerini bitirdin!');
+    if (state.puz.opened.length) note.textContent = t('Yeni tema açıldı: {names}!', { names: state.puz.opened.join(', ') }) + (note.textContent ? ' ' + note.textContent : '');
+    $('again').textContent = hasNext ? t('Sonraki bölüm') : t('Bölümler');
     $('puzLevels').hidden = !hasNext;
     $('puzRetry').hidden = false; $('puzUndo').hidden = true;
   } else {
-    $('overSub').textContent = `Hedef: ${goalText(lv)} · ` + puzGoal().label.replace(/ /g, '\u00a0'); // the progress stays on one line
+    $('overSub').textContent = t('Hedef: {g}', { g: goalText(lv) }) + ' · ' + puzGoal().label.replace(/ /g, '\u00a0'); // the progress stays on one line
     const undo = canUndo();
-    note.textContent = undo ? 'Son hamleni bir kez geri alabilirsin.' : '';
-    if (state.puz.opened.length) note.textContent = `Yeni tema açıldı: ${state.puz.opened.join(', ')}!` + (note.textContent ? ' ' + note.textContent : '');
-    $('again').textContent = 'Tekrar dene';
+    note.textContent = undo ? t('Son hamleni bir kez geri alabilirsin.') : '';
+    if (state.puz.opened.length) note.textContent = t('Yeni tema açıldı: {names}!', { names: state.puz.opened.join(', ') }) + (note.textContent ? ' ' + note.textContent : '');
+    $('again').textContent = t('Tekrar dene');
     $('puzRetry').hidden = true; $('puzUndo').hidden = !undo; $('puzLevels').hidden = false;
   }
   note.hidden = !note.textContent;
@@ -215,7 +216,7 @@ function puzUndo() {
   state.over = false; $('over').hidden = true;
   state.clearing = []; state.texts = []; state.shake = null; state.flash = null;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) pop[r][c] = state.grid[r][c] ? now + (r + c) * 10 : 0;
-  state.texts.push({ text: 'Geri alındı', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1000, size: L.cell * 0.6, role: 'fg' });
+  state.texts.push({ text: t('Geri alındı'), x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1000, size: L.cell * 0.6, role: 'fg' });
   if (Sfx.ok()) { Sfx.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 3000, to: 600, q: 0.8 }); Sfx.pick(); }
   buzz(12);
   refreshFits(); updateHud(); save();
@@ -237,9 +238,9 @@ defineMode({
   },
   renderCard() {
   const ps = puzzleStatus(), solved = puzSolved(), nx = nextLevelIndex();
-  $('puzzleSub').textContent = `${puzTotalStars()} / ${LEVELS.length * 3} yıldız`;
-  $('puzzleLbl').textContent = ps.prog ? 'Devam et' : nx < 0 ? 'Bölümler' : 'Başla';
-  $('puzzleInfo').textContent = ps.prog ? `Bölüm ${ps.li + 1} yarım kaldı` : nx < 0 ? `${solved} bölümün hepsi çözüldü` : `Sıradaki: Bölüm ${nx + 1}`;
+  $('puzzleSub').textContent = t('{a} / {b} yıldız', { a: puzTotalStars(), b: LEVELS.length * 3 });
+  $('puzzleLbl').textContent = ps.prog ? t('Devam et') : nx < 0 ? t('Bölümler') : t('Başla');
+  $('puzzleInfo').textContent = ps.prog ? t('Bölüm {n} yarım kaldı', { n: ps.li + 1 }) : nx < 0 ? t('{n} bölümün hepsi çözüldü', { n: solved }) : t('Sıradaki: Bölüm {n}', { n: nx + 1 });
   $('playPuzzle').querySelector('.mode-go').classList.toggle('soft', !ps.prog && nx < 0);
   },
   // carry on with a half-played level, else start the next unsolved one; with every level solved, show the list
@@ -282,7 +283,7 @@ defineMode({
     stats.puzzleGemsTotal += gemHit; // every gem ever broken (alchemy theme)
     if (rows && cols) stats.puzzleCross++; // a row and a column in the same move (magic cube theme)
   },
-  gemPraise(gemHit) { return !countGems(state.puz.gems) ? 'Son taş!' : gemHit > 1 ? `${gemHit} taş birden!` : 'Bir taş gitti!'; },
+  gemPraise(gemHit) { return !countGems(state.puz.gems) ? t('Son taş!') : gemHit > 1 ? t('{n} taş birden!', { n: gemHit }) : t('Bir taş gitti!'); },
   afterMove({ lines }) { stats.puzzlePlaced++; stats.puzzleLines += lines; },
   // a level: its own counters only, no level-ups, theme steps or records; only the puzzle collection's tasks move
   finishMove(now) {

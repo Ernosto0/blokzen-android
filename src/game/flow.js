@@ -17,6 +17,7 @@ import { bumpScore, updateHud } from '../ui/hud.js';
 import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
 import { tut } from '../ui/tutorial.js';
+import { t, fmtNum } from '../i18n/index.js';
 
 /* ---------- Game flow ---------- */
 export function deal(now = performance.now()) {
@@ -170,14 +171,14 @@ export function placePiece(slot, r0, c0) {
     const pts = sc.clear + sc.full;
     const grow = Math.min(1.7, 1 + pts / 2500);
 
-    state.texts.push({ text: '+' + pts.toLocaleString('tr-TR'), x: pcx, y: pcy, t0: now + 80, dur: 950, size: L.cell * 0.62 * grow, role: pts >= 400 ? 'accent' : 'fg' });
-    let praise = boardClean ? (state.fulls ? `Tertemiz ×${state.fulls + 1}!` : 'Tahta tertemiz!') : lines >= 4 ? 'Muhteşem!' : lines === 3 ? 'Harika!' : lines === 2 ? 'Güzel!' : null;
+    state.texts.push({ text: '+' + fmtNum(pts), x: pcx, y: pcy, t0: now + 80, dur: 950, size: L.cell * 0.62 * grow, role: pts >= 400 ? 'accent' : 'fg' });
+    let praise = boardClean ? (state.fulls ? t('Tertemiz ×{n}!', { n: state.fulls + 1 }) : t('Tahta tertemiz!')) : lines >= 4 ? t('Muhteşem!') : lines === 3 ? t('Harika!') : lines === 2 ? t('Güzel!') : null;
     if (gemHit && !boardClean && m.gemPraise) praise = m.gemPraise(gemHit);
     if (praise) state.texts.push({ text: praise, x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: boardClean ? 1500 : 1100, size: L.cell * (boardClean ? 1.0 : 0.82), role: 'accent' });
-    if (state.combo >= 2) state.texts.push({ text: `Kombo ${state.combo} · Puan ${fmtMult(comboMult(state.combo))}`, x: midX, y: L.gy + L.cell * (praise ? (boardClean ? 3.8 : 3.6) : 2.8), t0: now + 200, dur: 1050, size: L.cell * 0.5 * Math.min(1.45, 1 + state.combo * 0.05), role: 'fg' });
+    if (state.combo >= 2) state.texts.push({ text: t('Kombo {c} · Puan {m}', { c: state.combo, m: fmtMult(comboMult(state.combo)) }), x: midX, y: L.gy + L.cell * (praise ? (boardClean ? 3.8 : 3.6) : 2.8), t0: now + 200, dur: 1050, size: L.cell * 0.5 * Math.min(1.45, 1 + state.combo * 0.05), role: 'fg' });
     if (boardClean) {
       state.fulls++;
-      state.texts.push({ text: '+' + sc.full.toLocaleString('tr-TR') + ' bonus', x: midX, y: L.gy + L.cell * 5.2, t0: now + 320, dur: 1400, size: L.cell * 0.6, role: 'accent' });
+      state.texts.push({ text: t('+{n} bonus', { n: fmtNum(sc.full) }), x: midX, y: L.gy + L.cell * 5.2, t0: now + 320, dur: 1400, size: L.cell * 0.6, role: 'accent' });
       state.flash = { t0: now + 80 };
       burst(now + 60);
       Sfx.fullClear();
@@ -201,7 +202,7 @@ export function placePiece(slot, r0, c0) {
   if (m.finishMove && m.finishMove(now)) return; // the puzzle ends or continues a move its own way
   const lvl = levelOf(state.score);
   if (lvl > lvlBefore && mode().levels) {
-    state.texts.push({ text: `Seviye ${lvl} · Puan ${fmtMult(levelMult(lvl))}`, x: midX, y: L.gy + L.cell * 6.4, t0: now + (lines ? 900 : 400), dur: 1800, size: L.cell * 0.52, role: 'accent' });
+    state.texts.push({ text: t('Seviye {n} · Puan {m}', { n: lvl, m: fmtMult(levelMult(lvl)) }), x: midX, y: L.gy + L.cell * 6.4, t0: now + (lines ? 900 : 400), dur: 1800, size: L.cell * 0.52, role: 'accent' });
     $('lvl').classList.add('up'); setTimeout(() => $('lvl').classList.remove('up'), 900);
   }
 
@@ -296,7 +297,7 @@ export function showOver() {
   $('overStars').classList.toggle('big', lvl);
   $('puzRetry').hidden = $('puzLevels').hidden = $('puzUndo').hidden = !lvl;
   $('toMenu').hidden = lvl;
-  $('puzUndo').textContent = 'Geri al';
+  $('puzUndo').textContent = t('Geri al');
   const rv = canRevive();
   $('revive').hidden = !rv;
   $('again').className = rv ? 'ghost' : 'cta'; // with a continue on offer, a new game is the quieter choice
@@ -309,14 +310,14 @@ export function showOver() {
 export const STAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg>';
 export function paintStars(el, n, tg) {
   el.innerHTML = tg.map((t, i) => `<span class="star${i < n ? ' on' : ''}">${STAR_SVG}<small>${fmtN(t)}</small></span>`).join('');
-  el.setAttribute('aria-label', `${n} / 3 yıldız`);
+  el.setAttribute('aria-label', t('{n} / 3 yıldız', { n }));
 }
 export function shareText() {
   const tg = dailyStart(state.gameDay).targets, st = starsFor(state.score, tg), sk = curStreak();
-  return `Blokzen Günlük · ${fmtDay(state.gameDay)}\n${'★'.repeat(st)}${'☆'.repeat(3 - st)}  ${fmtN(state.score)} puan` + (sk ? `\nSeri: ${sk} gün` : '');
+  return `${t('Blokzen Günlük')} · ${fmtDay(state.gameDay)}\n${'★'.repeat(st)}${'☆'.repeat(3 - st)}  ${t('{n} puan', { n: fmtN(state.score) })}` + (sk ? `\n${t('Seri: {n} gün', { n: sk })}` : '');
 }
 
-export function resetShare() { clearTimeout(state.shareTimer); $('share').textContent = 'Sonucu kopyala'; }
+export function resetShare() { clearTimeout(state.shareTimer); $('share').textContent = t('Sonucu kopyala'); }
 export async function copyText(text) {
   try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
   try {

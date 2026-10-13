@@ -11,6 +11,7 @@ import { newGame, placePiece } from './flow.js';
 import { openLevels } from '../ui/levels.js';
 import { syncSettings } from '../ui/settings.js';
 import { tut, TUT, tutPlace } from '../ui/tutorial.js';
+import { t } from '../i18n/index.js';
 
 /* ---------- Input ---------- */
 function pt(e) { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
@@ -84,7 +85,7 @@ export function toggleMute() {
 $('mute').addEventListener('click', toggleMute);
 export function syncMute() {
   $('icoOn').hidden = Sfx.muted; $('icoOff').hidden = !Sfx.muted;
-  $('mute').setAttribute('aria-label', Sfx.muted ? 'Sesi aç' : 'Sesi kapat');
+  $('mute').setAttribute('aria-label', Sfx.muted ? t('Sesi aç') : t('Sesi kapat'));
   syncSettings();
 }
 let confirmTimer = 0;
@@ -94,14 +95,14 @@ export function resetConfirm() {
   $('icoRestart').hidden = false; $('icoCheck').hidden = true;
   b.setAttribute('aria-label', restartLabel());
 }
-export const restartLabel = () => mode().restartLabel;
+export const restartLabel = () => t(mode().restartLabel);
 $('restart').addEventListener('click', () => {
   Sfx.unlock();
   const b = $('restart');
   if (state.over) { newGame(); return; }
   if (b.classList.contains('confirm')) { resetConfirm(); newGame(); return; }
   b.classList.add('confirm'); $('icoRestart').hidden = true; $('icoCheck').hidden = false;
-  b.setAttribute('aria-label', 'Yeni oyunu onayla');
+  b.setAttribute('aria-label', t('Yeni oyunu onayla'));
   confirmTimer = setTimeout(resetConfirm, 2500);
 });
 $('again').addEventListener('click', () => {

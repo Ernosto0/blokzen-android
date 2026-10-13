@@ -13,6 +13,7 @@ import { buzz } from '../platform/haptics.js';
 import { L } from '../render/layout.js';
 import { $ } from '../ui/dom.js';
 import { rr, sprite } from '../render/sprites.js';
+import { t } from '../i18n/index.js';
 
 export const REC_KEYS = ['bestScore', 'bestCombo', 'bestFulls', 'bestMoves', 'bestMulti', 'bestCalm']; // one-game records an undo takes back
 
@@ -70,13 +71,13 @@ function classicStatus() {
 let newTimer = 0;
 function resetNew() {
   clearTimeout(newTimer);
-  const b = $('menuNew'); b.classList.remove('confirm'); b.textContent = 'Yeni oyun';
+  const b = $('menuNew'); b.classList.remove('confirm'); b.textContent = t('Yeni oyun');
 }
 $('menuNew').addEventListener('click', () => {
   Sfx.unlock();
   const b = $('menuNew');
   if (b.classList.contains('confirm')) { resetNew(); switchMode('classic'); newGame(); closeMenu(); return; }
-  b.classList.add('confirm'); b.textContent = 'Silinecek · Onayla';
+  b.classList.add('confirm'); b.textContent = t('Silinecek · Onayla');
   newTimer = setTimeout(resetNew, 3000);
 });
 
@@ -96,7 +97,7 @@ function classicRevive() {
   state.texts = []; state.shake = null; state.flash = null;
   clearFullest(now);
   state.combo = 0; state.msc = 0;
-  state.texts.push({ text: 'İkinci şans!', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 160, dur: 1700, size: L.cell * 0.8, role: 'accent' });
+  state.texts.push({ text: t('İkinci şans!'), x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 160, dur: 1700, size: L.cell * 0.8, role: 'accent' });
   Sfx.breath(); buzz([8, 60, 8]);
   refreshFits();
   if (!state.tray.some(t => t && t.fits)) deal(now + 500); // the cleared board still has no room for these pieces: new ones
@@ -119,7 +120,7 @@ function classicUndo() {
   state.over = false; $('over').hidden = true;
   state.clearing = []; state.texts = []; state.shake = null; state.flash = null;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) pop[r][c] = state.grid[r][c] ? now + (r + c) * 10 : 0;
-  state.texts.push({ text: state.cls.undoLeft ? `Geri alındı · ${state.cls.undoLeft} hak kaldı` : 'Geri alındı · son hak', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1100, size: L.cell * 0.56, role: 'fg' });
+  state.texts.push({ text: state.cls.undoLeft ? t('Geri alındı · {n} hak kaldı', { n: state.cls.undoLeft }) : t('Geri alındı · son hak'), x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1100, size: L.cell * 0.56, role: 'fg' });
   if (Sfx.ok()) { Sfx.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 3000, to: 600, q: 0.8 }); Sfx.pick(); }
   buzz(12);
   refreshFits(); updateHud(); save();
@@ -144,10 +145,10 @@ defineMode({
   },
   renderCard() {
   const cs = classicStatus();
-  $('playLbl').textContent = cs.prog ? 'Devam et' : 'Oyna';
-  $('classicSub').textContent = state.best ? `En iyi ${fmtN(state.best)}` : 'Yer kalmayana kadar';
+  $('playLbl').textContent = cs.prog ? t('Devam et') : t('Oyna');
+  $('classicSub').textContent = state.best ? t('En iyi {n}', { n: fmtN(state.best) }) : t('Yer kalmayana kadar');
   $('classicFoot').hidden = !cs.prog;
-  if (cs.prog) $('resumeInfo').textContent = `Yarım oyun · ${fmtN(cs.score)} puan`;
+  if (cs.prog) $('resumeInfo').textContent = t('Yarım oyun · {n} puan', { n: fmtN(cs.score) });
   },
   resetNew,
   remember: clsRemember,
@@ -162,16 +163,16 @@ defineMode({
   keepSave: () => state.cls.pendingEnd,
   overCard(rv) {
     $('finalScore').textContent = fmtN(state.score);
-    $('overTitle').textContent = 'Yer kalmadı';
-    $('newRec').textContent = 'Yeni rekor!';
+    $('overTitle').textContent = t('Yer kalmadı');
+    $('newRec').textContent = t('Yeni rekor!');
     $('newRec').hidden = !state.newRecord;
     $('overStars').hidden = true; $('share').hidden = true;
-    $('again').textContent = 'Tekrar oyna';
-    $('overSub').textContent = `En iyi: ${fmtN(state.best)}`;
+    $('again').textContent = t('Tekrar oyna');
+    $('overSub').textContent = t('En iyi: {n}', { n: fmtN(state.best) });
     const un = canUndo();
     $('puzUndo').hidden = !un;
-    if (un) $('puzUndo').textContent = `Geri al · ${state.cls.undoLeft}`;
-    const note = rv ? 'Devam edersen en dolu sıralar temizlenir. Oyun başına bir kez.' : un ? `${state.cls.undoLeft} geri alma hakkın kaldı.` : '';
+    if (un) $('puzUndo').textContent = t('Geri al · {n}', { n: state.cls.undoLeft });
+    const note = rv ? t('Devam edersen en dolu sıralar temizlenir. Oyun başına bir kez.') : un ? t('{n} geri alma hakkın kaldı.', { n: state.cls.undoLeft }) : '';
     $('overNote').textContent = note;
     $('overNote').hidden = !note;
   },

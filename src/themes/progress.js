@@ -5,6 +5,7 @@ import { buzz } from '../platform/haptics.js';
 import { state, discovered, earned, fresh, settings, theme } from '../core/state.js';
 import { LEVELS } from '../modes/puzzle-levels.js';
 import { burst, saveMeta } from './switching.js';
+import { t } from '../i18n/index.js';
 
 /* ---------- Theme unlocks: every theme except the first has a task and stays locked until it is done.
    Tasks are spaced so a new theme opens every game or two at first, then every few sessions; the running totals
@@ -32,7 +33,7 @@ export const dayKey = () => { const d = new Date(); return d.getFullYear() * 100
 let hourAt = -1e9, hourVal = 0; // the hour of day, looked up at most every few seconds (time-of-day zen tasks)
 export const hourNow = () => { const n = performance.now(); if (n - hourAt > 5000) { hourAt = n; hourVal = new Date().getHours(); } return hourVal; };
 export function touchDay() { const k = dayKey(); if (stats.lastDay !== k) { stats.lastDay = k; stats.daysPlayed++; stats.todayGames = 0; } }
-export const fmtDur = sec => { const m = Math.floor(sec / 60); return m >= 60 ? `${Math.floor(m / 60)} sa ${m % 60} dk` : `${m} dk`; };
+export const fmtDur = sec => { const m = Math.floor(sec / 60); return m >= 60 ? t('{h} sa {m} dk', { h: Math.floor(m / 60), m: m % 60 }) : t('{m} dk', { m }); };
 const isLocked = i => !earned.has(i);
 // a theme opened on a puzzle win card waits there and is celebrated on the next board
 let heldUnlock = null;
@@ -54,7 +55,7 @@ export function checkUnlocks(now) {
   const i = finale ? fin : got[0];
   if (mode().themeLocked) { // a level never changes theme halfway: the end card names it and the next board celebrates it
     heldUnlock = { i, finale };
-    if (state.puz.gems) state.puz.opened.push(...got.map(j => THEMES[j].name));
+    if (state.puz.gems) state.puz.opened.push(...got.map(j => t(THEMES[j].name)));
     return;
   }
   celebrateUnlock(i, finale, now);
@@ -62,7 +63,7 @@ export function checkUnlocks(now) {
 function celebrateUnlock(i, finale, now) {
   if (settings.auto) state.pendingTheme = { i, at: now + 700, unlocked: true, finale }; // auto mode moves straight to the new theme
   else {
-    state.banner = { name: THEMES[i].name, sub: finale ? FINALES[THEMES[i].id] : 'YENİ TEMA AÇILDI', t0: now + 700, dur: finale ? 3600 : 2300 };
+    state.banner = { name: t(THEMES[i].name), sub: finale ? t(FINALES[THEMES[i].id]) : t('YENİ TEMA AÇILDI'), t0: now + 700, dur: finale ? 3600 : 2300 };
     setTimeout(() => { burst(performance.now()); Sfx.themeChange(); buzz([12, 50, 12]); }, 650);
   }
   if (finale) setTimeout(() => {

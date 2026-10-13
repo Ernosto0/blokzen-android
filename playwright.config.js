@@ -13,6 +13,7 @@ export default defineConfig({
     ...devices['Pixel 7'],
     hasTouch: false, // mouse drags: no finger lift offset
     isMobile: false,
+    locale: 'tr-TR', // the suite checks the Turkish text; tests/i18n.spec.js covers the other languages
     baseURL: 'http://localhost:4173',
   },
   webServer: { command: cmd, url: 'http://localhost:4173', reuseExistingServer: false, timeout: 120_000 },

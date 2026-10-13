@@ -17,11 +17,12 @@ import { syncMute } from './game/input.js';
 import { openMenu } from './ui/menu.js';
 import { applyPrefs } from './ui/settings.js';
 import { frame } from './render/render.js';
+import { translatePage } from './i18n/index.js';
 
 /* ---------- Boot ---------- */
 // data: a game to resume as-is (skips the main menu)
 export function start(data) {
-  document.documentElement.lang = 'tr'; // Turkish casing for uppercase labels (i → İ)
+  translatePage(); // English for non-Turkish devices; also sets the page language
   state.best = store.get(BEST_KEY) | 0;
   Sfx.muted = !!store.get(MUTE_KEY);
   const sp = store.get(PREFS_KEY);

@@ -16,6 +16,7 @@ import { drawLogo, menuOpen } from '../ui/menu.js';
 import { drawTutHand, tut, TUT, tutFinish, tutGo } from '../ui/tutorial.js';
 import { PARTS } from '../themes/registry.js';
 import { mode } from '../modes/registry.js';
+import { fmtNum } from '../i18n/index.js';
 
 /* ---------- Rendering ---------- */
 function drawSprite(spr, x, y, size, scale = 1) {
@@ -180,7 +181,7 @@ export function frame(now) {
   state.displayScore += (state.score - state.displayScore) * Math.min(1, dt * 9);
   if (Math.abs(state.score - state.displayScore) < 0.5) state.displayScore = state.score;
   const ds = Math.round(state.displayScore);
-  if (ds !== state.shownScore) { state.shownScore = ds; elScore.textContent = ds.toLocaleString('tr-TR'); }
+  if (ds !== state.shownScore) { state.shownScore = ds; elScore.textContent = fmtNum(ds); }
 
   const gravity = L.cell * 22;
   for (const p of state.particles) {

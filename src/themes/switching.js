@@ -12,6 +12,7 @@ import { clamp01, inOut, rand } from '../core/util.js';
 import { L } from '../render/layout.js';
 import { fxParticle } from '../render/render.js';
 import { AMBIENTS } from './registry.js';
+import { t } from '../i18n/index.js';
 
 /* ---------- Theme switching ---------- */
 export function applyDomColors(now) {
@@ -31,7 +32,7 @@ export function setTheme(i, now, { show = true, sound = true, unlocked = false, 
   state.ambPrev = state.ambCur; state.ambCur = AMBIENTS[THEMES[i].amb](THEMES[i]);
   Sfx.snd = THEMES[i].snd;
   if (show) {
-    state.banner = { name: THEMES[i].name, sub: finale ? FINALES[THEMES[i].id] || 'KOLEKSİYON FİNALİ' : unlocked ? 'YENİ TEMA AÇILDI' : 'TEMA', t0: now + 120, dur: finale ? 3600 : unlocked ? 2300 : 1900 };
+    state.banner = { name: t(THEMES[i].name), sub: finale ? t(FINALES[THEMES[i].id] || 'KOLEKSİYON FİNALİ') : unlocked ? t('YENİ TEMA AÇILDI') : t('TEMA'), t0: now + 120, dur: finale ? 3600 : unlocked ? 2300 : 1900 };
     burst(now);
   }
   if (sound) { Sfx.themeChange(); buzz([12, 50, 12]); }

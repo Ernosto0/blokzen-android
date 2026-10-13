@@ -8,6 +8,7 @@ import { state } from '../core/state.js';
 import { toggleMute } from '../game/input.js';
 import { menuOpen } from './menu.js';
 import { setDev } from './devmode.js';
+import { t } from '../i18n/index.js';
 
 /* ---------- Settings ---------- */
 function savePrefs() { store.set(PREFS_KEY, prefs); }
@@ -23,8 +24,8 @@ export function syncSettings() {
   $('volRow').classList.toggle('off', Sfx.muted);
   $('optVib').checked = prefs.vib && CAN_VIBRATE; $('optVib').disabled = !CAN_VIBRATE;
   $('vibRow').classList.toggle('off', !CAN_VIBRATE);
-  if (!CAN_VIBRATE) $('vibNote').textContent = 'Bu cihaz ya da tarayıcı titreşimi desteklemiyor';
-  else if (iosTick) $('vibNote').textContent = 'Hamlelerde hafif dokunuş hissi (iOS 18 ve sonrası)';
+  if (!CAN_VIBRATE) $('vibNote').textContent = t('Bu cihaz ya da tarayıcı titreşimi desteklemiyor');
+  else if (iosTick) $('vibNote').textContent = t('Hamlelerde hafif dokunuş hissi (iOS 18 ve sonrası)');
   $('optLow').checked = prefs.lowFx;
   $('devGroup').hidden = !state.devMode; $('optDev').checked = state.devMode;
 }
