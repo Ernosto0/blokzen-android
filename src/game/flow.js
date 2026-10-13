@@ -9,11 +9,11 @@ import { store } from '../core/store.js';
 import { $ } from '../ui/dom.js';
 import { state, discovered, emptyGrid, freshCls, pop, settings, theme } from '../core/state.js';
 import { autoTheme, checkUnlocks, dayKey, DONE_KEY, playHeldUnlock, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
-import { curStreak, dailyProgress, dailySeed, dailyStart, dayBest, dayRec, fmtDay, saveDaily, starsFor } from '../modes/daily.js';
-import { canRevive, canUndo, mode, MODE_KEY, MODES, saveKey } from '../modes/registry.js';
-import { LEVELS, PUZ_SAVE_KEY } from '../modes/puzzle-levels.js';
-import { bestStars, countGems, levelOpen, nextLevelIndex, puzCollect, puzDeal, puzGoal, puzLevel, puzLoad, puzProg, puzRemember, puzStarsFor, savePuzzle } from '../modes/puzzle.js';
-import { clsRemember, readCls, readPrev } from '../modes/classic.js';
+import { curStreak, dailySeed, dailyStart, dayRec, fmtDay, saveDaily, starsFor } from '../modes/daily.js';
+import { canRevive, mode, MODE_KEY, MODES, saveKey } from '../modes/registry.js';
+import { LEVELS } from '../modes/puzzle-levels.js';
+import { levelOpen, nextLevelIndex, puzDeal, puzLevel, puzLoad } from '../modes/puzzle.js';
+import { readCls, readPrev } from '../modes/classic.js';
 import { L } from '../render/layout.js';
 import { burst, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
@@ -21,6 +21,7 @@ import { closeMenu, fmtN } from '../ui/menu.js';
 import { closeLevels } from '../ui/levels.js';
 import { applyPrefs } from '../ui/settings.js';
 import { startTutorial, tut } from '../ui/tutorial.js';
+import { cancelBreath } from '../modes/zen.js';
 
 /* ---------- Game flow ---------- */
 export function deal(now = performance.now()) {
@@ -183,9 +184,8 @@ export function startLevel(li) {
 
 export function placePiece(slot, r0, c0) {
   const now = performance.now();
-  const pz = state.mode === 'puzzle';
-  if (pz) puzRemember();
-  else if (state.mode === 'classic') clsRemember();
+  const m = mode();
+  if (m.remember) m.remember();
   const { shape, color } = state.tray[slot].piece;
   state.tray[slot] = null;
   for (const [dr, dc] of shape.cells) {
@@ -213,16 +213,12 @@ export function placePiece(slot, r0, c0) {
     }
     let gemHit = 0;
     for (const [k, d] of hit) {
-      const r = (k / N) | 0, c = k % N, gem = pz && state.puz.gems[r][c] ? 1 : 0;
+      const r = (k / N) | 0, c = k % N, gem = m.cellCleared ? m.cellCleared(r, c) : 0; // 1 for a gem: the puzzle takes it off its board
       state.clearing.push({ r, c, v: state.grid[r][c], t0: now + 60, delay: d * 26, spawned: false, few: hit.size > 16, gem });
       state.grid[r][c] = 0; pop[r][c] = 0;
-      if (gem) { state.puz.gems[r][c] = 0; gemHit++; }
+      gemHit += gem;
     }
-    if (pz) {
-      stats.puzzleBestGems = Math.max(stats.puzzleBestGems, gemHit); // gems broken by one move (domino theme)
-      stats.puzzleGemsTotal += gemHit; // every gem ever broken (alchemy theme)
-      if (rows.length && cols.length) stats.puzzleCross++; // a row and a column in the same move (magic cube theme)
-    }
+    if (m.cleared) m.cleared({ gemHit, rows: rows.length, cols: cols.length });
     const boardClean = state.grid.every(row => row.every(v => !v));
     const sc = scoreMove(shape.size, lines, state.combo, boardClean, state.fulls, state.score);
     gained = sc.place + sc.clear + sc.full;
@@ -231,7 +227,7 @@ export function placePiece(slot, r0, c0) {
 
     state.texts.push({ text: '+' + pts.toLocaleString('tr-TR'), x: pcx, y: pcy, t0: now + 80, dur: 950, size: L.cell * 0.62 * grow, role: pts >= 400 ? 'accent' : 'fg' });
     let praise = boardClean ? (state.fulls ? `Tertemiz ×${state.fulls + 1}!` : 'Tahta tertemiz!') : lines >= 4 ? 'Muhteşem!' : lines === 3 ? 'Harika!' : lines === 2 ? 'Güzel!' : null;
-    if (gemHit && !boardClean) { const gl = countGems(state.puz.gems); praise = !gl ? 'Son taş!' : gemHit > 1 ? `${gemHit} taş birden!` : 'Bir taş gitti!'; }
+    if (gemHit && !boardClean && m.gemPraise) praise = m.gemPraise(gemHit);
     if (praise) state.texts.push({ text: praise, x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: boardClean ? 1500 : 1100, size: L.cell * (boardClean ? 1.0 : 0.82), role: 'accent' });
     if (state.combo >= 2) state.texts.push({ text: `Kombo ${state.combo} · Puan ${fmtMult(comboMult(state.combo))}`, x: midX, y: L.gy + L.cell * (praise ? (boardClean ? 3.8 : 3.6) : 2.8), t0: now + 200, dur: 1050, size: L.cell * 0.5 * Math.min(1.45, 1 + state.combo * 0.05), role: 'fg' });
     if (boardClean) {
@@ -255,31 +251,9 @@ export function placePiece(slot, r0, c0) {
   }
 
   state.score += gained;
-  if (state.mode === 'daily') {
-    const db = dayBest(state.gameDay);
-    if (state.score > db && !state.newRecord && db > 0) state.newRecord = true;
-    dailyProgress(now, midX);
-  } else if (state.mode === 'zen') {
-    state.gs.lines += lines; stats.zenLines += lines; stats.zenMoves++;
-    if (lines && state.grid.every(row => row.every(v => !v))) stats.zenFulls++;
-    state.gs.zrun++; stats.zenBestRun = Math.max(stats.zenBestRun, state.gs.zrun); // moves since the last breath (batik theme)
-    if (cellsOf(...bitsOf(state.grid)) > 32) state.gs.zcalm = 0; // moves in a row with the board at most half full (andes theme)
-    else { state.gs.zcalm++; stats.zenBestCalm = Math.max(stats.zenBestCalm, state.gs.zcalm); }
-  }
-  else if (pz) { stats.puzzlePlaced++; stats.puzzleLines += lines; }
-  else if (state.score > state.best) { if (!state.newRecord && state.best > 0) state.newRecord = true; state.best = state.score; }
+  if (m.afterMove) m.afterMove({ now, midX, lines });
   bumpScore();
-  if (pz) { // a level: its own counters only, no level-ups, theme steps or records; only the puzzle collection's tasks move
-    store.set(STATS_KEY, stats);
-    checkUnlocks(now);
-    if (puzGoal().done) { puzWin(now); return; }
-    if (state.tray.every(t => !t)) puzDeal(now + 120);
-    refreshFits();
-    updateHud();
-    save();
-    checkOver(now);
-    return;
-  }
+  if (m.finishMove && m.finishMove(now)) return; // the puzzle ends or continues a move its own way
   const lvl = levelOf(state.score);
   if (lvl > lvlBefore && mode().levels) {
     state.texts.push({ text: `Seviye ${lvl} · Puan ${fmtMult(levelMult(lvl))}`, x: midX, y: L.gy + L.cell * 6.4, t0: now + (lines ? 900 : 400), dur: 1800, size: L.cell * 0.52, role: 'accent' });
@@ -317,30 +291,8 @@ export function placePiece(slot, r0, c0) {
   save();
   checkOver(now);
 }
-// The goal is reached: the level ends at once. Stars come from the pieces still unused.
-function puzWin(now) {
-  const lv = puzLevel(), left = Math.max(0, lv.pieces.length - state.moves), st = puzStarsFor(left, lv.stars), before = bestStars(lv.id);
-  state.over = true; state.overT0 = now;
-  Object.assign(state.puz, { won: true, prev: null, stars: st, left, newBest: before > 0 && st > before });
-  if (st > before) puzProg.best[lv.id] = st;
-  if (st === 3 && puzProg.lost[lv.id] && !state.puz.failed) puzProg.back[lv.id] = 1; // lost once, now solved cleanly on a fresh try (chalkboard theme)
-  if (st === 3 && !state.puz.failed && !state.puz.undoUsed) puzProg.clean[lv.id] = 1; // cracked in one go: no fail, no undo (cipher theme)
-  savePuzzle();
-  stats.puzzleWins++;
-  if (left === 0) stats.puzzleLast++; // the goal fell with the very last piece (detective theme)
-  puzCollect();
-  store.set(STATS_KEY, stats);
-  checkUnlocks(now); // held for the next board; the card names what opened
-  store.set(PUZ_SAVE_KEY, null);
-  state.drag = null;
-  refreshFits(); updateHud();
-  const midX = L.gx + L.B / 2 - L.pad;
-  state.texts.push({ text: 'Bölüm tamam!', x: midX, y: L.gy + L.cell * 4.1, t0: now + 380, dur: 1500, size: L.cell * 0.9, role: 'accent' });
-  setTimeout(() => { if (!state.puz.won) return; burst(performance.now()); Sfx.star(st); buzz([16, 40, 16, 40, 30]); }, 420);
-  setTimeout(showOver, state.REDUCED ? 800 : 1500);
-}
 // a finished game: time of day, which theme it ended in, scoring streak
-function gameEnded() {
+export function gameEnded() {
   countGame();
   const hr = new Date().getHours();
   if (hr >= 5 && hr < 9) stats.morningGames++;
@@ -350,10 +302,6 @@ function gameEnded() {
   store.set(STATS_KEY, stats);
   checkUnlocks(performance.now() + 900);
 }
-// Zen breath: clear the fullest rows and columns one by one (at least two, at most five) until a waiting piece fits again.
-// Cells drift away in a slow wave from the line's middle; no points, the combo rests.
-let breathTimer = 0;
-function cancelBreath() { clearTimeout(breathTimer); breathTimer = 0; }
 // The fullest rows and columns drift away, one by one (at least two, at most five), until a waiting piece fits again. No points.
 export function clearFullest(now) {
   const g = state.grid.map(row => row.slice());
@@ -383,40 +331,17 @@ export function clearFullest(now) {
     state.grid[r][c] = 0; pop[r][c] = 0;
   }));
 }
-function zenBreath(now) {
-  clearFullest(now);
-  state.combo = 0; state.msc = 0; state.gs.zrun = 0;
-  stats.zenBreaths++; store.set(STATS_KEY, stats);
-  checkUnlocks(now);
-  state.texts.push({ text: 'Nefes al, devam et', x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 160, dur: 1900, size: L.cell * 0.66, role: 'accent' });
-  Sfx.breath(); buzz([8, 60, 8]);
-  refreshFits();
-  if (!state.tray.some(t => t && t.fits)) deal(now + 500); // the cleared board still has no room for these pieces: new ones
-  updateHud();
-  save();
-}
 export function checkOver(now) {
-  if (state.mode === 'puzzle' && state.puz.won) return;
+  const m = mode();
+  if (m.skipOver && m.skipOver()) return; // a won level has nothing left to check
   if (state.tray.some(t => t && t.fits)) return;
-  if (state.mode === 'zen') { // zen never ends: after a short pause, the board breathes out
-    if (!breathTimer) breathTimer = setTimeout(() => {
-      breathTimer = 0;
-      if (state.mode === 'zen' && !tut && !state.over && state.grid && !state.tray.some(t => t && t.fits)) zenBreath(performance.now());
-    }, 650);
-    return;
-  }
+  if (m.stuck && m.stuck()) return; // zen never ends: the board breathes out instead
   state.over = true; state.overT0 = now + 450;
-  if (state.mode === 'puzzle') { // a failed level is not a finished game
-    state.puz.fail = state.tray.some(Boolean) ? 'room' : 'pieces';
-    state.puz.failed = true;
-    if (!puzProg.lost[puzLevel().id]) { puzProg.lost[puzLevel().id] = 1; savePuzzle(); }
-  }
-  else if (state.mode === 'classic' && (canRevive() || canUndo())) state.cls.pendingEnd = true; // a second chance is still there: the game stays saved
-  else gameEnded();
+  if (m.ended) m.ended(now); else gameEnded();
   setTimeout(() => Sfx.over(), 400);
   if (state.newRecord) Sfx.record();
   setTimeout(showOver, 450 + N * 70 + 350);
-  if (!(state.mode === 'classic' && state.cls.pendingEnd)) store.set(saveKey(), null);
+  if (!(m.keepSave && m.keepSave())) store.set(saveKey(), null); // classic keeps the game while a second chance is on offer
   store.set(BEST_KEY, state.best);
 }
 // A classic game whose game-over card offered a second chance is counted as finished once the player moves on without it
@@ -426,7 +351,7 @@ function endClassic() {
   gameEnded();
   store.set(SAVE_KEY, null);
 }
-function showOver() {
+export function showOver() {
   if (!state.over) return; // a new game started meanwhile
   const m = mode(), lvl = !!m.levelCard;
   $('finalScore').classList.toggle('txt', lvl);

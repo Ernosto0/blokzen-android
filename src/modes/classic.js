@@ -8,7 +8,7 @@ import { trayIds } from './puzzle.js';
 import { tut } from '../ui/tutorial.js';
 import { Sfx } from '../audio/sfx.js';
 import { store } from '../core/store.js';
-import { clearFullest, deal, refreshFits, save } from '../game/flow.js';
+import { clearFullest, deal, gameEnded, refreshFits, save } from '../game/flow.js';
 import { buzz } from '../platform/haptics.js';
 import { L } from '../render/layout.js';
 import { $ } from '../ui/dom.js';
@@ -105,6 +105,13 @@ defineMode({
   canRevive: () => !tut && !state.cls.contUsed,
   undo: classicUndo,
   revive: classicRevive,
+  remember: clsRemember,
+  afterMove() {
+    if (state.score > state.best) { if (!state.newRecord && state.best > 0) state.newRecord = true; state.best = state.score; }
+  },
+  // a second chance is still there: the game stays saved and is counted when the player moves on
+  ended() { if (canRevive() || canUndo()) state.cls.pendingEnd = true; else gameEnded(); },
+  keepSave: () => state.cls.pendingEnd,
   overCard(rv) {
     $('finalScore').textContent = fmtN(state.score);
     $('overTitle').textContent = 'Yer kalmadı';

@@ -1,5 +1,5 @@
 import { comboMult, fmtMult, levelMult, levelOf } from '../core/scoring.js';
-import { canUndo, mode } from '../modes/registry.js';
+import { canUndo, mode, MODES } from '../modes/registry.js';
 import { $, elBest, elCombo, elScore } from './dom.js';
 import { state } from '../core/state.js';
 import { updateRing } from '../themes/switching.js';
@@ -18,7 +18,7 @@ export function updateHud() {
   elBest.textContent = info.best;
   $('bestBox').title = info.bestTitle;
   $('icoBest').toggleAttribute('hidden', info.icon !== 'best'); $('icoZen').toggleAttribute('hidden', info.icon !== 'zen'); $('icoPuz').toggleAttribute('hidden', info.icon !== 'puz'); // svg elements have no .hidden property
-  for (const id of ['daily', 'zen', 'puzzle']) document.body.classList.toggle(id, state.mode === id);
+  for (const x of Object.values(MODES)) if (x.bodyClass) document.body.classList.toggle(x.bodyClass, x === m);
   $('goalRow').hidden = !info.goalRow;
   $('puzRow').hidden = !info.puzRow;
   $('undo').hidden = !info.undo;

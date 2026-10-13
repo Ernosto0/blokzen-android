@@ -19,6 +19,18 @@
 //   hud()          what the top bar shows, as hudInfo({ best, bestTitle, icon, goalRow, puzRow, undo })
 //   updateHud()    extra HUD work only this mode has (the daily goal bar, the puzzle row, the undo badge)
 //   undoInfo       { left(), spent } for the undo badge: moves left and what to announce when none are
+//   remember()     called before a piece is placed (what undo will restore)
+//   cellCleared(r, c)  a cell is cleared: return 1 if it held something special (a gem) and take it off
+//   cleared({ gemHit, rows, cols }), gemPraise(gemHit)   what a clear means to the mode
+//   afterMove({ now, midX, lines })   the mode's bookkeeping after every move
+//   finishMove(now)  ends the move its own way (return true), else the shared ending runs
+//   skipOver()     true when there is nothing to check (a won level)
+//   stuck()        no piece fits: return true when the mode handles it (zen breathes out), else the game is over
+//   ended(now)     the game just ended: count it (default), or mark a failure (puzzle)
+//   keepSave()     keep the saved game although it ended (classic, while a second chance is open)
+//   playTime(dt)   play-time counters; default adds to the shared total
+//   boardGems()    cells drawn with a gem, or nothing
+//   bodyClass      class on <body> while this mode is active
 //   canUndo(), undo()        the undo button
 //   canRevive(), revive()    a second chance on the game-over card
 //   overCard(rv)   fills in the game-over card (rv: a second chance is on offer); a mode that never ends has none

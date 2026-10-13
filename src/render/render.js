@@ -4,7 +4,7 @@ import { GREY, N, SHAPES } from '../core/constants.js';
 import { store } from '../core/store.js';
 import { $, ctx, elScore } from '../ui/dom.js';
 import { state, pop, theme, THEME_DUR } from '../core/state.js';
-import { checkUnlocks, hourNow, stats, STATS_KEY, TH } from '../themes/progress.js';
+import { checkUnlocks, stats, STATS_KEY, TH } from '../themes/progress.js';
 import { clamp01, inOut, lerp, outBack, outCubic } from '../core/util.js';
 import { DPR, H, L, W } from './layout.js';
 import { drawGemOn, rr, sprite } from './sprites.js';
@@ -15,6 +15,7 @@ import { liftFor } from '../game/input.js';
 import { drawLogo, menuOpen } from '../ui/menu.js';
 import { drawTutHand, tut, TUT, tutFinish, tutGo } from '../ui/tutorial.js';
 import { PARTS } from '../themes/registry.js';
+import { mode } from '../modes/registry.js';
 
 /* ---------- Rendering ---------- */
 function drawSprite(spr, x, y, size, scale = 1) {
@@ -192,14 +193,9 @@ export function frame(now) {
   state.particles = state.particles.filter(p => p.life < p.max);
 
   if (!menuOpen && !state.over && !tut && !document.hidden && now - state.lastInput < 45000 && $('gallery').hidden && $('info').hidden && $('settings').hidden && $('levels').hidden) {
-    if (state.mode === 'puzzle') stats.puzzleSec += dt; // kept apart: total play time drives a theme task
-    else stats.playSec += dt;
+    const pt = mode().playTime;
+    if (pt) pt(dt); else stats.playSec += dt;
     state.playAcc += dt;
-    if (state.mode === 'zen') {
-      stats.zenSec += dt;
-      const hr = hourNow();
-      if (hr >= 5 && hr < 10) stats.zenMorningSec += dt; else if (hr >= 19 && hr < 23) stats.zenEveningSec += dt;
-    }
     if (state.playAcc > 10) { state.playAcc = 0; store.set(STATS_KEY, stats); checkUnlocks(now); }
   }
   drawBg(now, dt);
@@ -232,7 +228,7 @@ function draw(now) {
 
   const tgt = state.drag && state.drag.target;
   const dragColor = state.drag && state.drag.piece.color;
-  const pzg = state.mode === 'puzzle' && !tut ? state.puz.gems : null; // gems on the board
+  const pzg = !tut && mode().boardGems ? mode().boardGems() : null; // gems on the board
   const greyRows = state.over && !(pzg && state.puz.won) ? Math.floor((now - state.overT0) / 70) : -1; // a won level does not grey out
   const pulse = 0.5 + 0.5 * Math.sin(now / 90);
 

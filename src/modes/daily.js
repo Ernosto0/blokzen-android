@@ -125,7 +125,13 @@ function updateGoal() {
 
 defineMode({
   id: 'daily', saveKey: DAILY_SAVE_KEY, button: 'playDaily', restartLabel: 'Günlüğü baştan dene',
+  bodyClass: 'daily',
   hud: () => hudInfo({ best: fmtN(Math.max(dayBest(state.gameDay), state.score)), bestTitle: 'Bugünün en iyisi', goalRow: true }),
+  afterMove({ now, midX }) {
+    const db = dayBest(state.gameDay);
+    if (state.score > db && !state.newRecord && db > 0) state.newRecord = true;
+    dailyProgress(now, midX);
+  },
   updateHud: updateGoal,
   overCard() {
     $('finalScore').textContent = fmtN(state.score);

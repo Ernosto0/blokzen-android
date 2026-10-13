@@ -2,17 +2,18 @@ import { N, SHAPES } from '../core/constants.js';
 import { Sfx } from '../audio/sfx.js';
 import { store } from '../core/store.js';
 import { state, emptyGrid, pop } from '../core/state.js';
-import { stats } from '../themes/progress.js';
+import { checkUnlocks, stats, STATS_KEY } from '../themes/progress.js';
 import { GEM_COLOR, LEVELS, PUZ_KEY, PUZ_SAVE_KEY } from './puzzle-levels.js';
 import { canUndo, defineMode, hudInfo } from './registry.js';
 import { $ } from '../ui/dom.js';
-import { refreshFits, save, STAR_SVG, startLevel } from '../game/flow.js';
+import { checkOver, refreshFits, save, showOver, STAR_SVG, startLevel } from '../game/flow.js';
 import { updateHud, updateUndoBtn } from '../ui/hud.js';
 import { fmtN } from '../ui/menu.js';
 import { buzz } from '../platform/haptics.js';
 import { L } from '../render/layout.js';
 import { openLevels } from '../ui/levels.js';
 import { tut } from '../ui/tutorial.js';
+import { burst } from '../themes/switching.js';
 
 // best stars per level id; levels that have been lost once, and those later won with three stars (chalkboard theme) (saved)
 // clean: levels solved with three stars in one attempt that never ran out and never used the undo (cipher theme)
@@ -114,6 +115,29 @@ function updatePuzzleHud() {
   updateUndoBtn();
 }
 
+// The goal is reached: the level ends at once. Stars come from the pieces still unused.
+function puzWin(now) {
+  const lv = puzLevel(), left = Math.max(0, lv.pieces.length - state.moves), st = puzStarsFor(left, lv.stars), before = bestStars(lv.id);
+  state.over = true; state.overT0 = now;
+  Object.assign(state.puz, { won: true, prev: null, stars: st, left, newBest: before > 0 && st > before });
+  if (st > before) puzProg.best[lv.id] = st;
+  if (st === 3 && puzProg.lost[lv.id] && !state.puz.failed) puzProg.back[lv.id] = 1; // lost once, now solved cleanly on a fresh try (chalkboard theme)
+  if (st === 3 && !state.puz.failed && !state.puz.undoUsed) puzProg.clean[lv.id] = 1; // cracked in one go: no fail, no undo (cipher theme)
+  savePuzzle();
+  stats.puzzleWins++;
+  if (left === 0) stats.puzzleLast++; // the goal fell with the very last piece (detective theme)
+  puzCollect();
+  store.set(STATS_KEY, stats);
+  checkUnlocks(now); // held for the next board; the card names what opened
+  store.set(PUZ_SAVE_KEY, null);
+  state.drag = null;
+  refreshFits(); updateHud();
+  const midX = L.gx + L.B / 2 - L.pad;
+  state.texts.push({ text: 'Bölüm tamam!', x: midX, y: L.gy + L.cell * 4.1, t0: now + 380, dur: 1500, size: L.cell * 0.9, role: 'accent' });
+  setTimeout(() => { if (!state.puz.won) return; burst(performance.now()); Sfx.star(st); buzz([16, 40, 16, 40, 30]); }, 420);
+  setTimeout(showOver, state.REDUCED ? 800 : 1500);
+}
+
 defineMode({
   id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true,
   hud: () => hudInfo({ best: `${state.puz.li + 1}/${LEVELS.length}`, bestTitle: 'Bölüm', icon: 'puz', puzRow: true, undo: true }),
@@ -168,7 +192,38 @@ function puzUndo() {
 
 defineMode({
   id: 'puzzle', saveKey: PUZ_SAVE_KEY, button: 'playPuzzle', restartLabel: 'Bölümü baştan al', levels: false, records: false, countsGame: false, themeLocked: true,
-  levelCard: true,
+  levelCard: true, bodyClass: 'puzzle',
+  remember: puzRemember,
+  // gems sit on board cells; a cleared gem comes off the list and counts
+  cellCleared(r, c) { if (!state.puz.gems[r][c]) return 0; state.puz.gems[r][c] = 0; return 1; },
+  cleared({ gemHit, rows, cols }) {
+    stats.puzzleBestGems = Math.max(stats.puzzleBestGems, gemHit); // gems broken by one move (domino theme)
+    stats.puzzleGemsTotal += gemHit; // every gem ever broken (alchemy theme)
+    if (rows && cols) stats.puzzleCross++; // a row and a column in the same move (magic cube theme)
+  },
+  gemPraise(gemHit) { return !countGems(state.puz.gems) ? 'Son taş!' : gemHit > 1 ? `${gemHit} taş birden!` : 'Bir taş gitti!'; },
+  afterMove({ lines }) { stats.puzzlePlaced++; stats.puzzleLines += lines; },
+  // a level: its own counters only, no level-ups, theme steps or records; only the puzzle collection's tasks move
+  finishMove(now) {
+    store.set(STATS_KEY, stats);
+    checkUnlocks(now);
+    if (puzGoal().done) { puzWin(now); return true; }
+    if (state.tray.every(t => !t)) puzDeal(now + 120);
+    refreshFits();
+    updateHud();
+    save();
+    checkOver(now);
+    return true;
+  },
+  skipOver: () => state.puz.won,
+  boardGems: () => state.puz.gems,
+  playTime(dt) { stats.puzzleSec += dt; }, // kept apart: total play time drives a theme task
+  // a failed level is not a finished game
+  ended() {
+    state.puz.fail = state.tray.some(Boolean) ? 'room' : 'pieces';
+    state.puz.failed = true;
+    if (!puzProg.lost[puzLevel().id]) { puzProg.lost[puzLevel().id] = 1; savePuzzle(); }
+  },
   hud: () => hudInfo({ best: `${state.puz.li + 1}/${LEVELS.length}`, bestTitle: 'Bölüm', icon: 'puz', puzRow: true, undo: true }),
   updateHud: updatePuzzleHud,
   undoInfo: { left: () => state.puz.undoUsed ? 0 : 1, spent: 'Geri alma hakkı kullanıldı' },
