@@ -94,10 +94,10 @@ for (const block of ['classic', 'soft']) {
       await drag(page, g.slot(0), g.cell(0, 0));
       await page.waitForTimeout(1500); // let the clear effects and the ambient run
       const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('blokzen.game.v2')));
+      expect(errors).toEqual([]);
       expect(saved.th.cur).toBe(t);
       expect(saved.score).toBeGreaterThan(0);
       expect(saved.grid[0].every(v => v === 0)).toBe(true);
-      expect(errors).toEqual([]);
     });
   }
 }

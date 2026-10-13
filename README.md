@@ -5,15 +5,25 @@ The Blokzen web game, built with Vite and wrapped as a native Android app with C
 ## Layout
 
 ```
-src/             the game (Vite root)
-  index.html     markup
-  main.js        entry: styles + game
-  game.js        game code (being split into modules)
-  styles/        CSS
-  assets/fonts/  Baloo 2, self-hosted
-tests/           Playwright smoke tests
-android/         Capacitor Android project
+src/
+  index.html       markup
+  main.js          entry: styles, theme collections, screens, then boot
+  boot.js          start(): load saves and settings, first frame
+  core/            board, pieces, dealing, scoring, storage, shared state
+  modes/           daily, puzzle (+ level data), classic
+  game/            game flow, input
+  render/          layout, block sprites, textures, backgrounds, frame loop
+  themes/          theme list, effects, unlocks, switching, collections/
+  audio/           synthesized sound
+  platform/        haptics
+  ui/              HUD, menu, dialogs, gallery, tutorial
+  styles/          CSS
+  assets/fonts/    Baloo 2, self-hosted
+tests/             Playwright smoke tests
+android/           Capacitor Android project
 ```
+
+Shared mutable game state lives in `core/state.js` as `state.x`; a variable with a single writer is exported from the module that writes it.
 
 ## Commands
 
