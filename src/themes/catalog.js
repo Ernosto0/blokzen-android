@@ -78,6 +78,7 @@ import blueprint from './blueprint/theme.js';
 import alchemy from './alchemy/theme.js';
 import chess from './chess/theme.js';
 import kawaii from './kawaii/theme.js';
+import bubble from './bubble/theme.js';
 
 /* ---------- Themes ---------- */
 // The order is the index that saved games, unlock records and the gallery refer to: add new themes at the end.
@@ -161,6 +162,7 @@ export const THEMES = [
   alchemy,
   chess,
   kawaii,
+  bubble,
 ];
 // derived fields: clear effect, outline and surface colors
 THEMES.forEach(th => {

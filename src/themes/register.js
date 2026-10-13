@@ -79,3 +79,4 @@ import './blueprint/index.js';
 import './alchemy/index.js';
 import './chess/index.js';
 import './kawaii/index.js';
+import './bubble/index.js';

@@ -354,6 +354,7 @@ export default {
   'Satranç': 'Chess',
   'Kawaii Kedi': 'Kawaii Kitty',
   'Fiyonk!': 'Bow!',
+  'Köpük Kasabası': 'Bubble Town',
 
   /* ---- theme unlock tasks ---- */
   'Tek oyunda 2.500 puan yap': 'Score 2,500 points in one game',
@@ -393,6 +394,7 @@ export default {
   'Toplam 5.000 blok yerleştir': 'Place 5,000 blocks in total',
   'Tahtayı toplam 25 kez temizle': 'Clear the board 25 times in total',
   'Fiyonk yap: aynı hamlede hem satırı hem sütunu temizle (7 kez)': 'Tie a bow: clear a row and a column in the same move (7 times)',
+  'Köpük patlat: tek hamlede 2+ sırayı 25 kez temizle': 'Pop the bubbles: clear 2+ lines in one move 25 times',
   'Toplamda 3.000.000 puan topla': 'Earn 3,000,000 points in total',
   "Bir oyunda 10'lu kombo yap": 'Make a 10x combo in one game',
   'Toplam 2.500 sıra temizle': 'Clear 2,500 rows in total',

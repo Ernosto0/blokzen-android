@@ -228,6 +228,7 @@ export function placePiece(slot, r0, c0) {
   stats.totalPlaced++;
   touchDay();
   if (lines >= 2 && oneGame) { state.gs.multi++; stats.bestMulti = Math.max(stats.bestMulti, state.gs.multi); }
+  if (lines >= 2) stats.pops++;
   if (lines >= 3) stats.total3++;
   if (rows.length && cols.length) stats.crossMoves++;
   if (!state.gs.broke && oneGame) { if (cellsOf(...bitsOf(state.grid)) > 32) state.gs.broke = true; else { state.gs.calm = state.moves; stats.bestCalm = Math.max(stats.bestCalm, state.gs.calm); } }
