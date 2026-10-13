@@ -1,0 +1,56 @@
+name: Android build
+
+# Builds an installable Blokzen.apk (debug-signed) on every push to main.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install
+        run: npm ci
+
+      - name: Copy the game into the Android project
+        run: npx cap sync android
+
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Blokzen.apk && ls -lh Blokzen.apk
+
+      - name: Publish to the Releases page
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest Blokzen.apk \
+            --title "Blokzen Android build #${{ github.run_number }}" \
+            --notes "Install Blokzen.apk on your Android phone (allow installs from unknown sources)." \
+            --latest
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Blokzen-apk
+          path: Blokzen.apk
+          retention-days: 30
