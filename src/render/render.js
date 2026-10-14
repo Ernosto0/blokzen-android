@@ -18,6 +18,7 @@ import { PARTS } from '../themes/registry.js';
 import { mode } from '../modes/registry.js';
 import { fmtNum } from '../i18n/index.js';
 import { Sfx } from '../audio/sfx.js';
+import { DRAW as GROUP_DRAW, SPAWN as GROUP_SPAWN } from './groupfx.js';
 import { bumpScore } from '../ui/hud.js';
 
 /* ---------- Rendering ---------- */
@@ -57,10 +58,13 @@ const MAX_PARTS = 900;
 function spawnParticles(it) {
   const th = TH(), fx = th.fx, k = it.k || 1;
   const crowd = state.particles.length > MAX_PARTS * 0.6; // a big clear on a slow phone: keep the count sane
-  const n = state.REDUCED ? 1 : it.few || crowd ? 3 : Math.round(4 + k * 1.5);
+  const grp = GROUP_SPAWN[th.snd.boom];
+  const n = state.REDUCED ? 1 : it.few || crowd ? 2 : grp ? ((it.r + it.c) % 2 ? 0 : Math.round(1 + k)) : Math.round(4 + k * 1.5); // the theme's own particles thin out under the material's
   const cx = L.gx + (it.c + 0.5) * L.cell, cy = L.gy + (it.r + 0.5) * L.cell;
   const color = th.blocks[(it.v - 1) % 7] || th.accent;
-  if (!state.REDUCED && state.particles.length < MAX_PARTS) {
+  if (!state.REDUCED && grp && state.particles.length < MAX_PARTS) {
+    grp(cx, cy, color, k, it.few || crowd, (it.r + it.c) % 2); // the block breaks the way the theme's material would
+  } else if (!state.REDUCED && state.particles.length < MAX_PARTS) {
     // the block breaks into a few shards of itself
     const ns = it.few || crowd ? 1 : Math.round(1 + (k - 1) * 1.5);
     for (let i = 0; i < ns; i++) {
@@ -121,6 +125,7 @@ function drawParticle(p, k, light) {
     ctx.drawImage(glowSprite(p.color), -gs / 2, -gs / 2, gs, gs);
   }
   ctx.globalAlpha = a;
+  if (GROUP_DRAW[p.kind]) { ctx.globalCompositeOperation = 'source-over'; GROUP_DRAW[p.kind](ctx, p, s, k, light); ctx.restore(); return; }
   switch (p.kind) {
     case 'bubble': {
       const r = s * 0.7;

@@ -62,7 +62,11 @@ export function lineBlast(rows, cols, x, y, k, now) {
   for (const c of cols) state.beams.push({ col: c, t0 });
   if (state.REDUCED) return;
   const lines = rows.length + cols.length;
-  state.rings.push({ x, y, t0, dur: 520, rad: L.cell * (2.2 + lines * 0.7) * Math.sqrt(k), w: L.cell * 0.14 });
+  const rad = L.cell * (2.2 + lines * 0.7) * Math.sqrt(k), g = TH().snd.boom;
+  if (g === 'soft' || g === 'electro') return; // puffs and pixels carry the moment alone
+  if (g === 'drum') for (let i = 0; i < 3; i++) state.rings.push({ x, y, t0: t0 + i * 90, dur: 560, rad: rad * (1 - i * 0.12), w: L.cell * 0.1 }); // three beats
+  else if (g === 'water') for (let i = 0; i < 2; i++) state.rings.push({ x, y, t0: t0 + i * 130, dur: 700, rad: rad * (1 - i * 0.2), w: L.cell * 0.08, color: '#bfe6ff' }); // ripples
+  else state.rings.push({ x, y, t0, dur: 520, rad, w: L.cell * 0.14 });
 }
 // a clean board: two golden rings sweep out from the middle and a shower of spinning coins and stars falls over it
 export const GOLD = '#ffd24a';
