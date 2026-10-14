@@ -6,7 +6,7 @@ import { store } from '../core/store.js';
 import { $, cv } from '../ui/dom.js';
 import { state } from '../core/state.js';
 import { clamp01, lerp, outCubic } from '../core/util.js';
-import { L } from '../render/layout.js';
+import { H, L } from '../render/layout.js';
 import { newGame, placePiece } from './flow.js';
 import { openLevels } from '../ui/levels.js';
 import { syncSettings } from '../ui/settings.js';
@@ -54,9 +54,15 @@ cv.addEventListener('pointerdown', e => {
   computeTarget();
   Sfx.pick(); buzz(6);
 });
+// keep the dragged piece fully inside the board column / stage instead of following the finger off-screen
+function clampDrag(d, p) {
+  const s = d.piece.shape, hw = s.w * L.cell / 2, hh = s.h * L.cell / 2, lift = liftFor(d);
+  d.x = Math.min(Math.max(p.x, L.bx + hw), L.bx + L.B - hw);
+  d.y = Math.min(Math.max(p.y, hh + lift), H - hh + lift);
+}
 cv.addEventListener('pointermove', e => {
   if (!state.drag || e.pointerId !== state.drag.id) return;
-  const p = pt(e); state.drag.x = p.x; state.drag.y = p.y;
+  clampDrag(state.drag, pt(e));
   computeTarget();
 });
 function endDrag(e, cancelled) {
