@@ -51,9 +51,27 @@ export function fxParticle(fx, p) {
   if (fx.p === 'bubble' || fx.p === 'firefly' || fx.p === 'ember' || fx.p === 'star') p.vr *= 0.3;
   return p;
 }
+// colour strings for particles, memoised so a big clear does not build thousands of strings a frame
+const colorMemo = new Map();
+function memo(tag, fn, a, b, c) {
+  const key = tag + a + b + (c ?? '');
+  let v = colorMemo.get(key);
+  if (v === undefined) { if (colorMemo.size > 400) colorMemo.clear(); v = fn(a, b, c); colorMemo.set(key, v); }
+  return v;
+}
+const cshade = (hex, amt) => memo('s', shade, hex, amt);
+const crgba = (hex, a) => memo('r', rgba, hex, a);
+const cmix = (a, b, t) => memo('m', mixHex, a, b, t);
+// a big clear shares a fixed particle budget instead of every cell throwing its own full burst
+const PARTICLE_BUDGET = 90, PARTICLE_MAX = 140, GLOW_MAX = 60;
 function spawnParticles(it) {
   const th = TH(), fx = th.fx;
-  const n = state.REDUCED ? 1 : it.few ? 3 : 5;
+  const room = PARTICLE_MAX - state.particles.length;
+  if (room <= 0) return;
+  let pending = 0;
+  for (const c of state.clearing) if (!c.spawned) pending++;
+  let n = state.REDUCED ? 1 : it.few ? 3 : 5;
+  n = Math.max(1, Math.min(n, Math.round((PARTICLE_BUDGET - state.particles.length) / (pending + 1))));
   const cx = L.gx + (it.c + 0.5) * L.cell, cy = L.gy + (it.r + 0.5) * L.cell;
   const color = th.blocks[(it.v - 1) % 7] || th.accent;
   for (let i = 0; i < n; i++) {
@@ -64,7 +82,7 @@ function spawnParticles(it) {
       rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12, color,
     }));
   }
-  if (it.gem) for (let i = 0; i < (state.REDUCED ? 2 : 7); i++) { // a breaking gem throws a few accent sparks
+  if (it.gem) for (let i = 0; i < (state.REDUCED ? 2 : state.particles.length > PARTICLE_BUDGET ? 3 : 7); i++) { // a breaking gem throws a few accent sparks
     const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, v = (0.8 + Math.random()) * L.cell * 4.5;
     state.particles.push(fxParticle({ p: 'star', g: 0.5, drag: 1.4, glow: true }, {
       x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.6 + Math.random() * 0.4,
@@ -89,7 +107,7 @@ function drawParticle(p, k, light) {
   const a = Math.min(1, k * 1.5);
   ctx.save();
   ctx.translate(p.x, p.y);
-  if (p.glow && !light) {
+  if (p.glow && !light && state.particles.length <= GLOW_MAX) {
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = a * 0.8;
     const gs = s * (p.kind === 'streak' ? 2.4 : 3.2);
@@ -100,14 +118,14 @@ function drawParticle(p, k, light) {
     case 'bubble': {
       const r = s * 0.7;
       ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(p.color, 0.18); ctx.fill();
-      ctx.lineWidth = Math.max(1, r * 0.22); ctx.strokeStyle = shade(p.color, 0.35); ctx.stroke();
+      ctx.fillStyle = crgba(p.color, 0.18); ctx.fill();
+      ctx.lineWidth = Math.max(1, r * 0.22); ctx.strokeStyle = cshade(p.color, 0.35); ctx.stroke();
       ctx.beginPath(); ctx.arc(-r * 0.35, -r * 0.35, r * 0.22, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fill();
       break;
     }
     case 'firefly': case 'ember': {
       ctx.beginPath(); ctx.arc(0, 0, s * 0.32, 0, Math.PI * 2);
-      ctx.fillStyle = p.kind === 'ember' ? shade(p.color, 0.55) : shade(p.color, 0.7); ctx.fill();
+      ctx.fillStyle = p.kind === 'ember' ? cshade(p.color, 0.55) : cshade(p.color, 0.7); ctx.fill();
       break;
     }
     case 'diamond': {
@@ -120,7 +138,7 @@ function drawParticle(p, k, light) {
     }
     case 'flake': {
       ctx.rotate(p.rot * 0.4);
-      ctx.strokeStyle = mixHex(p.color, '#ffffff', 0.6); ctx.lineWidth = Math.max(1, s * 0.16); ctx.lineCap = 'round';
+      ctx.strokeStyle = cmix(p.color, '#ffffff', 0.6); ctx.lineWidth = Math.max(1, s * 0.16); ctx.lineCap = 'round';
       const r = s * 0.7;
       for (let i = 0; i < 3; i++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke(); }
       break;
@@ -132,7 +150,7 @@ function drawParticle(p, k, light) {
       ctx.lineCap = 'round';
       ctx.strokeStyle = p.color; ctx.lineWidth = Math.max(1, s * 0.4);
       ctx.beginPath(); ctx.moveTo(-len, 0); ctx.lineTo(0, 0); ctx.stroke();
-      ctx.strokeStyle = shade(p.color, 0.7); ctx.lineWidth = Math.max(1, s * 0.15); ctx.stroke();
+      ctx.strokeStyle = cshade(p.color, 0.7); ctx.lineWidth = Math.max(1, s * 0.15); ctx.stroke();
       break;
     }
     case 'petal': {
@@ -140,7 +158,7 @@ function drawParticle(p, k, light) {
       ctx.scale(1, 0.35 + 0.65 * Math.abs(Math.sin(p.life * 5 + p.ph)));
       ctx.beginPath(); ctx.moveTo(0, -s * 0.7);
       ctx.quadraticCurveTo(s * 0.6, -s * 0.1, 0, s * 0.7); ctx.quadraticCurveTo(-s * 0.6, -s * 0.1, 0, -s * 0.7);
-      ctx.fillStyle = mixHex(p.color, '#ffffff', 0.35); ctx.fill();
+      ctx.fillStyle = cmix(p.color, '#ffffff', 0.35); ctx.fill();
       break;
     }
     case 'drop': { // honey drop, stretched along its fall
@@ -149,7 +167,7 @@ function drawParticle(p, k, light) {
       const r = s * 0.5;
       ctx.beginPath(); ctx.moveTo(0, -r * 1.6 * st);
       ctx.quadraticCurveTo(r * 1.05, r * 0.1, 0, r); ctx.quadraticCurveTo(-r * 1.05, r * 0.1, 0, -r * 1.6 * st);
-      ctx.fillStyle = shade(p.color, 0.1); ctx.fill();
+      ctx.fillStyle = cshade(p.color, 0.1); ctx.fill();
       ctx.beginPath(); ctx.arc(-r * 0.3, r * 0.15, r * 0.25, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,250,225,.8)'; ctx.fill();
       break;
     }
@@ -158,7 +176,7 @@ function drawParticle(p, k, light) {
       const r = s * 0.8, q = r * 0.22;
       ctx.beginPath(); ctx.moveTo(0, -r); ctx.quadraticCurveTo(q, -q, r, 0); ctx.quadraticCurveTo(q, q, 0, r);
       ctx.quadraticCurveTo(-q, q, -r, 0); ctx.quadraticCurveTo(-q, -q, 0, -r);
-      ctx.fillStyle = shade(p.color, 0.55); ctx.fill();
+      ctx.fillStyle = cshade(p.color, 0.55); ctx.fill();
       break;
     }
     default:
