@@ -486,7 +486,7 @@ body.lowfx .pchip { transition: none; }
 @media (prefers-reduced-motion: reduce) { .toast, .toast.out { transition: opacity .2s; transform: none; } }
 
 /* Tablets: a wider game column so the board is not a narrow strip in the middle of the screen */
-@media (min-width: 640px) and (min-height: 700px) { :root { --game-w: 700px; } }
+@media (min-width: 640px) and (min-height: 700px) { :root { --game-w: 560px; } }
 /* ...with bigger tool buttons, and the undo button down in the bottom-left corner where a thumb rests */
 @media (min-width: 640px) and (min-height: 700px) {
   .tools { gap: 12px; }
@@ -503,4 +503,31 @@ body.lowfx .pchip { transition: none; }
   .toast-head { font-size: 1rem; }
   .toast-task { font-size: 1.5rem; }
   .toast-theme { font-size: 1.15rem; }
+}
+
+/* Tablets: a roomier main menu, bigger hero, mode cards and corner buttons (the phone sizes above are far too small on a big screen) */
+@media (min-width: 640px) and (min-height: 700px) {
+  .menu-inner { max-width: 600px; gap: 20px; padding-top: 64px; }
+  #logo { width: 96px; height: 58px; }
+  .mtitle { font-size: 3.6rem; }
+  .mgrid { top: max(18px, env(safe-area-inset-top, 0px)); right: 20px; gap: 8px; }
+  .mgrid button { width: 60px; height: 60px; border-radius: 18px; }
+  .mgrid svg { width: 32px; height: 32px; }
+  .hero { padding: 22px 28px 20px; border-radius: 30px; }
+  .hero-txt b { font-size: 2.2rem; }
+  .hero-txt small { font-size: 1.15rem; }
+  .hero svg { width: 56px; height: 56px; }
+  .modes-h { font-size: 1rem; margin-bottom: -10px; }
+  .modes { gap: 16px; }
+  .mode { border-radius: 28px; }
+  .mode-main { padding: 22px; gap: 12px; }
+  .mode-main:focus-visible { border-radius: 28px; }
+  .mode-art { width: 80px; height: 80px; border-radius: 20px; }
+  .mode-txt { gap: 4px; }
+  .mode-txt b { font-size: 1.7rem; }
+  .mode-txt small { font-size: 1.05rem; }
+  .corner { top: 16px; right: 16px; }
+  .mini { font-size: 1.05rem; padding: 9px 16px 7px; border-radius: 13px; }
+  .star { font-size: 1.05rem; } .star svg { width: 22px; height: 22px; }
+  .streak { font-size: 1.15rem; } .streak svg { width: 22px; height: 22px; }
 }
