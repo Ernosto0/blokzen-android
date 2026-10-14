@@ -18,6 +18,7 @@ import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
 import { tut } from '../ui/tutorial.js';
 import { t, fmtNum } from '../i18n/index.js';
+import { bowPraise, cleanPraise, praiseFor } from './praise.js';
 
 /* ---------- Game flow ---------- */
 export function deal(now = performance.now()) {
@@ -175,10 +176,10 @@ export function placePiece(slot, r0, c0) {
     const grow = Math.min(1.7, 1 + pts / 2500);
 
     state.texts.push({ text: '+' + fmtNum(pts), x: pcx, y: pcy, t0: now + 80, dur: 950, size: L.cell * 0.62 * grow, role: pts >= 400 ? 'accent' : 'fg' });
-    let praise = boardClean ? (state.fulls ? t('Tertemiz ×{n}!', { n: state.fulls + 1 }) : t('Tahta tertemiz!')) : lines >= 4 ? t('Muhteşem!') : lines === 3 ? t('Harika!') : lines === 2 ? t('Güzel!') : null;
+    let praise = boardClean ? (state.fulls ? t('Tertemiz ×{n}!', { n: state.fulls + 1 }) : cleanPraise()) : praiseFor(lines, state.combo);
     if (gemHit && !boardClean && m.gemPraise) praise = m.gemPraise(gemHit);
     if (praise) state.texts.push({ text: praise, x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: boardClean ? 1500 : 1100, size: L.cell * (boardClean ? 1.0 : 0.82), role: 'accent' });
-    if (rows.length && cols.length && TH().fx.edge) state.texts.push({ text: t('Fiyonk!'), x: pcx, y: pcy - L.cell * 0.9, t0: now + 160, dur: 1000, size: L.cell * 0.7, role: 'accent' });
+    if (rows.length && cols.length && TH().fx.edge) state.texts.push({ text: bowPraise(), x: pcx, y: pcy - L.cell * 0.9, t0: now + 160, dur: 1000, size: L.cell * 0.7, role: 'accent' });
     if (state.combo >= 2) { // a big bouncy combo word that grows and changes colour as the combo climbs, the multiplier under it
       const cy = L.gy + L.cell * (praise ? (boardClean ? 3.9 : 3.7) : 2.8), size = L.cell * 0.7 * Math.min(1.7, 1 + (state.combo - 2) * 0.1);
       state.texts.push({ text: t('Kombo ×{c}', { c: state.combo }), sub: t('Puan {m}', { m: fmtMult(comboMult(state.combo)) }), x: midX, y: cy, t0: now + 200, dur: 1300, size, combo: state.combo });
