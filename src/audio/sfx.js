@@ -128,19 +128,18 @@ export const Sfx = {
     if (this.samples.impact && this.samples.whoosh && this.samples.shimmer) {
       // the whoosh and the sparkle climb a whole step with every combo; big moves stack more layers
       const c = Math.min(Math.max(combo, 1) - 1, 8), lift = Math.pow(2, c * 2 / 12);
-      this.play('impact', { vol: 0.5 * Math.min(k, 1.5), rate: 1 + (lines - 1) * 0.04 });
-      this.play('whoosh', { vol: 0.2 * k, rate: lift * (1 + (lines - 1) * 0.06), when: 0.01 });
-      this.play('shimmer', { vol: 0.16 * k, rate: lift, when: 0.06, wet: true });
-      if (combo >= 3 || lines >= 3) this.play('chime', { vol: 0.11 * Math.min(k, 1.6), rate: Math.pow(2, Math.min(combo - 3, 7) * 2 / 12), when: 0.12, wet: true });
-      if (combo >= 5 || lines >= 4) this.play('shimmer', { vol: 0.1 * k, rate: lift * 2, when: 0.2, wet: true });
+      this.play('impact', { vol: 0.3, rate: lift });
+      if (combo >= 2) this.play('whoosh', { vol: 0.07 * k, rate: lift, when: 0.01 });
+      this.play('shimmer', { vol: 0.08 * k, rate: lift, when: 0.06, wet: true });
+      if (combo >= 3 || lines >= 3) this.play('chime', { vol: 0.07 * Math.min(k, 1.6), rate: Math.pow(2, Math.min(combo - 3, 7) * 2 / 12), when: 0.12, wet: true });
+      if (combo >= 5 || lines >= 4) this.play('shimmer', { vol: 0.05 * k, rate: lift * 2, when: 0.2, wet: true });
       return;
     }
-    this.tone(95, { type: 'sine', dur: 0.26, vol: 0.22 * Math.min(k, 1.5), to: 42, attack: 0.003 });
-    this.hiss({ dur: 0.3, vol: 0.035 * k, type: 'bandpass', freq: 700, to: 5200, q: 0.9, when: 0.01 });
+    this.tone(420, { type: 'sine', dur: 0.12, vol: 0.12, to: 760, attack: 0.003 }); // a soft pop until the samples load
     const n = Math.round(4 + 3 * k), top = this.snd.root * 4;
     for (let i = 0; i < n; i++) {
       const f = top * Math.pow(2, rand(0, 1.2)), when = 0.07 + i * 0.035 + rand(0, 0.025);
-      this.tone(f, { type: 'sine', dur: 0.09 + rand(0, 0.08), vol: 0.022 * (1 - i / (n + 2)), attack: 0.002, when, wet: true });
+      this.tone(f, { type: 'sine', dur: 0.09 + rand(0, 0.08), vol: 0.012 * (1 - i / (n + 2)), attack: 0.002, when, wet: true });
     }
   },
   themeChange() {
@@ -157,8 +156,8 @@ export const Sfx = {
     [12, 16, 19].forEach(st => this.note(r * Math.pow(2, st / 12), { when: 0.75, vol: 0.09, dur: 0.9 }));
     this.hiss({ dur: 1.1, vol: 0.06, type: 'highpass', freq: 2500, to: 10000, when: 0.25 });
     this.tone(90, { dur: 0.5, vol: 0.35, to: 40, when: 0.2 });
-    this.play('coins', { vol: 0.32, when: 0.22, wet: true }); // the gold rain
-    this.play('chime', { vol: 0.12, rate: 0.5, when: 0.3, wet: true });
+    this.play('coins', { vol: 0.18, when: 0.22, wet: true }); // the gold rain
+    this.play('chime', { vol: 0.07, rate: 0.5, when: 0.3, wet: true });
   },
   // a score spark lands on the counter: a tiny tick, a little higher for each one
   orb(i) {

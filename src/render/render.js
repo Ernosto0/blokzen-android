@@ -62,7 +62,7 @@ function spawnParticles(it) {
   const color = th.blocks[(it.v - 1) % 7] || th.accent;
   if (!state.REDUCED && state.particles.length < MAX_PARTS) {
     // the block breaks into a few shards of itself
-    const ns = it.few || crowd ? 2 : Math.round(2 + k);
+    const ns = it.few || crowd ? 1 : Math.round(1 + (k - 1) * 1.5);
     for (let i = 0; i < ns; i++) {
       const a = Math.random() * Math.PI * 2, v = (0.8 + Math.random() * 1.2) * L.cell * 4 * Math.sqrt(k);
       const r = L.cell * (0.16 + Math.random() * 0.14), pts = [];
@@ -72,10 +72,10 @@ function spawnParticles(it) {
         life: 0, max: 0.6 + Math.random() * 0.35, size: r, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 18, color });
     }
     // and throws quick glowing sparks
-    const nk = it.few || crowd ? 1 : Math.round(1 + k);
+    const nk = it.few || crowd || k < 1.4 ? 0 : 1;
     for (let i = 0; i < nk; i++) {
       const a = Math.random() * Math.PI * 2, v = (1.6 + Math.random() * 1.4) * L.cell * 4 * k;
-      state.particles.push({ kind: 'streak', x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0.25, drag: 3.2, wob: 0, glow: true, ph: 0,
+      state.particles.push({ kind: 'streak', x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0.25, drag: 3.2, wob: 0, glow: false, ph: 0,
         life: 0, max: 0.35 + Math.random() * 0.2, size: L.cell * (0.1 + Math.random() * 0.07), rot: 0, vr: 0, color: Math.random() < 0.5 ? hiCol(th) : th.accent });
     }
   }
@@ -274,21 +274,20 @@ function drawPreview(now, d, th, cs, FR, pulse) {
 function drawBlast(now, th, cs) {
   const light = !!th.light, hc = hiCol(th), lc = light ? th.accent : hc;
   ctx.save();
-  if (!light) ctx.globalCompositeOperation = 'lighter';
   for (const b of state.beams) {
     const t = (now - b.t0) / 380;
     if (t < 0 || t >= 1) continue;
     const [x, y, w, h, horiz] = lineRect(b, cs), e = outCubic(t);
-    const grow = cs * 0.9 * e, wide = cs * (0.35 + 0.9 * e); // a beam flares out past the board's ends and widens as it fades
+    const grow = cs * 0.3 * e, wide = cs * (0.3 + 0.35 * e); // a beam reaches a little past the board's ends and widens as it fades
     const a = (1 - t) * (1 - t);
     const cx = x + w / 2, cy = y + h / 2;
     const g = horiz ? ctx.createLinearGradient(0, cy - wide, 0, cy + wide) : ctx.createLinearGradient(cx - wide, 0, cx + wide, 0);
-    g.addColorStop(0, rgba(lc, 0)); g.addColorStop(0.5, rgba(lc, 0.85)); g.addColorStop(1, rgba(lc, 0));
+    g.addColorStop(0, rgba(lc, 0)); g.addColorStop(0.5, rgba(lc, 0.38)); g.addColorStop(1, rgba(lc, 0));
     ctx.globalAlpha = a; ctx.fillStyle = g;
     if (horiz) ctx.fillRect(x - grow, cy - wide, w + grow * 2, wide * 2); else ctx.fillRect(cx - wide, y - grow, wide * 2, h + grow * 2);
     // bright core
-    const core = cs * 0.12 * (1 - t);
-    ctx.fillStyle = light ? th.accent : '#ffffff';
+    const core = cs * 0.05 * (1 - t);
+    ctx.globalAlpha = a * 0.5; ctx.fillStyle = light ? th.accent : '#ffffff';
     if (horiz) ctx.fillRect(x - grow, cy - core / 2, w + grow * 2, core); else ctx.fillRect(cx - core / 2, y - grow, core, h + grow * 2);
   }
   state.beams = state.beams.filter(b => now - b.t0 < 380);
@@ -296,7 +295,7 @@ function drawBlast(now, th, cs) {
   for (const ring of state.rings) {
     const t = (now - ring.t0) / ring.dur;
     if (t < 0 || t >= 1) continue;
-    ctx.globalAlpha = 0.85 * (1 - t);
+    ctx.globalAlpha = 0.4 * (1 - t);
     ctx.strokeStyle = ring.color || lc;
     ctx.lineWidth = Math.max(1, ring.w * (1 - t));
     ctx.beginPath(); ctx.arc(ring.x, ring.y, Math.max(1, ring.rad * outCubic(t)), 0, Math.PI * 2); ctx.stroke();
@@ -325,7 +324,7 @@ function drawCombo(tx, t, now, th, cs) {
   ctx.rotate(Math.sin(t * 16) * Math.exp(-t * 5) * 0.03 * Math.min(lv, 7));
   ctx.scale(pop * (1 + wob), pop * (1 - wob));
   ctx.lineWidth = size * 0.26; ctx.strokeStyle = light ? 'rgba(60,30,10,.85)' : 'rgba(20,10,4,.82)';
-  if (lv >= 4 && !light) { ctx.shadowColor = col; ctx.shadowBlur = size * 0.7; }
+  if (lv >= 4 && !light) { ctx.shadowColor = col; ctx.shadowBlur = size * 0.3; }
   ctx.strokeText(tx.text, 0, 0);
   ctx.shadowBlur = 0;
   const g = ctx.createLinearGradient(0, -size * 0.45, 0, size * 0.4);
@@ -499,7 +498,7 @@ function draw(now) {
     if (t < 0) {
       drawSprite(spr, x, y, cs, 1);
       if (now > it.t0) {
-        ctx.globalAlpha = 0.62;
+        ctx.globalAlpha = 0.35;
         rr(ctx, x + cs * FI, y + cs * FI, cs * (1 - 2 * FI), cs * (1 - 2 * FI), cs * FR);
         ctx.fillStyle = fl; ctx.fill(); ctx.globalAlpha = 1;
       }
@@ -507,7 +506,7 @@ function draw(now) {
       const s = 1 - t * t;
       ctx.globalAlpha = 1 - t * 0.4;
       drawSprite(spr, x, y, cs, s * (1 + 0.15 * Math.sin(t * Math.PI)));
-      ctx.globalAlpha = (1 - t) * 0.6;
+      ctx.globalAlpha = (1 - t) * 0.35;
       const w = cs * (1 - 2 * FI) * s;
       rr(ctx, x + (cs - w) / 2, y + (cs - w) / 2, w, w, cs * FR * s);
       ctx.fillStyle = fl; ctx.fill();

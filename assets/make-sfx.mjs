@@ -1,6 +1,6 @@
 // Synthesizes the shared clear-sound samples (impact, whoosh, shimmer, chime, coins, tick) and writes them as small
 // mono Ogg Vorbis files into src/assets/sfx. The game layers them under every theme's own clear sound.
-//   node assets/make-sfx.mjs   (needs ffmpeg with libvorbis)
+//   node assets/make-sfx.mjs   (needs ffmpeg with libvorbis; SFX_IMPACT=pop|crystal|wood picks the clear's impact, SFX_OUT another folder)
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -54,14 +54,31 @@ function finish(x, peak = 0.89, fadeMs = 30) {
 }
 
 const S = {};
-S.impact = (() => { // a deep punch: a falling sine body, a sub, a short crack on top, softly saturated
-  const x = buf(0.5);
-  partial(x, { f: 160, to: 42, dur: 0.5, amp: 1, attack: 0.002, tau: 0.11, sweep: 0.22 });
-  partial(x, { f: 62, to: 38, dur: 0.45, amp: 0.6, attack: 0.004, tau: 0.14 });
-  noiseBand(x, { dur: 0.05, f0: 3200, f1: 900, q: 0.8, amp: 0.9, env: u => Math.exp(-u * 6) });
-  noiseBand(x, { dur: 0.16, f0: 500, f1: 160, q: 1.2, amp: 0.7, env: u => Math.exp(-u * 4) });
-  return finish(x.map(v => Math.tanh(v * 1.8)));
-})();
+// the layer under every clear. Three softer takes; SFX_IMPACT picks which one is written as impact.ogg (pop by default)
+const IMPACTS = {
+  pop() { // a round bubble pop: a short rising sine with a soft low body under it
+    const x = buf(0.3);
+    partial(x, { f: 420, to: 760, dur: 0.3, amp: 1, attack: 0.003, tau: 0.045, sweep: 0.05 });
+    partial(x, { f: 840, to: 1300, dur: 0.15, amp: 0.25, attack: 0.002, tau: 0.025, sweep: 0.04 });
+    partial(x, { f: 170, to: 120, dur: 0.25, amp: 0.45, attack: 0.006, tau: 0.06 });
+    return finish(x, 0.85, 15);
+  },
+  crystal() { // a light glassy crunch: a few bright pings close together, a little air
+    const x = buf(0.45);
+    for (let i = 0; i < 5; i++) { const at = i * 0.012 + rnd() * 0.01, f = range(1800, 3200); partial(x, { f, at, dur: 0.35, amp: 0.5, attack: 0.001, tau: range(0.05, 0.1) }); partial(x, { f: f * 2.76, at, dur: 0.15, amp: 0.15, attack: 0.001, tau: 0.03 }); }
+    noiseBand(x, { dur: 0.08, f0: 6000, f1: 3500, q: 1, amp: 0.25, env: u => Math.exp(-u * 5) });
+    return finish(reverb(x, 0.2), 0.8, 20);
+  },
+  wood() { // a soft wooden thock, like a block set down on a felt table
+    const x = buf(0.3);
+    partial(x, { f: 520, to: 430, dur: 0.3, amp: 1, attack: 0.002, tau: 0.035 });
+    partial(x, { f: 1270, dur: 0.12, amp: 0.3, attack: 0.001, tau: 0.015 });
+    partial(x, { f: 210, dur: 0.2, amp: 0.4, attack: 0.004, tau: 0.04 });
+    noiseBand(x, { dur: 0.03, f0: 2500, f1: 1500, q: 1.5, amp: 0.2, env: u => 1 - u });
+    return finish(x, 0.85, 15);
+  },
+};
+S.impact = IMPACTS[process.env.SFX_IMPACT || 'pop']();
 S.whoosh = (() => { // air rushing past: a band of noise sweeping up, swelling then gone
   const x = buf(0.55);
   noiseBand(x, { dur: 0.55, f0: 380, f1: 4200, q: 1.6, amp: 1, env: u => Math.sin(Math.PI * Math.pow(u, 0.6)) ** 2 });
@@ -111,7 +128,7 @@ function wav(x) {
   x.forEach((v, i) => b.writeInt16LE(Math.round(Math.max(-1, Math.min(1, v)) * 32767), 44 + i * 2));
   return b;
 }
-const out = new URL('../src/assets/sfx/', import.meta.url).pathname, tmp = join(tmpdir(), 'blokzen-sfx');
+const out = process.env.SFX_OUT || new URL('../src/assets/sfx/', import.meta.url).pathname, tmp = join(tmpdir(), 'blokzen-sfx');
 mkdirSync(out, { recursive: true }); mkdirSync(tmp, { recursive: true });
 for (const [name, x] of Object.entries(S)) {
   const w = join(tmp, name + '.wav');

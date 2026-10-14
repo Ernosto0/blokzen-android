@@ -187,14 +187,14 @@ export function placePiece(slot, r0, c0) {
     if (boardClean) {
       state.fulls++;
       state.texts.push({ text: t('+{n} bonus', { n: fmtNum(sc.full) }), x: midX, y: L.gy + L.cell * (state.combo >= 2 ? 6 : 5.2), t0: now + 320, dur: 1400, size: L.cell * 0.6, role: 'accent' });
-      state.flash = { t0: now + 80 };
+      state.flash = { t0: now + 80, a: 0.12, dur: 600 };
       burst(now + 60);
       goldRain(now);
       Sfx.fullClear();
       buzz([30, 40, 30, 40, 60]);
     }
 
-    if (!state.REDUCED && mode().shake) state.shake = { amp: Math.min(4 + lines * 3.5 + state.combo * 1.5 + (boardClean ? 8 : 0), 24), t0: now + 60 };
+    if (!state.REDUCED && mode().shake) state.shake = { amp: Math.min(2 + lines * 1.5 + state.combo * 0.5 + (boardClean ? 3 : 0), 8), t0: now + 60 };
     Sfx.clear(lines, state.combo);
     if (!boardClean) buzz(lines >= 3 || state.combo >= 4 ? [24, 30, 30, 30, 40] : lines >= 2 || state.combo >= 2 ? [18, 30, 24] : 20);
   } else {

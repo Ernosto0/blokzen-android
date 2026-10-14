@@ -62,21 +62,18 @@ export function lineBlast(rows, cols, x, y, k, now) {
   for (const c of cols) state.beams.push({ col: c, t0 });
   if (state.REDUCED) return;
   const lines = rows.length + cols.length;
-  state.rings.push({ x, y, t0, dur: 480, rad: L.cell * (2.4 + lines * 0.9) * k, w: L.cell * 0.32 * k });
-  if (lines >= 2 || k >= 1.4) state.rings.push({ x, y, t0: t0 + 110, dur: 560, rad: L.cell * (3.4 + lines * 1.1) * k, w: L.cell * 0.18 * k });
-  if (!state.flash && (lines >= 3 || k >= 1.6)) state.flash = { t0, a: 0.18, dur: 380 };
+  state.rings.push({ x, y, t0, dur: 520, rad: L.cell * (2.2 + lines * 0.7) * Math.sqrt(k), w: L.cell * 0.14 });
 }
 // a clean board: two golden rings sweep out from the middle and a shower of spinning coins and stars falls over it
 export const GOLD = '#ffd24a';
 export function goldRain(now) {
   const cx = L.bx + L.B / 2, cy = L.by + L.B / 2;
-  state.rings.push({ x: cx, y: cy, t0: now + 80, dur: 900, rad: L.B * 0.8, w: L.cell * 0.6, color: GOLD });
-  state.rings.push({ x: cx, y: cy, t0: now + 260, dur: 1050, rad: L.B * 1.0, w: L.cell * 0.32, color: '#fff3c4' });
+  state.rings.push({ x: cx, y: cy, t0: now + 80, dur: 1000, rad: L.B * 0.75, w: L.cell * 0.22, color: GOLD });
   if (state.REDUCED) return;
-  for (let i = 0; i < 64; i++) {
+  for (let i = 0; i < 30; i++) {
     const coin = i % 3 !== 0;
     state.particles.push({ kind: coin ? 'goldCoin' : 'star', x: L.bx + Math.random() * L.B, y: L.by - L.cell * rand(0.2, 1.4),
-      vx: rand(-0.5, 0.5) * L.cell, vy: rand(0.5, 2.5) * L.cell, g: coin ? 0.4 : 0.15, drag: 0.5, wob: coin ? 0 : 0.5, glow: true, ph: Math.random() * 6.28,
+      vx: rand(-0.5, 0.5) * L.cell, vy: rand(0.5, 2.5) * L.cell, g: coin ? 0.4 : 0.15, drag: 0.5, wob: coin ? 0 : 0.5, glow: false, ph: Math.random() * 6.28,
       life: -rand(0.12, 1), max: rand(1.4, 2), size: L.cell * (coin ? rand(0.24, 0.34) : rand(0.16, 0.26)), rot: Math.random() * 6, vr: rand(-3, 3), color: coin ? GOLD : '#fff0a8' });
   }
 }
