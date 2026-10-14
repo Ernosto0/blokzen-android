@@ -11,6 +11,7 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
+    target: ['chrome70', 'safari13'], // syntax for older Android WebViews; compat.js covers the missing built-ins
     assetsInlineLimit: 0, // keep fonts as files
   },
   server: { host: true }, // reachable from a phone on the same network
