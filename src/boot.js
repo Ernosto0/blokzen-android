@@ -59,18 +59,22 @@ export function start(data) {
   if (!store.get(TUT_KEY) && (state.best > 0 || stats.totalLines > 0)) store.set(TUT_KEY, true); // returning players skip the automatic guide
   theme.mode = theme.prevMode = settings.block;
   syncMute();
-  layout();
-  snapTheme(settings.auto ? 0 : settings.fixed);
-  const oldSave = store.get(OLD_SAVE_KEY);
-  if (oldSave) store.set(OLD_SAVE_KEY, null); // migrate once, never resurrect later
-  // a live reload keeps its game; otherwise pick up the mode played last (a daily only on its own day)
-  const last = store.get(MODE_KEY), lm = Object.hasOwn(MODES, last) ? MODES[last] : null, lsave = lm ? store.get(lm.saveKey) : null;
-  const ok = restore(data && data.grid ? data : null) || (lsave && lm.canResume(lsave) && restore(lsave)) || restore(store.get(SAVE_KEY));
-  if (!ok) { state.grid = null; state.tray = []; state.score = 0; state.mode = 'classic'; newGame(); }
-  else { refreshFits(); checkOver(performance.now()); }
-  applyPrefs(); // the volume depends on the mode that was picked up
-  checkUnlocks(performance.now() + 400);
-  updateHud();
+  // The game is set up inside a try: if one step fails (a WebView that is not laid out yet, an old engine), the observers, the frame loop
+  // and the main menu below must still start, or the player is left on a dead board with no way in.
+  try {
+    layout();
+    snapTheme(settings.auto ? 0 : settings.fixed);
+    const oldSave = store.get(OLD_SAVE_KEY);
+    if (oldSave) store.set(OLD_SAVE_KEY, null); // migrate once, never resurrect later
+    // a live reload keeps its game; otherwise pick up the mode played last (a daily only on its own day)
+    const last = store.get(MODE_KEY), lm = Object.prototype.hasOwnProperty.call(MODES, last) ? MODES[last] : null, lsave = lm ? store.get(lm.saveKey) : null;
+    const ok = restore(data && data.grid ? data : null) || (lsave && lm.canResume(lsave) && restore(lsave)) || restore(store.get(SAVE_KEY));
+    if (!ok) { state.grid = null; state.tray = []; state.score = 0; state.mode = 'classic'; newGame(); }
+    else { refreshFits(); checkOver(performance.now()); }
+    applyPrefs(); // the volume depends on the mode that was picked up
+    checkUnlocks(performance.now() + 400);
+    updateHud();
+  } catch (e) { console.error('Blokzen boot', e); }
   new ResizeObserver(() => layout()).observe(stage);
   window.addEventListener('resize', layout);
   if (document.fonts && document.fonts.load) document.fonts.load('800 20px "Baloo 2"');

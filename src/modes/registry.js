@@ -68,7 +68,7 @@ export const defineMode = def => (MODES[def.id] = { ...BASE, ...def });
 
 export const mode = () => MODES[state.mode];
 // the mode for a saved game's id; a missing or unknown one is classic
-export const modeFor = id => (Object.hasOwn(MODES, id) ? MODES[id] : MODES.classic);
+export const modeFor = id => (Object.prototype.hasOwnProperty.call(MODES, id) ? MODES[id] : MODES.classic);
 // the game on the board is being left or replaced: a mode may settle it (classic counts a game that offered a second chance)
 export const leaveGame = () => { for (const m of Object.values(MODES)) if (m.leave) m.leave(); };
 // stop anything a mode has timed (the zen breath)
