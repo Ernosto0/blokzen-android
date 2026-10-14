@@ -6,12 +6,15 @@ import { state, discovered, earned, fresh, settings, theme } from '../core/state
 import { LEVELS } from '../modes/puzzle-levels.js';
 import { burst, saveMeta } from './switching.js';
 import { t } from '../i18n/index.js';
+import { taskToast } from '../ui/toast.js';
 
 /* ---------- Theme unlocks: every theme except the first has a task and stays locked until it is done.
    Tasks are spaced so a new theme opens every game or two at first, then every few sessions; the running totals
    (games, total score, blocks, lines) mean steady play always moves some bar forward. ---------- */
 export const STATS_KEY = 'blokzen.stats';
 export const UNLOCKS = Object.fromEntries(THEMES.filter(t => t.unlock).map(t => [t.id, t.unlock]));
+// which collection a theme belongs to: the mode its task is played in (the first theme has no task and is classic)
+export const collectionOf = th => th.unlock?.daily ? 'daily' : th.unlock?.zen ? 'zen' : th.unlock?.puzzle ? 'puzzle' : 'classic';
 // the last theme of a collection gets a bigger moment when it opens
 export const FINALES = Object.fromEntries(THEMES.filter(t => t.finale).map(t => [t.id, t.finale]));
 // themes that were open from the start before version 2 of the theme meta; older saves lose them until the task is done
@@ -54,6 +57,7 @@ export function checkUnlocks(now) {
   });
   if (!got.length) return;
   saveMeta();
+  for (const j of got) taskToast(t(UNLOCKS[THEMES[j].id].text), t(THEMES[j].name)); // say which task opened which theme, right when it is done
   const fin = got.find(j => FINALES[THEMES[j].id]), finale = fin !== undefined; // a collection's last theme gets a bigger moment
   const i = finale ? fin : got[0];
   if (mode().themeLocked) { // a level never changes theme halfway: the end card names it and the next board celebrates it

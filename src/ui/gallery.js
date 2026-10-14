@@ -2,7 +2,7 @@ import { milestone, stageAt, T, THEMES } from '../themes/catalog.js';
 import { Sfx } from '../audio/sfx.js';
 import { $ } from './dom.js';
 import { state, discovered, earned, fresh, settings, theme } from '../core/state.js';
-import { stats, TH, UNLOCKS } from '../themes/progress.js';
+import { collectionOf, stats, TH, UNLOCKS } from '../themes/progress.js';
 import { rr, sprite } from '../render/sprites.js';
 import { paintBase } from '../render/backgrounds.js';
 import { saveMeta, setBlockMode, setTheme, updateRing } from '../themes/switching.js';
@@ -43,13 +43,14 @@ export function renderGallery() {
   $('galHint').textContent = (settings.auto
     ? t('Tema {n} puanda açık temalardan bir sonrakine geçer.', { n: fmtNum(nextAt) }) + ' '
     : t('Seçtiğin tema sabit kalır.') + ' ') + (state.devMode ? t('Geliştirici modu açık: kilitli temalar da gösteriliyor ve "Test" yazıyor.') : t('Kilitli temalar, altlarında yazan görevi tamamlayınca açılır.'));
-  // saved indexes never move, so a theme added later for a collection is only shown next to it (cozy follows the last Zen theme)
-  const shown = THEMES.map((_, i) => i), at = THEMES.findIndex(th => th.id === 'inkmount'), cz = THEMES.findIndex(th => th.id === 'cozy');
-  if (at >= 0 && cz >= 0) { shown.splice(cz, 1); shown.splice(at + 1, 0, cz); }
-  shown.forEach(i => {
+  // themes are grouped by the collection their task belongs to, not by their place in THEMES: new themes are added at the end
+  // of that list (saves refer to the index), whichever collection they join
+  const SECS = { daily: t('Günlük koleksiyon'), zen: t('Zen koleksiyonu'), puzzle: t('Bulmaca koleksiyonu') };
+  const byCol = { classic: [], daily: [], zen: [], puzzle: [] };
+  THEMES.forEach((th, i) => byCol[collectionOf(th)].push(i));
+  Object.entries(byCol).forEach(([col, list]) => list.forEach((i, k) => {
     const th = THEMES[i];
-    const sec = { news: t('Günlük koleksiyon'), zellige: t('Zen koleksiyonu'), jigsaw: t('Bulmaca koleksiyonu') }[th.id];
-    if (sec) { const h = document.createElement('h3'); h.className = 'gal-sec'; h.textContent = sec; wrap.appendChild(h); }
+    if (!k && SECS[col]) { const h = document.createElement('h3'); h.className = 'gal-sec'; h.textContent = SECS[col]; wrap.appendChild(h); }
     const known = discovered.has(i), cur = i === theme.cur;
     const b = document.createElement('button');
     b.type = 'button'; b.id = 'tcard-' + th.id;
@@ -72,7 +73,7 @@ export function renderGallery() {
     }
     wrap.appendChild(b);
     b.addEventListener('click', () => { if (known) chooseTheme(i); });
-  });
+  }));
   [['modeClassic', 'classic'], ['modeSoft', 'soft']].forEach(([id, mode]) => $(id).setAttribute('aria-checked', String(theme.mode === mode)));
   requestAnimationFrame(() => {
     // long single-word names (Alacakaranlık) shrink to fit the card instead of spilling over it

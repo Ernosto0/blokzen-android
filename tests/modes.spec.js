@@ -60,9 +60,13 @@ test.describe('game over', () => {
     await expect(page.locator('#over')).toBeVisible({ timeout: 5000 });
     expect(await text(page, 'overTitle')).toMatch(/^Günlük · \d+ \p{L}+$/u);
     expect(await text(page, 'finalScore')).toBe('120');
-    expect(await page.locator('#overStars .star small').allTextContents()).toEqual(['4.500', '23.000', '92.000']);
+    // the star targets are the base 5.000 / 25.000 / 100.000 with the day's own twist of up to ±15%, so they change every day
+    const targets = (await page.locator('#overStars .star small').allTextContents()).map(s => +s.replace(/\./g, ''));
+    expect(targets).toHaveLength(3);
+    [5000, 25000, 100000].forEach((base, i) => { expect(targets[i]).toBeGreaterThanOrEqual(base * 0.85 - 500); expect(targets[i]).toBeLessThanOrEqual(base * 1.15 + 500); });
+    const first = (await page.locator('#overStars .star small').first().textContent()).trim();
     expect(await text(page, 'overSub')).toBe('Bugünün en iyisi: 0');
-    expect(await text(page, 'overNote')).toBe('Sonraki yıldız 4.500 puanda.');
+    expect(await text(page, 'overNote')).toBe(`Sonraki yıldız ${first} puanda.`);
     expect(await text(page, 'again')).toBe('Tekrar dene');
     await expect(page.locator('#share')).toBeVisible();
     await expect(page.locator('#revive')).toBeHidden();
