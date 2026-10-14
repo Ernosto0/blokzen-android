@@ -65,7 +65,7 @@ function spawnParticles(it) {
       const a = Math.random() * Math.PI * 2, v = (0.8 + Math.random() * 1.2) * L.cell * 4 * Math.sqrt(k);
       const r = L.cell * (0.16 + Math.random() * 0.14), pts = [];
       for (let j = 0; j < 3; j++) { const aa = j * 2.1 + Math.random() * 0.8; pts.push(Math.cos(aa) * r * (0.6 + Math.random() * 0.5), Math.sin(aa) * r * (0.6 + Math.random() * 0.5)); }
-      state.particles.push({ kind: 'shard', pts, x: cx + Math.cos(a) * L.cell * 0.2, y: cy + Math.sin(a) * L.cell * 0.2,
+      state.particles.push({ kind: 'blockShard', pts, x: cx + Math.cos(a) * L.cell * 0.2, y: cy + Math.sin(a) * L.cell * 0.2,
         vx: Math.cos(a) * v, vy: Math.sin(a) * v - L.cell * 5, g: 1.1, drag: 0.6, wob: 0, glow: false, ph: 0,
         life: 0, max: 0.6 + Math.random() * 0.35, size: r, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 18, color });
     }
@@ -176,7 +176,7 @@ function drawParticle(p, k, light) {
       ctx.beginPath(); ctx.arc(-r * 0.3, r * 0.15, r * 0.25, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,250,225,.8)'; ctx.fill();
       break;
     }
-    case 'shard': {
+    case 'blockShard': { // the clear's own shards; themes register their particle kinds by plain names
       ctx.rotate(p.rot);
       const q = p.pts, sc = 0.5 + 0.5 * k;
       ctx.beginPath(); ctx.moveTo(q[0] * sc, q[1] * sc); ctx.lineTo(q[2] * sc, q[3] * sc); ctx.lineTo(q[4] * sc, q[5] * sc); ctx.closePath();
