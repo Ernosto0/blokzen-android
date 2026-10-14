@@ -1,9 +1,10 @@
 import { THEMES } from '../themes/catalog.js';
 import { rand } from '../core/util.js';
 import { KITS } from '../themes/registry.js';
+import { BOOM_GROUPS } from './booms.js';
 
-// recorded layers shared by every theme (made by assets/make-sfx.mjs); until they load, the synth fallback plays
-const SAMPLES = Object.fromEntries(['impact', 'whoosh', 'shimmer', 'chime', 'coins', 'tick'].map(k => [k, new URL(`../assets/sfx/${k}.ogg`, import.meta.url).href]));
+// recorded sounds (made by assets/make-sfx.mjs): a clear burst per material group, the clean-board coins, the score tick
+const SAMPLES = Object.fromEntries([...Object.keys(BOOM_GROUPS).map(g => 'boom-' + g), 'coins', 'tick'].map(k => [k, new URL(`../assets/sfx/${k}.ogg`, import.meta.url).href]));
 
 /* ---------- Sound (synthesized, timbre follows the theme) ---------- */
 export const Sfx = {
@@ -121,26 +122,13 @@ export const Sfx = {
     this.tone(f * 2.76, { type: 'sine', dur: 0.12, vol: 0.018, attack: 0.006, when: 0.01 });
     this.hiss({ dur: 0.16, vol: 0.02, type: 'highpass', freq: 6000, to: 9500 });
   },
-  // laid under every clear, whatever the theme kit: a low punch, an airy whoosh and a sparkling tail
-  // that grows with the lines and the combo
+  // laid under every clear: the burst of the theme's material group, a semitone higher for every step of the combo;
+  // each extra line adds a smaller, higher echo of it
   shimmer(lines, combo) {
-    const k = Math.min(1 + (lines - 1) * 0.25 + Math.max(0, combo - 1) * 0.12, 2);
-    if (this.samples.impact && this.samples.whoosh && this.samples.shimmer) {
-      // the whoosh and the sparkle climb a whole step with every combo; big moves stack more layers
-      const c = Math.min(Math.max(combo, 1) - 1, 8), lift = Math.pow(2, c * 2 / 12);
-      this.play('impact', { vol: 0.3, rate: lift });
-      if (combo >= 2) this.play('whoosh', { vol: 0.07 * k, rate: lift, when: 0.01 });
-      this.play('shimmer', { vol: 0.08 * k, rate: lift, when: 0.06, wet: true });
-      if (combo >= 3 || lines >= 3) this.play('chime', { vol: 0.07 * Math.min(k, 1.6), rate: Math.pow(2, Math.min(combo - 3, 7) * 2 / 12), when: 0.12, wet: true });
-      if (combo >= 5 || lines >= 4) this.play('shimmer', { vol: 0.05 * k, rate: lift * 2, when: 0.2, wet: true });
-      return;
-    }
-    this.tone(420, { type: 'sine', dur: 0.12, vol: 0.12, to: 760, attack: 0.003 }); // a soft pop until the samples load
-    const n = Math.round(4 + 3 * k), top = this.snd.root * 4;
-    for (let i = 0; i < n; i++) {
-      const f = top * Math.pow(2, rand(0, 1.2)), when = 0.07 + i * 0.035 + rand(0, 0.025);
-      this.tone(f, { type: 'sine', dur: 0.09 + rand(0, 0.08), vol: 0.012 * (1 - i / (n + 2)), attack: 0.002, when, wet: true });
-    }
+    const name = 'boom-' + (this.snd.boom || 'soft'), lift = Math.pow(2, Math.min(Math.max(combo, 1) - 1, 8) / 12);
+    if (!this.samples[name]) { this.tone(300 * lift, { type: 'sine', dur: 0.12, vol: 0.08, to: 180 * lift, attack: 0.004 }); return; } // a soft thump until the samples load
+    this.play(name, { vol: 0.42, rate: lift });
+    for (let i = 1; i < Math.min(lines, 4); i++) this.play(name, { vol: 0.42 * Math.pow(0.6, i), rate: lift * Math.pow(2, i * 3 / 12), when: i * 0.075 });
   },
   themeChange() {
     if (!this.ok()) return;
@@ -157,7 +145,6 @@ export const Sfx = {
     this.hiss({ dur: 1.1, vol: 0.06, type: 'highpass', freq: 2500, to: 10000, when: 0.25 });
     this.tone(90, { dur: 0.5, vol: 0.35, to: 40, when: 0.2 });
     this.play('coins', { vol: 0.18, when: 0.22, wet: true }); // the gold rain
-    this.play('chime', { vol: 0.07, rate: 0.5, when: 0.3, wet: true });
   },
   // a score spark lands on the counter: a tiny tick, a little higher for each one
   orb(i) {
