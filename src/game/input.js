@@ -30,14 +30,21 @@ function computeTarget() {
   if (valid) for (const [dr, dc] of s.cells) if (state.grid[r + dr][c + dc]) { valid = false; break; }
   if (valid && tut && !TUT[tut.step].free) { const [tr, tc] = TUT[tut.step].target; if (r !== tr || c !== tc) valid = false; } // guided steps accept only the shown spot
   let hl = null;
+  const rows = [], cols = [];
   if (valid) {
     const g = state.grid.map(row => row.slice());
     for (const [dr, dc] of s.cells) g[r + dr][c + dc] = 1;
     hl = new Set();
-    for (let r2 = 0; r2 < N; r2++) if (g[r2].every(Boolean)) for (let cc = 0; cc < N; cc++) hl.add(r2 * N + cc);
-    for (let cc = 0; cc < N; cc++) if (g.every(row => row[cc])) for (let r2 = 0; r2 < N; r2++) hl.add(r2 * N + cc);
+    for (let r2 = 0; r2 < N; r2++) if (g[r2].every(Boolean)) { rows.push(r2); for (let cc = 0; cc < N; cc++) hl.add(r2 * N + cc); }
+    for (let cc = 0; cc < N; cc++) if (g.every(row => row[cc])) { cols.push(cc); for (let r2 = 0; r2 < N; r2++) hl.add(r2 * N + cc); }
   }
-  d.target = valid ? { r, c, hl } : null;
+  d.target = valid ? { r, c, hl, rows, cols } : null;
+  // the lines this drop would clear changed: a soft chime and a tick, and the glow starts over
+  const key = rows.length + cols.length ? rows.join(',') + '|' + cols.join(',') : '';
+  if (key !== d.hlKey) {
+    d.hlKey = key;
+    if (key) { d.hlT0 = performance.now(); Sfx.preview(rows.length + cols.length); buzz(5); }
+  }
 }
 
 cv.addEventListener('pointerdown', e => {
@@ -49,7 +56,7 @@ cv.addEventListener('pointerdown', e => {
   const t = state.tray[i];
   if (!t || t.ret) return;
   e.preventDefault();
-  state.drag = { slot: i, piece: t.piece, x: p.x, y: p.y, touch: e.pointerType !== 'mouse', t0: performance.now(), target: null, id: e.pointerId };
+  state.drag = { slot: i, piece: t.piece, x: p.x, y: p.y, touch: e.pointerType !== 'mouse', t0: performance.now(), target: null, id: e.pointerId, hlKey: '', hlT0: 0 };
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   computeTarget();
   Sfx.pick(); buzz(6);

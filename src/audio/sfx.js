@@ -85,9 +85,30 @@ export const Sfx = {
     const start = Math.min(Math.max(combo, 1) - 1, 7);
     const n = Math.min(lines + 2, 6);
     for (let i = 0; i < n; i++) this.note(this.snd.root * Math.pow(2, scale[start + i] / 12), { when: i * 0.055 });
+    this.shimmer(lines, combo);
     const kit = KITS[this.snd.kit]; if (kit) { kit.clear(n, combo); return; }
     this.hiss({ dur: 0.38, vol: 0.06, type: 'highpass', freq: 3000, to: 9000, when: 0.02 });
     this.tone(140, { dur: 0.22, vol: 0.3, to: 60 });
+  },
+  // the drag would clear lines: a soft glassy chime, one step higher for every extra line
+  preview(lines) {
+    if (!this.ok()) return;
+    const f = this.snd.root * 2 * Math.pow(2, [0, 4, 7, 12][Math.min(lines, 4) - 1] / 12);
+    this.tone(f, { type: 'sine', dur: 0.22, vol: 0.05, attack: 0.01, wet: true });
+    this.tone(f * 2.76, { type: 'sine', dur: 0.12, vol: 0.018, attack: 0.006, when: 0.01 });
+    this.hiss({ dur: 0.16, vol: 0.02, type: 'highpass', freq: 6000, to: 9500 });
+  },
+  // laid under every clear, whatever the theme kit: a low punch, an airy whoosh and a sparkling tail
+  // that grows with the lines and the combo
+  shimmer(lines, combo) {
+    const k = Math.min(1 + (lines - 1) * 0.25 + Math.max(0, combo - 1) * 0.12, 2);
+    this.tone(95, { type: 'sine', dur: 0.26, vol: 0.22 * Math.min(k, 1.5), to: 42, attack: 0.003 });
+    this.hiss({ dur: 0.3, vol: 0.035 * k, type: 'bandpass', freq: 700, to: 5200, q: 0.9, when: 0.01 });
+    const n = Math.round(4 + 3 * k), top = this.snd.root * 4;
+    for (let i = 0; i < n; i++) {
+      const f = top * Math.pow(2, rand(0, 1.2)), when = 0.07 + i * 0.035 + rand(0, 0.025);
+      this.tone(f, { type: 'sine', dur: 0.09 + rand(0, 0.08), vol: 0.022 * (1 - i / (n + 2)), attack: 0.002, when, wet: true });
+    }
   },
   themeChange() {
     if (!this.ok()) return;

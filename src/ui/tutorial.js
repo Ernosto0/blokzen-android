@@ -8,7 +8,7 @@ import { TH } from '../themes/progress.js';
 import { clamp01, inOut, lerp } from '../core/util.js';
 import { L } from '../render/layout.js';
 import { rr } from '../render/sprites.js';
-import { burst } from '../themes/switching.js';
+import { burst, lineBlast } from '../themes/switching.js';
 import { checkOver, newGame, refreshFits, restore, snapshot } from '../game/flow.js';
 import { updateHud } from './hud.js';
 import { resetConfirm } from '../game/input.js';
@@ -73,6 +73,7 @@ export function tutPlace(slot, r0, c0) {
       state.grid[r][c] = 0; pop[r][c] = 0;
     }
     const clean = state.grid.every(row => row.every(v => !v));
+    lineBlast(rows, cols, L.gx + (c0 + shape.w / 2) * L.cell, L.gy + (r0 + shape.h / 2) * L.cell, Math.min(1 + (lines - 1) * 0.2, 2), now);
     const midX = L.gx + L.B / 2 - L.pad;
     state.texts.push({ text: clean ? t('Tahta tertemiz!') : lines >= 2 ? t('Harika!') : t('Güzel!'), x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: 1300, size: L.cell * (clean ? 0.95 : 0.82), role: 'accent' });
     if (clean) { state.flash = { t0: now + 80 }; burst(now + 60); Sfx.fullClear(); buzz([30, 40, 30, 40, 60]); }

@@ -12,7 +12,7 @@ import { autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, TH, stats, STATS_KEY
 import { curStreak, dailyStart, fmtDay, starsFor } from '../modes/daily.js';
 import { canRevive, leaveGame, mode, MODE_KEY, modeFor, MODES, saveKey, stopTimers } from '../modes/registry.js';
 import { L } from '../render/layout.js';
-import { burst, edgeBurst, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
+import { burst, edgeBurst, lineBlast, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
 import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
@@ -150,6 +150,7 @@ export function placePiece(slot, r0, c0) {
 
   if (lines) {
     state.combo += 1; state.msc = 0;
+    const k = Math.min(1 + (lines - 1) * 0.2 + Math.max(0, state.combo - 1) * 0.1, 2); // how hard this clear hits
     const centerR = r0 + shape.h / 2, centerC = c0 + shape.w / 2;
     const hit = new Map();
     for (const r of rows) for (let c = 0; c < N; c++) hit.set(r * N + c, Math.abs(c + 0.5 - centerC));
@@ -160,10 +161,11 @@ export function placePiece(slot, r0, c0) {
     let gemHit = 0;
     for (const [k, d] of hit) {
       const r = (k / N) | 0, c = k % N, gem = m.cellCleared ? m.cellCleared(r, c) : 0; // 1 for a gem: the puzzle takes it off its board
-      state.clearing.push({ r, c, v: state.grid[r][c], t0: now + 60, delay: d * 26, spawned: false, few: hit.size > 16, gem });
+      state.clearing.push({ r, c, v: state.grid[r][c], t0: now + 60, delay: d * 26, spawned: false, few: hit.size > 16, gem, k });
       state.grid[r][c] = 0; pop[r][c] = 0;
       gemHit += gem;
     }
+    lineBlast(rows, cols, pcx, pcy, k, now);
     edgeBurst(rows, cols);
     if (m.cleared) m.cleared({ gemHit, rows: rows.length, cols: cols.length });
     const boardClean = state.grid.every(row => row.every(v => !v));
@@ -187,9 +189,9 @@ export function placePiece(slot, r0, c0) {
       buzz([30, 40, 30, 40, 60]);
     }
 
-    if (!state.REDUCED && mode().shake) state.shake = { amp: Math.min(3 + lines * 3 + state.combo + (boardClean ? 8 : 0), 20), t0: now + 60 };
+    if (!state.REDUCED && mode().shake) state.shake = { amp: Math.min(4 + lines * 3.5 + state.combo * 1.5 + (boardClean ? 8 : 0), 24), t0: now + 60 };
     Sfx.clear(lines, state.combo);
-    buzz(lines >= 2 ? [18, 30, 24] : 20);
+    if (!boardClean) buzz(lines >= 3 || state.combo >= 4 ? [24, 30, 30, 30, 40] : lines >= 2 || state.combo >= 2 ? [18, 30, 24] : 20);
   } else {
     gained = scoreMove(shape.size, 0, 0, false, 0, state.score).place;
     state.msc += 1;

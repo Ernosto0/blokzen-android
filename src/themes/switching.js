@@ -54,6 +54,18 @@ export function burst(now) {
       size: L.cell * rand(0.12, 0.24), rot: Math.random() * 6, vr: rand(-8, 8), color: i % 3 ? th.blocks[i % 7] : th.accent }));
   }
 }
+// every clear: a beam of light runs along each finished line and a shockwave rings out from where the piece landed;
+// k (1..2) grows with the lines and the combo
+export function lineBlast(rows, cols, x, y, k, now) {
+  const t0 = now + 50;
+  for (const r of rows) state.beams.push({ row: r, t0 });
+  for (const c of cols) state.beams.push({ col: c, t0 });
+  if (state.REDUCED) return;
+  const lines = rows.length + cols.length;
+  state.rings.push({ x, y, t0, dur: 480, rad: L.cell * (2.4 + lines * 0.9) * k, w: L.cell * 0.32 * k });
+  if (lines >= 2 || k >= 1.4) state.rings.push({ x, y, t0: t0 + 110, dur: 560, rad: L.cell * (3.4 + lines * 1.1) * k, w: L.cell * 0.18 * k });
+  if (!state.flash && (lines >= 3 || k >= 1.6)) state.flash = { t0, a: 0.18, dur: 380 };
+}
 // themes with fx.edge celebrate a finished row or column from the board's edges: confetti shoots out of both ends of every line
 export function edgeBurst(rows, cols) {
   const th = TH();

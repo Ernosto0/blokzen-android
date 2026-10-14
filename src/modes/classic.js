@@ -118,7 +118,7 @@ function classicUndo() {
   store.set(STATS_KEY, stats);
   state.cls.pendingEnd = false;
   state.over = false; $('over').hidden = true;
-  state.clearing = []; state.texts = []; state.shake = null; state.flash = null;
+  state.clearing = []; state.beams = []; state.rings = []; state.texts = []; state.shake = null; state.flash = null;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) pop[r][c] = state.grid[r][c] ? now + (r + c) * 10 : 0;
   state.texts.push({ text: state.cls.undoLeft ? t('Geri alındı · {n} hak kaldı', { n: state.cls.undoLeft }) : t('Geri alındı · son hak'), x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1100, size: L.cell * 0.56, role: 'fg' });
   if (Sfx.ok()) { Sfx.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 3000, to: 600, q: 0.8 }); Sfx.pick(); }

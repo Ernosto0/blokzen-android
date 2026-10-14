@@ -25,6 +25,8 @@ export const state = {
   displayScore: 0,
   shownScore: -1,
   clearing: [],
+  beams: [], // light sweeping along a line as it clears
+  rings: [], // shockwaves from where the piece landed
   particles: [],
   texts: [],
   shake: null,

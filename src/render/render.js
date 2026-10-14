@@ -51,13 +51,34 @@ export function fxParticle(fx, p) {
   if (fx.p === 'bubble' || fx.p === 'firefly' || fx.p === 'ember' || fx.p === 'star') p.vr *= 0.3;
   return p;
 }
+const MAX_PARTS = 900;
 function spawnParticles(it) {
-  const th = TH(), fx = th.fx;
-  const n = state.REDUCED ? 1 : it.few ? 3 : 5;
+  const th = TH(), fx = th.fx, k = it.k || 1;
+  const crowd = state.particles.length > MAX_PARTS * 0.6; // a big clear on a slow phone: keep the count sane
+  const n = state.REDUCED ? 1 : it.few || crowd ? 3 : Math.round(4 + k * 1.5);
   const cx = L.gx + (it.c + 0.5) * L.cell, cy = L.gy + (it.r + 0.5) * L.cell;
   const color = th.blocks[(it.v - 1) % 7] || th.accent;
+  if (!state.REDUCED && state.particles.length < MAX_PARTS) {
+    // the block breaks into a few shards of itself
+    const ns = it.few || crowd ? 2 : Math.round(2 + k);
+    for (let i = 0; i < ns; i++) {
+      const a = Math.random() * Math.PI * 2, v = (0.8 + Math.random() * 1.2) * L.cell * 4 * Math.sqrt(k);
+      const r = L.cell * (0.16 + Math.random() * 0.14), pts = [];
+      for (let j = 0; j < 3; j++) { const aa = j * 2.1 + Math.random() * 0.8; pts.push(Math.cos(aa) * r * (0.6 + Math.random() * 0.5), Math.sin(aa) * r * (0.6 + Math.random() * 0.5)); }
+      state.particles.push({ kind: 'shard', pts, x: cx + Math.cos(a) * L.cell * 0.2, y: cy + Math.sin(a) * L.cell * 0.2,
+        vx: Math.cos(a) * v, vy: Math.sin(a) * v - L.cell * 5, g: 1.1, drag: 0.6, wob: 0, glow: false, ph: 0,
+        life: 0, max: 0.6 + Math.random() * 0.35, size: r, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 18, color });
+    }
+    // and throws quick glowing sparks
+    const nk = it.few || crowd ? 1 : Math.round(1 + k);
+    for (let i = 0; i < nk; i++) {
+      const a = Math.random() * Math.PI * 2, v = (1.6 + Math.random() * 1.4) * L.cell * 4 * k;
+      state.particles.push({ kind: 'streak', x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0.25, drag: 3.2, wob: 0, glow: true, ph: 0,
+        life: 0, max: 0.35 + Math.random() * 0.2, size: L.cell * (0.1 + Math.random() * 0.07), rot: 0, vr: 0, color: Math.random() < 0.5 ? hiCol(th) : th.accent });
+    }
+  }
   for (let i = 0; i < n; i++) {
-    const a = Math.random() * Math.PI * 2, v = (0.6 + Math.random()) * L.cell * 4;
+    const a = Math.random() * Math.PI * 2, v = (0.6 + Math.random()) * L.cell * 4 * Math.sqrt(k);
     state.particles.push(fxParticle(fx, {
       x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - L.cell * 4,
       life: 0, max: 0.55 + Math.random() * 0.35, size: L.cell * (0.14 + Math.random() * 0.14),
@@ -72,6 +93,8 @@ function spawnParticles(it) {
     }));
   }
 }
+// the theme's highlight color for light effects (glows need a hex color)
+const hiCol = th => /^#[0-9a-f]{6}$/i.test(th.fx.flash || '') ? th.fx.flash : '#ffffff';
 // soft round glow, cached per color, drawn additively
 const glows = new Map();
 function glowSprite(color) {
@@ -153,6 +176,15 @@ function drawParticle(p, k, light) {
       ctx.beginPath(); ctx.arc(-r * 0.3, r * 0.15, r * 0.25, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,250,225,.8)'; ctx.fill();
       break;
     }
+    case 'shard': {
+      ctx.rotate(p.rot);
+      const q = p.pts, sc = 0.5 + 0.5 * k;
+      ctx.beginPath(); ctx.moveTo(q[0] * sc, q[1] * sc); ctx.lineTo(q[2] * sc, q[3] * sc); ctx.lineTo(q[4] * sc, q[5] * sc); ctx.closePath();
+      ctx.fillStyle = p.color; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(q[0] * sc, q[1] * sc); ctx.lineTo(q[2] * sc, q[3] * sc); ctx.lineTo(0, 0); ctx.closePath();
+      ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fill();
+      break;
+    }
     case 'star': {
       ctx.rotate(p.rot * 0.3);
       const r = s * 0.8, q = r * 0.22;
@@ -167,6 +199,97 @@ function drawParticle(p, k, light) {
       ctx.fillStyle = p.color;
       ctx.fillRect(-s / 2, -s / 2, s, s);
   }
+  ctx.restore();
+}
+
+// a four-pointed sparkle with a soft glow behind it
+function sparkle(x, y, r, color, a, light) {
+  if (!light) { ctx.globalAlpha = a * 0.7; const g = r * 3.4; ctx.drawImage(glowSprite(color), x - g / 2, y - g / 2, g, g); }
+  ctx.globalAlpha = a;
+  const q = r * 0.2;
+  ctx.beginPath(); ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x + q, y - q, x + r, y); ctx.quadraticCurveTo(x + q, y + q, x, y + r);
+  ctx.quadraticCurveTo(x - q, y + q, x - r, y); ctx.quadraticCurveTo(x - q, y - q, x, y - r);
+  ctx.fillStyle = light ? color : '#ffffff'; ctx.fill();
+}
+const lineRect = (b, cs) => b.row !== undefined ? [L.gx, L.gy + b.row * cs, N * cs, cs, true] : [L.gx + b.col * cs, L.gy, cs, N * cs, false];
+// while dragging: the lines this drop would clear glow, a band of light runs along them and sparkles twinkle on them
+function drawPreview(now, d, th, cs, FR, pulse) {
+  const tg = d.target, n = tg.rows.length + tg.cols.length;
+  const light = !!th.light, hc = hiCol(th), lc = light ? th.accent : hc;
+  const intro = outCubic(clamp01((now - d.hlT0) / 220)), k = Math.min(1 + (n - 1) * 0.25, 1.75);
+  const rects = [...tg.rows.map(row => lineRect({ row }, cs)), ...tg.cols.map(col => lineRect({ col }, cs))];
+  ctx.save();
+  if (!light) ctx.globalCompositeOperation = 'lighter';
+  // glowing frame around each line
+  if (!state.REDUCED) { ctx.shadowColor = lc; ctx.shadowBlur = cs * 0.45 * k; }
+  ctx.lineWidth = Math.max(2, cs * 0.07); ctx.strokeStyle = lc;
+  for (const [x, y, w, h] of rects) {
+    ctx.globalAlpha = intro * (0.5 + 0.3 * pulse);
+    rr(ctx, x + 1, y + 1, w - 2, h - 2, cs * FR); ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  if (state.REDUCED) { ctx.restore(); return; }
+  // a band of light sweeping along the lines
+  const ph = ((now - d.hlT0) / 820) % 1;
+  for (const [x, y, w, h, horiz] of rects) {
+    const len = horiz ? w : h, bw = cs * 1.6, p = -bw + ph * (len + bw * 2);
+    const g = horiz ? ctx.createLinearGradient(x + p - bw, 0, x + p + bw, 0) : ctx.createLinearGradient(0, y + p - bw, 0, y + p + bw);
+    g.addColorStop(0, rgba(lc, 0)); g.addColorStop(0.5, rgba(lc, Math.min(0.75, 0.42 * k))); g.addColorStop(1, rgba(lc, 0));
+    ctx.save(); rr(ctx, x, y, w, h, cs * FR); ctx.clip();
+    ctx.globalAlpha = intro; ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    ctx.restore();
+  }
+  // twinkling sparkles, each cell on its own beat
+  for (const key of tg.hl) {
+    const hsh = ((key * 2654435761) >>> 0) / 4294967296, t = ((now / 1000) * (0.9 + 0.4 * k) + hsh * 7.3) % 1;
+    if (t > 0.4) continue;
+    const r = (key / N) | 0, c = key % N, hx = (hsh * 13.7) % 1, hy = (hsh * 29.3) % 1;
+    sparkle(L.gx + (c + 0.2 + 0.6 * hx) * cs, L.gy + (r + 0.2 + 0.6 * hy) * cs, cs * 0.2 * k * Math.sin(t / 0.4 * Math.PI), hc, intro, light);
+  }
+  ctx.restore();
+  // small motes of light drift up off the lines
+  const every = 150 / k;
+  if (!d.moteT || now - d.moteT > 500) d.moteT = now;
+  while (now - d.moteT > every) {
+    d.moteT += every;
+    const keys = [...tg.hl], key = keys[(Math.random() * keys.length) | 0], r = (key / N) | 0, c = key % N;
+    state.particles.push(fxParticle({ p: 'star', g: -0.12, drag: 2.2, glow: true }, {
+      x: L.gx + (c + Math.random()) * cs, y: L.gy + (r + Math.random()) * cs, vx: (Math.random() - 0.5) * cs, vy: -cs * (0.8 + Math.random()),
+      life: 0, max: 0.5 + Math.random() * 0.3, size: cs * (0.12 + Math.random() * 0.1), rot: Math.random() * 6, vr: 2, color: Math.random() < 0.6 ? hc : th.accent,
+    }));
+  }
+}
+// a clear: a beam of light flares along each line, shockwaves ring out from where the piece landed
+function drawBlast(now, th, cs) {
+  const light = !!th.light, hc = hiCol(th), lc = light ? th.accent : hc;
+  ctx.save();
+  if (!light) ctx.globalCompositeOperation = 'lighter';
+  for (const b of state.beams) {
+    const t = (now - b.t0) / 380;
+    if (t < 0 || t >= 1) continue;
+    const [x, y, w, h, horiz] = lineRect(b, cs), e = outCubic(t);
+    const grow = cs * 0.9 * e, wide = cs * (0.35 + 0.9 * e); // a beam flares out past the board's ends and widens as it fades
+    const a = (1 - t) * (1 - t);
+    const cx = x + w / 2, cy = y + h / 2;
+    const g = horiz ? ctx.createLinearGradient(0, cy - wide, 0, cy + wide) : ctx.createLinearGradient(cx - wide, 0, cx + wide, 0);
+    g.addColorStop(0, rgba(lc, 0)); g.addColorStop(0.5, rgba(lc, 0.85)); g.addColorStop(1, rgba(lc, 0));
+    ctx.globalAlpha = a; ctx.fillStyle = g;
+    if (horiz) ctx.fillRect(x - grow, cy - wide, w + grow * 2, wide * 2); else ctx.fillRect(cx - wide, y - grow, wide * 2, h + grow * 2);
+    // bright core
+    const core = cs * 0.12 * (1 - t);
+    ctx.fillStyle = light ? th.accent : '#ffffff';
+    if (horiz) ctx.fillRect(x - grow, cy - core / 2, w + grow * 2, core); else ctx.fillRect(cx - core / 2, y - grow, core, h + grow * 2);
+  }
+  state.beams = state.beams.filter(b => now - b.t0 < 380);
+  ctx.strokeStyle = lc;
+  for (const ring of state.rings) {
+    const t = (now - ring.t0) / ring.dur;
+    if (t < 0 || t >= 1) continue;
+    ctx.globalAlpha = 0.85 * (1 - t);
+    ctx.lineWidth = Math.max(1, ring.w * (1 - t));
+    ctx.beginPath(); ctx.arc(ring.x, ring.y, Math.max(1, ring.rad * outCubic(t)), 0, Math.PI * 2); ctx.stroke();
+  }
+  state.rings = state.rings.filter(ring => now - ring.t0 < ring.dur);
   ctx.restore();
 }
 
@@ -248,7 +371,7 @@ function draw(now) {
     }
     if (state.over && r < greyRows) v = GREY;
     const lit = tgt && tgt.hl && tgt.hl.has(r * N + c);
-    if (lit) v = dragColor;
+    if (lit) { v = dragColor; if (!state.REDUCED) s *= 1 + 0.035 * pulse; }
     drawFlip(sprite(tp, v, 0, pm), sprite(ti, v), x, y, cs, ft, s);
     if (pzg && pzg[r][c]) drawGemOn(ctx, ti, x, y, cs, DPR, 0.86 * s);
     if (lit) {
@@ -267,10 +390,19 @@ function draw(now) {
   }
 
   if (tgt) {
-    const spr = sprite(ti, dragColor);
-    ctx.globalAlpha = 0.38;
-    for (const [dr, dc] of state.drag.piece.shape.cells) ctx.drawImage(spr, L.gx + (tgt.c + dc) * cs, L.gy + (tgt.r + dr) * cs, cs, cs);
+    const spr = sprite(ti, dragColor), clears = tgt.hl && tgt.hl.size;
+    for (const [dr, dc] of state.drag.piece.shape.cells) {
+      const x = L.gx + (tgt.c + dc) * cs, y = L.gy + (tgt.r + dr) * cs;
+      ctx.globalAlpha = clears ? 0.72 : 0.38;
+      ctx.drawImage(spr, x, y, cs, cs);
+      if (clears) {
+        ctx.globalAlpha = 0.12 + 0.12 * pulse;
+        rr(ctx, x + cs * FI, y + cs * FI, cs * (1 - 2 * FI), cs * (1 - 2 * FI), cs * FR);
+        ctx.fillStyle = '#fff'; ctx.fill();
+      }
+    }
     ctx.globalAlpha = 1;
+    if (clears) drawPreview(now, state.drag, th, cs, FR, pulse);
   }
 
   for (const it of state.clearing) {
@@ -282,7 +414,7 @@ function draw(now) {
     if (t < 0) {
       drawSprite(spr, x, y, cs, 1);
       if (now > it.t0) {
-        ctx.globalAlpha = 0.45;
+        ctx.globalAlpha = 0.62;
         rr(ctx, x + cs * FI, y + cs * FI, cs * (1 - 2 * FI), cs * (1 - 2 * FI), cs * FR);
         ctx.fillStyle = fl; ctx.fill(); ctx.globalAlpha = 1;
       }
@@ -304,12 +436,13 @@ function draw(now) {
     }
   }
   state.clearing = state.clearing.filter(it => (now - it.t0 - it.delay) / 300 < 1);
+  if (state.beams.length || state.rings.length) drawBlast(now, th, cs);
   if (state.flash) {
-    const t = (now - state.flash.t0) / 700;
+    const t = (now - state.flash.t0) / (state.flash.dur || 700);
     if (t >= 1) state.flash = null;
     else if (t > 0) {
       rr(ctx, L.bx, L.by, L.B, L.B, L.B * 0.03);
-      ctx.fillStyle = rgba(th.accent, 0.35 * (1 - t) * (1 - t)); ctx.fill();
+      ctx.fillStyle = rgba(th.accent, (state.flash.a ?? 0.35) * (1 - t) * (1 - t)); ctx.fill();
     }
   }
   ctx.restore();
