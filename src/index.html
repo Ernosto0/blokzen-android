@@ -10,7 +10,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Blokzen">
 <meta name="format-detection" content="telephone=no">
-<script>if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) document.documentElement.classList.add("native");</script>
+<script>if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) document.documentElement.classList.add("native");
+// the game screen stays hidden until boot has drawn it and opened the menu (no flash of an empty board); never longer than 4 s
+document.documentElement.classList.add("booting"); setTimeout(function () { document.documentElement.classList.remove("booting"); }, 4000);</script>
 <script type="module" src="./main.js"></script>
 </head>
 <body>

@@ -13,6 +13,7 @@ let shown = false;
 function report(msg) {
   if (shown || !document.body) return;
   shown = true;
+  document.documentElement.classList.remove('booting'); // an error at boot must stay visible
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;padding:10px 12px;border-radius:12px;background:#3b1020;color:#fff;font:12px/1.35 monospace;white-space:pre-wrap;word-break:break-word;max-height:40vh;overflow:auto';
   d.textContent = 'Blokzen error: ' + msg;

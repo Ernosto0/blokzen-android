@@ -80,4 +80,5 @@ export function start(data) {
   if (document.fonts && document.fonts.load) document.fonts.load('800 20px "Baloo 2"');
   requestAnimationFrame(frame);
   if (!(data && data.grid)) openMenu(false); // a live reload keeps playing; a fresh visit starts on the main menu
+  requestAnimationFrame(() => document.documentElement.classList.remove('booting')); // show the game once its first frame is drawn
 }
