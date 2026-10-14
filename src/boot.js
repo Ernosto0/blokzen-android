@@ -79,6 +79,13 @@ export function start(data) {
   window.addEventListener('resize', layout);
   if (document.fonts && document.fonts.load) document.fonts.load('800 20px "Baloo 2"');
   requestAnimationFrame(frame);
-  if (!(data && data.grid)) openMenu(false); // a live reload keeps playing; a fresh visit starts on the main menu
-  requestAnimationFrame(() => document.documentElement.classList.remove('booting')); // show the game once its first frame is drawn
+  const reveal = () => document.documentElement.classList.remove('booting');
+  if (data && data.grid) { requestAnimationFrame(reveal); return; } // a live reload keeps playing
+  openMenu(false); // a fresh visit starts on the main menu
+  // the menu fades in over the plain background; the game screen appears behind it only once the menu is fully there,
+  // or it would show through the first, still transparent frames of the fade
+  const menu = document.getElementById('menu');
+  const done = e => { if (e.target === menu) { menu.removeEventListener('animationend', done); reveal(); } };
+  menu.addEventListener('animationend', done);
+  setTimeout(reveal, 450); // no animation (reduced motion) or it never reports: show it anyway
 }
