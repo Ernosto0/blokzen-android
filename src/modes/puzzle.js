@@ -18,6 +18,7 @@ import { readPrev } from './classic.js';
 import { applyPrefs } from '../ui/settings.js';
 import { drawGemOn, rr, sprite } from '../render/sprites.js';
 import { t, lang } from '../i18n/index.js';
+import { gemPraise } from '../game/praise.js';
 
 // best stars per level id; levels that have been lost once, and those later won with three stars (chalkboard theme) (saved)
 // clean: levels solved with three stars in one attempt that never ran out and never used the undo (cipher theme)
@@ -286,7 +287,7 @@ defineMode({
     stats.puzzleGemsTotal += gemHit; // every gem ever broken (alchemy theme)
     if (rows && cols) stats.puzzleCross++; // a row and a column in the same move (magic cube theme)
   },
-  gemPraise(gemHit) { return !countGems(state.puz.gems) ? t('Son taş!') : gemHit > 1 ? t('{n} taş birden!', { n: gemHit }) : t('Bir taş gitti!'); },
+  gemPraise(gemHit) { return !countGems(state.puz.gems) ? t('Son taş!') : gemHit > 1 ? t('{n} taş birden!', { n: gemHit }) : gemPraise(); },
   afterMove({ lines }) { stats.puzzlePlaced++; stats.puzzleLines += lines; },
   // a level: its own counters only, no level-ups, theme steps or records; only the puzzle collection's tasks move
   finishMove(now) {
