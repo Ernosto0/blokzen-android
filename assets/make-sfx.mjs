@@ -1,6 +1,6 @@
 // Synthesizes the shared clear-sound samples (impact, whoosh, shimmer, chime, coins, tick) and writes them as small
 // mono Ogg Vorbis files into src/assets/sfx. The game layers them under every theme's own clear sound.
-//   node assets/make-sfx.mjs   (needs ffmpeg with libvorbis; SFX_IMPACT=pop|crystal|wood picks the clear's impact, SFX_OUT another folder)
+//   node assets/make-sfx.mjs   (needs ffmpeg with libvorbis; SFX_IMPACT=burst|pop|crystal|wood picks the clear's impact, SFX_OUT another folder)
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -54,8 +54,17 @@ function finish(x, peak = 0.89, fadeMs = 30) {
 }
 
 const S = {};
-// the layer under every clear. Three softer takes; SFX_IMPACT picks which one is written as impact.ogg (pop by default)
+// the layer under every clear. A general burst by default; SFX_IMPACT=pop|crystal|wood writes one of the material takes instead
 const IMPACTS = {
+  burst() { // a general, material-free burst: a soft airy puff with a little weight and a bright ding on top
+    const x = buf(0.4);
+    noiseBand(x, { dur: 0.32, f0: 2600, f1: 260, q: 0.7, amp: 1, env: u => Math.min(1, u * 60) * Math.exp(-u * 7) });
+    noiseBand(x, { dur: 0.12, f0: 5200, f1: 2000, q: 0.9, amp: 0.35, env: u => Math.exp(-u * 6) });
+    partial(x, { f: 240, to: 120, dur: 0.22, amp: 0.35, attack: 0.004, tau: 0.05 });
+    partial(x, { f: 1568, at: 0.012, dur: 0.3, amp: 0.22, attack: 0.002, tau: 0.06 });
+    partial(x, { f: 1568 * 2.76, at: 0.012, dur: 0.12, amp: 0.06, attack: 0.001, tau: 0.025 });
+    return finish(reverb(x, 0.15), 0.85, 20);
+  },
   pop() { // a round bubble pop: a short rising sine with a soft low body under it
     const x = buf(0.3);
     partial(x, { f: 420, to: 760, dur: 0.3, amp: 1, attack: 0.003, tau: 0.045, sweep: 0.05 });
@@ -78,13 +87,16 @@ const IMPACTS = {
     return finish(x, 0.85, 15);
   },
 };
-S.impact = IMPACTS[process.env.SFX_IMPACT || 'pop']();
+seed = 101; // each sound has its own seed, so adding or changing one leaves the others as they are
+S.impact = IMPACTS[process.env.SFX_IMPACT || 'burst']();
+seed = 102;
 S.whoosh = (() => { // air rushing past: a band of noise sweeping up, swelling then gone
   const x = buf(0.55);
   noiseBand(x, { dur: 0.55, f0: 380, f1: 4200, q: 1.6, amp: 1, env: u => Math.sin(Math.PI * Math.pow(u, 0.6)) ** 2 });
   noiseBand(x, { dur: 0.55, f0: 900, f1: 7000, q: 3, amp: 0.4, env: u => Math.sin(Math.PI * u) ** 3 });
   return finish(x);
 })();
+seed = 103;
 S.shimmer = (() => { // a sparkling tail: glassy pings scattered over a second, thinning out, in a small room
   const x = buf(1.3);
   for (let i = 0; i < 34; i++) {
@@ -95,6 +107,7 @@ S.shimmer = (() => { // a sparkling tail: glassy pings scattered over a second, 
   noiseBand(x, { dur: 0.9, f0: 7000, f1: 11000, q: 0.7, amp: 0.08, env: u => Math.exp(-u * 4) });
   return finish(reverb(x, 0.35));
 })();
+seed = 104;
 S.chime = (() => { // a bright bell arpeggio (C, E, G, C) for big combos
   const x = buf(1.4);
   [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
@@ -105,6 +118,7 @@ S.chime = (() => { // a bright bell arpeggio (C, E, G, C) for big combos
   });
   return finish(reverb(x, 0.3));
 })();
+seed = 105;
 S.coins = (() => { // a shower of coins for a clean board: metallic clinks with inharmonic partials
   const x = buf(1.8);
   for (let i = 0; i < 26; i++) {
@@ -114,6 +128,7 @@ S.coins = (() => { // a shower of coins for a clean board: metallic clinks with 
   }
   return finish(reverb(x, 0.25));
 })();
+seed = 106;
 S.tick = (() => { // a tiny glass tick: a score spark landing on the counter
   const x = buf(0.18);
   partial(x, { f: 2093, dur: 0.18, amp: 1, attack: 0.001, tau: 0.035 });
