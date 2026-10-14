@@ -21,7 +21,7 @@ src/
     registry.js    STYLES / TEX / AMBIENTS / PARTS / KITS / GEM_LOOKS, filled by the theme folders
     register.js    loads every theme folder
     progress.js, switching.js   unlocks, theme changes
-  audio/           synthesized sound
+  audio/           synthesized sound, plus the shared clear-sound samples it layers in (assets/sfx)
   platform/        haptics
   ui/              HUD, menu, dialogs, gallery, tutorial
   styles/          CSS
@@ -53,6 +53,7 @@ Shared mutable game state lives in `core/state.js` as `state.x`; a variable with
 - `npm test` — smoke tests: boot, every mode, every theme with a line clear, dialogs
 - `npm run sync` — build and copy into the Android project
 - `npm run build:test` — the same build with the developer mode switched on (`.env.test`), into `dist-test/`; the tests use it
+- `node assets/make-sfx.mjs` — re-synthesize the shared clear-sound samples (impact, whoosh, shimmer, chime, coins, tick) into `src/assets/sfx/*.ogg` (needs ffmpeg with libvorbis)
 - `node assets/make-assets.mjs` — redraw the app icon, splash and Play Store graphics from the game logo, then `npx capacitor-assets generate --android --iconBackgroundColor "#1a1330" --splashBackgroundColor "#1a1330"`
 
 Every push to `main` builds, tests and publishes `Blokzen.apk` with GitHub Actions (artifact `Blokzen-apk`, also on the **Releases** page). That test APK keeps the developer mode (7 taps on the menu title); the Play build does not have it.

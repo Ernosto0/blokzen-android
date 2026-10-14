@@ -12,7 +12,7 @@ import { autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, TH, stats, STATS_KEY
 import { curStreak, dailyStart, fmtDay, starsFor } from '../modes/daily.js';
 import { canRevive, leaveGame, mode, MODE_KEY, modeFor, MODES, saveKey, stopTimers } from '../modes/registry.js';
 import { L } from '../render/layout.js';
-import { burst, edgeBurst, lineBlast, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
+import { burst, edgeBurst, goldRain, lineBlast, pickStartTheme, scoreOrbs, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
 import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
@@ -47,7 +47,7 @@ export function newGame() {
   state.grid = emptyGrid();
   const m = mode();
   m.setup(now);
-  state.score = 0; state.displayScore = 0; state.combo = 0; state.msc = 0; state.moves = 0; state.fulls = 0; state.over = false; state.newRecord = false; state.pendingTheme = null;
+  state.score = 0; state.displayScore = 0; state.orbs = []; state.combo = 0; state.msc = 0; state.moves = 0; state.fulls = 0; state.over = false; state.newRecord = false; state.pendingTheme = null;
   state.cls = freshCls();
   $('over').hidden = true;
   stopTimers();
@@ -100,7 +100,7 @@ export function restore(d, keepTheme = false) {
   else if (d.th) { theme.start = open(d.th.start | 0); theme.stage = d.th.stage | 0; snapTheme(settings.auto ? open((d.th.cur | 0) % T) : settings.fixed); }
   else { theme.start = 0; theme.stage = stageAt(state.score); snapTheme(settings.auto ? autoTheme(theme.stage) : settings.fixed); }
   refreshFits();
-  state.displayScore = state.score;
+  state.displayScore = state.score; state.orbs = [];
   return true;
 }
 
@@ -114,7 +114,7 @@ export function switchMode(m) {
   leaveGame();
   if (!state.over && state.grid) save();
   state.mode = m; store.set(MODE_KEY, m);
-  state.pendingTheme = null; state.banner = null; state.texts = []; state.shake = null; state.flash = null; state.drag = null;
+  state.pendingTheme = null; state.banner = null; state.texts = []; state.orbs = []; state.shake = null; state.flash = null; state.drag = null;
   state.over = false; $('over').hidden = true;
   stopTimers();
   const d = store.get(saveKey());
@@ -179,12 +179,17 @@ export function placePiece(slot, r0, c0) {
     if (gemHit && !boardClean && m.gemPraise) praise = m.gemPraise(gemHit);
     if (praise) state.texts.push({ text: praise, x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: boardClean ? 1500 : 1100, size: L.cell * (boardClean ? 1.0 : 0.82), role: 'accent' });
     if (rows.length && cols.length && TH().fx.edge) state.texts.push({ text: t('Fiyonk!'), x: pcx, y: pcy - L.cell * 0.9, t0: now + 160, dur: 1000, size: L.cell * 0.7, role: 'accent' });
-    if (state.combo >= 2) state.texts.push({ text: t('Kombo {c} · Puan {m}', { c: state.combo, m: fmtMult(comboMult(state.combo)) }), x: midX, y: L.gy + L.cell * (praise ? (boardClean ? 3.8 : 3.6) : 2.8), t0: now + 200, dur: 1050, size: L.cell * 0.5 * Math.min(1.45, 1 + state.combo * 0.05), role: 'fg' });
+    if (state.combo >= 2) { // a big bouncy combo word that grows and changes colour as the combo climbs, the multiplier under it
+      const cy = L.gy + L.cell * (praise ? (boardClean ? 3.9 : 3.7) : 2.8), size = L.cell * 0.7 * Math.min(1.7, 1 + (state.combo - 2) * 0.1);
+      state.texts.push({ text: t('Kombo ×{c}', { c: state.combo }), sub: t('Puan {m}', { m: fmtMult(comboMult(state.combo)) }), x: midX, y: cy, t0: now + 200, dur: 1300, size, combo: state.combo });
+    }
+    scoreOrbs([...hit.keys()].map(k => [(k / N) | 0, k % N]), pts, TH().accent, now);
     if (boardClean) {
       state.fulls++;
-      state.texts.push({ text: t('+{n} bonus', { n: fmtNum(sc.full) }), x: midX, y: L.gy + L.cell * 5.2, t0: now + 320, dur: 1400, size: L.cell * 0.6, role: 'accent' });
+      state.texts.push({ text: t('+{n} bonus', { n: fmtNum(sc.full) }), x: midX, y: L.gy + L.cell * (state.combo >= 2 ? 6 : 5.2), t0: now + 320, dur: 1400, size: L.cell * 0.6, role: 'accent' });
       state.flash = { t0: now + 80 };
       burst(now + 60);
+      goldRain(now);
       Sfx.fullClear();
       buzz([30, 40, 30, 40, 60]);
     }

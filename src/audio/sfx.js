@@ -2,9 +2,12 @@ import { THEMES } from '../themes/catalog.js';
 import { rand } from '../core/util.js';
 import { KITS } from '../themes/registry.js';
 
+// recorded layers shared by every theme (made by assets/make-sfx.mjs); until they load, the synth fallback plays
+const SAMPLES = Object.fromEntries(['impact', 'whoosh', 'shimmer', 'chime', 'coins', 'tick'].map(k => [k, new URL(`../assets/sfx/${k}.ogg`, import.meta.url).href]));
+
 /* ---------- Sound (synthesized, timbre follows the theme) ---------- */
 export const Sfx = {
-  ctx: null, out: null, send: null, noise: null, muted: false, vol: 1, snd: THEMES[0].snd,
+  ctx: null, out: null, send: null, noise: null, muted: false, vol: 1, snd: THEMES[0].snd, samples: {},
   setVol(v) { this.vol = v; if (this.out) this.out.gain.setTargetAtTime(0.7 * v, this.ctx.currentTime, 0.02); },
   unlock() {
     if (this.ctx) { if (this.ctx.state !== 'running' && this.ctx.state !== 'closed') this.ctx.resume(); return; }
@@ -28,7 +31,27 @@ export const Sfx = {
       const dd = buf.getChannelData(0);
       for (let i = 0; i < len; i++) dd[i] = Math.random() * 2 - 1;
       this.ctx = ctx; this.out = g; this.send = send; this.noise = buf;
+      this.loadSamples();
     } catch (e) { this.ctx = null; }
+  },
+  loadSamples() {
+    const c = this.ctx;
+    for (const [k, url] of Object.entries(SAMPLES)) {
+      fetch(url).then(r => r.arrayBuffer())
+        .then(b => new Promise((res, rej) => { const p = c.decodeAudioData(b, res, rej); if (p && p.then) p.then(res, rej); })) // old WebViews only take callbacks
+        .then(buf => { this.samples[k] = buf; }).catch(() => {});
+    }
+  },
+  // play a loaded sample; false when it is not there yet, so the caller can fall back to the synth
+  play(name, { vol = 1, rate = 1, when = 0, wet = false } = {}) {
+    const b = this.samples[name];
+    if (!b) return false;
+    const c = this.ctx, s = c.createBufferSource(), g = c.createGain();
+    s.buffer = b; s.playbackRate.value = rate; g.gain.value = vol;
+    s.connect(g); g.connect(this.out);
+    if (wet && this.snd.echo) g.connect(this.send);
+    s.start(c.currentTime + when);
+    return true;
   },
   suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); }, // app in the background: stop the audio clock and any tail still playing
   ok() { return this.ctx && !this.muted; },
@@ -102,6 +125,16 @@ export const Sfx = {
   // that grows with the lines and the combo
   shimmer(lines, combo) {
     const k = Math.min(1 + (lines - 1) * 0.25 + Math.max(0, combo - 1) * 0.12, 2);
+    if (this.samples.impact && this.samples.whoosh && this.samples.shimmer) {
+      // the whoosh and the sparkle climb a whole step with every combo; big moves stack more layers
+      const c = Math.min(Math.max(combo, 1) - 1, 8), lift = Math.pow(2, c * 2 / 12);
+      this.play('impact', { vol: 0.5 * Math.min(k, 1.5), rate: 1 + (lines - 1) * 0.04 });
+      this.play('whoosh', { vol: 0.2 * k, rate: lift * (1 + (lines - 1) * 0.06), when: 0.01 });
+      this.play('shimmer', { vol: 0.16 * k, rate: lift, when: 0.06, wet: true });
+      if (combo >= 3 || lines >= 3) this.play('chime', { vol: 0.11 * Math.min(k, 1.6), rate: Math.pow(2, Math.min(combo - 3, 7) * 2 / 12), when: 0.12, wet: true });
+      if (combo >= 5 || lines >= 4) this.play('shimmer', { vol: 0.1 * k, rate: lift * 2, when: 0.2, wet: true });
+      return;
+    }
     this.tone(95, { type: 'sine', dur: 0.26, vol: 0.22 * Math.min(k, 1.5), to: 42, attack: 0.003 });
     this.hiss({ dur: 0.3, vol: 0.035 * k, type: 'bandpass', freq: 700, to: 5200, q: 0.9, when: 0.01 });
     const n = Math.round(4 + 3 * k), top = this.snd.root * 4;
@@ -124,6 +157,13 @@ export const Sfx = {
     [12, 16, 19].forEach(st => this.note(r * Math.pow(2, st / 12), { when: 0.75, vol: 0.09, dur: 0.9 }));
     this.hiss({ dur: 1.1, vol: 0.06, type: 'highpass', freq: 2500, to: 10000, when: 0.25 });
     this.tone(90, { dur: 0.5, vol: 0.35, to: 40, when: 0.2 });
+    this.play('coins', { vol: 0.32, when: 0.22, wet: true }); // the gold rain
+    this.play('chime', { vol: 0.12, rate: 0.5, when: 0.3, wet: true });
+  },
+  // a score spark lands on the counter: a tiny tick, a little higher for each one
+  orb(i) {
+    if (!this.ok()) return;
+    if (!this.play('tick', { vol: 0.07, rate: Math.pow(2, Math.min(i, 12) / 12) })) this.tone(2093 * Math.pow(2, Math.min(i, 12) / 12), { dur: 0.06, vol: 0.02 });
   },
   bad() { if (!this.ok()) return; this.tone(160, { type: 'square', dur: 0.09, vol: 0.04, to: 110 }); },
   deal() { if (!this.ok()) return; const kit = KITS[this.snd.kit]; if (kit) { kit.deal(); return; } this.hiss({ dur: 0.2, vol: 0.05, type: 'bandpass', freq: 500, to: 2600, q: 0.9 }); },

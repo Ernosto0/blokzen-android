@@ -211,7 +211,7 @@ function puzUndo() {
   const p = state.puz.prev, now = performance.now();
   state.grid = p.grid.map(r => r.slice()); state.puz.gems = p.gems.map(r => r.slice());
   state.tray = p.tray.map((t, i) => t ? { piece: { shape: SHAPES[t.s], color: t.c }, appear: now + i * 50, ret: null, fits: true } : null);
-  state.score = p.score; state.displayScore = state.score; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.puz.seq = p.seq;
+  state.score = p.score; state.displayScore = state.score; state.orbs = []; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.puz.seq = p.seq;
   state.puz.prev = null; state.puz.undoUsed = true; state.puz.fail = '';
   state.over = false; $('over').hidden = true;
   state.clearing = []; state.beams = []; state.rings = []; state.texts = []; state.shake = null; state.flash = null;

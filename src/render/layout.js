@@ -1,5 +1,5 @@
 import { N } from '../core/constants.js';
-import { bgc, cv, stage } from '../ui/dom.js';
+import { bgc, cv, flyc, stage } from '../ui/dom.js';
 import { gemSprites, sprites } from './sprites.js';
 
 /* ---------- Layout ---------- */
@@ -13,10 +13,11 @@ export function layout() {
   const trayH = B * 0.42, gap = B * 0.04;
   const bx = (W - B) / 2, by = Math.max(0, (H - (B + gap + trayH)) / 2);
   const pad = B * 0.03, cell = (B - 2 * pad) / N;
-  L = { B, bx, by, pad, cell, gx: bx + pad, gy: by + pad, trayY: by + B + gap, trayH, slotW: B / 3 };
+  L = { B, bx, by, pad, cell, gx: bx + pad, gy: by + pad, trayY: by + B + gap, trayH, slotW: B / 3, ox: rect.left, oy: rect.top }; // ox, oy: the board canvas on the page
   L.trayCell = Math.min(cell * 0.56, (L.slotW * 0.86) / 5, (trayH * 0.86) / 5);
   sprites.clear(); gemSprites.clear();
   BW = window.innerWidth; BH = window.innerHeight;
   BDPR = Math.min(window.devicePixelRatio || 1, 2);
   bgc.width = Math.round(BW * BDPR); bgc.height = Math.round(BH * BDPR);
+  flyc.width = bgc.width; flyc.height = bgc.height;
 }

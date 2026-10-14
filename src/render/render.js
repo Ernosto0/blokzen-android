@@ -2,11 +2,11 @@ import { THEMES } from '../themes/catalog.js';
 import { mixHex, rgba, shade } from '../core/color.js';
 import { GREY, N, SHAPES } from '../core/constants.js';
 import { store } from '../core/store.js';
-import { $, ctx, elScore } from '../ui/dom.js';
+import { $, ctx, elScore, fctx, flyc } from '../ui/dom.js';
 import { state, pop, theme, THEME_DUR } from '../core/state.js';
 import { checkUnlocks, stats, STATS_KEY, TH } from '../themes/progress.js';
 import { clamp01, inOut, lerp, outBack, outCubic } from '../core/util.js';
-import { DPR, H, L, W } from './layout.js';
+import { BDPR, BH, BW, DPR, H, L, W } from './layout.js';
 import { drawGemOn, rr, sprite } from './sprites.js';
 import { drawBg } from './backgrounds.js';
 import { applyDomColors, setTheme } from '../themes/switching.js';
@@ -17,6 +17,8 @@ import { drawTutHand, tut, TUT, tutFinish, tutGo } from '../ui/tutorial.js';
 import { PARTS } from '../themes/registry.js';
 import { mode } from '../modes/registry.js';
 import { fmtNum } from '../i18n/index.js';
+import { Sfx } from '../audio/sfx.js';
+import { bumpScore } from '../ui/hud.js';
 
 /* ---------- Rendering ---------- */
 function drawSprite(spr, x, y, size, scale = 1) {
@@ -185,6 +187,15 @@ function drawParticle(p, k, light) {
       ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fill();
       break;
     }
+    case 'goldCoin': { // the clean-board shower: a coin spinning as it falls
+      const r = s * 0.62, w = Math.max(0.12, Math.abs(Math.cos(p.life * 9 + p.ph)));
+      ctx.rotate(p.rot * 0.15); ctx.scale(w, 1);
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#c08a1c'; ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.78, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2); ctx.lineWidth = Math.max(1, r * 0.14); ctx.strokeStyle = '#e0a82a'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.3, r * 0.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fill();
+      break;
+    }
     case 'star': {
       ctx.rotate(p.rot * 0.3);
       const r = s * 0.8, q = r * 0.22;
@@ -286,11 +297,80 @@ function drawBlast(now, th, cs) {
     const t = (now - ring.t0) / ring.dur;
     if (t < 0 || t >= 1) continue;
     ctx.globalAlpha = 0.85 * (1 - t);
+    ctx.strokeStyle = ring.color || lc;
     ctx.lineWidth = Math.max(1, ring.w * (1 - t));
     ctx.beginPath(); ctx.arc(ring.x, ring.y, Math.max(1, ring.rad * outCubic(t)), 0, Math.PI * 2); ctx.stroke();
   }
   state.rings = state.rings.filter(ring => now - ring.t0 < ring.dur);
   ctx.restore();
+}
+
+// the combo word: pops in with an elastic squash and stretch, bounces, wobbles, and gets hotter in colour as the combo climbs
+const COMBO_COLS = ['#ffd23f', '#ffa630', '#ff6b4a', '#ff4fa3'];
+const elastic = x => x >= 1 ? 1 : 1 - Math.pow(2, -9 * x) * Math.cos(x * 9.5);
+function drawCombo(tx, t, now, th, cs) {
+  const lv = tx.combo, rainbow = lv >= 7, light = !!th.light;
+  const col = rainbow ? `hsl(${(now * 0.25) % 360},95%,60%)` : lv === 2 ? th.accent : COMBO_COLS[lv - 3];
+  const top = rainbow ? `hsl(${(now * 0.25 + 50) % 360},100%,82%)` : mixHex(col, '#ffffff', 0.55);
+  const pop = Math.max(0.01, elastic(Math.min(1, t / 0.32)));
+  const wob = Math.sin(t * 30) * Math.exp(-t * 7) * 0.24; // squash and stretch
+  const bounce = Math.abs(Math.sin(t * Math.PI * 2.4)) * Math.exp(-t * 3.6) * cs * 0.4;
+  const y = tx.y - bounce - outCubic(t) * cs * 1.1, size = tx.size; // rises like the other texts so the stack keeps its spacing
+  ctx.font = `800 ${size}px "Baloo 2", "Trebuchet MS", sans-serif`;
+  const half = ctx.measureText(tx.text).width / 2 * 1.2 + size * 0.15;
+  const x = Math.max(L.bx + half, Math.min(L.bx + L.B - half, tx.x));
+  ctx.save();
+  ctx.globalAlpha = t > 0.75 ? 1 - (t - 0.75) / 0.25 : 1;
+  ctx.translate(x, y);
+  ctx.rotate(Math.sin(t * 16) * Math.exp(-t * 5) * 0.03 * Math.min(lv, 7));
+  ctx.scale(pop * (1 + wob), pop * (1 - wob));
+  ctx.lineWidth = size * 0.26; ctx.strokeStyle = light ? 'rgba(60,30,10,.85)' : 'rgba(20,10,4,.82)';
+  if (lv >= 4 && !light) { ctx.shadowColor = col; ctx.shadowBlur = size * 0.7; }
+  ctx.strokeText(tx.text, 0, 0);
+  ctx.shadowBlur = 0;
+  const g = ctx.createLinearGradient(0, -size * 0.45, 0, size * 0.4);
+  g.addColorStop(0, top); g.addColorStop(0.55, col); g.addColorStop(1, rainbow ? col : shade(col, -0.12));
+  ctx.fillStyle = g; ctx.fillText(tx.text, 0, 0);
+  ctx.restore();
+  if (tx.sub) { // the multiplier rides under the word, steady, fading in after the pop
+    const ss = size * 0.55, sy = y + size * 0.5 + ss * 0.7;
+    ctx.globalAlpha = clamp01((t - 0.08) / 0.15) * (t > 0.75 ? 1 - (t - 0.75) / 0.25 : 1);
+    ctx.font = `800 ${ss}px "Baloo 2", "Trebuchet MS", sans-serif`;
+    ctx.lineWidth = ss * 0.22; ctx.strokeStyle = rgba(th.stroke, 0.88);
+    ctx.strokeText(tx.sub, x, sy); ctx.fillStyle = th.fg; ctx.fillText(tx.sub, x, sy);
+    ctx.globalAlpha = 1;
+  }
+}
+// score sparks, drawn on the canvas over the HUD: each one curves up to the counter, leaves a short trail and flashes as it lands
+let flyDirty = false;
+function drawOrbs(now, th) {
+  if (!state.orbs.length && !flyDirty) return;
+  fctx.setTransform(BDPR, 0, 0, BDPR, 0, 0);
+  fctx.clearRect(0, 0, BW, BH);
+  flyDirty = state.orbs.length > 0;
+  const light = !!th.light;
+  if (!light) fctx.globalCompositeOperation = 'lighter';
+  const at = (o, u) => { const e = u * u * (3 - 2 * u), a = 1 - e; return [a * a * o.sx + 2 * a * e * o.mx + e * e * o.tx, a * a * o.sy + 2 * a * e * o.my + e * e * o.ty]; };
+  for (const o of state.orbs) {
+    const u = (now - o.t0) / o.dur;
+    if (u < 0) continue;
+    if (u >= 1) {
+      if (!o.done) { o.done = true; bumpScore(); Sfx.orb(o.i); }
+      const f = (now - o.t0 - o.dur) / 260; // the landing flash
+      if (f < 1) { fctx.globalAlpha = 1 - f; const r = o.size * (1.5 + f * 4); fctx.drawImage(glowSprite(o.color), o.tx - r, o.ty - r, r * 2, r * 2); }
+      continue;
+    }
+    for (let j = 4; j >= 0; j--) { // trail
+      const [x, y] = at(o, Math.max(0, u - j * 0.035)), r = o.size * (1 - j * 0.16) * (j ? 1.6 : 2.6);
+      fctx.globalAlpha = j ? 0.5 * (1 - j / 5) : 1;
+      fctx.drawImage(glowSprite(o.color), x - r, y - r, r * 2, r * 2);
+    }
+    const [x, y] = at(o, u);
+    fctx.globalAlpha = 1; fctx.fillStyle = '#ffffff';
+    fctx.beginPath(); fctx.arc(x, y, o.size * 0.42, 0, Math.PI * 2); fctx.fill();
+  }
+  fctx.globalAlpha = 1; fctx.globalCompositeOperation = 'source-over';
+  state.orbs = state.orbs.filter(o => now - o.t0 - o.dur < 260);
 }
 
 let last = performance.now();
@@ -301,8 +381,12 @@ export function frame(now) {
   if (state.pendingTheme && now >= state.pendingTheme.at) { const p = state.pendingTheme; state.pendingTheme = null; setTheme(p.i, now, { unlocked: !!p.unlocked, finale: !!p.finale }); if (!state.over) save(); }
   applyDomColors(now);
 
-  state.displayScore += (state.score - state.displayScore) * Math.min(1, dt * 9);
-  if (Math.abs(state.score - state.displayScore) < 0.5) state.displayScore = state.score;
+  let held = 0; // points still flying up as sparks: the counter adds them as they land
+  for (const o of state.orbs) if (!o.done) held += o.val;
+  const shown = state.score - held;
+  if (state.orbs.length) state.displayScore = shown; // while sparks fly the counter steps up with each one that lands
+  else state.displayScore += (shown - state.displayScore) * Math.min(1, dt * 9);
+  if (Math.abs(shown - state.displayScore) < 0.5) state.displayScore = shown;
   const ds = Math.round(state.displayScore);
   if (ds !== state.shownScore) { state.shownScore = ds; elScore.textContent = fmtNum(ds); }
 
@@ -324,6 +408,7 @@ export function frame(now) {
   }
   drawBg(now, dt);
   draw(now);
+  drawOrbs(now, TH());
   if (menuOpen) drawLogo();
   requestAnimationFrame(frame);
 }
@@ -480,6 +565,7 @@ function draw(now) {
   for (const tx of state.texts) {
     const t = (now - tx.t0) / tx.dur;
     if (t < 0 || t >= 1) continue;
+    if (tx.combo) { drawCombo(tx, t, now, th, cs); continue; }
     const sc = t < 0.18 ? outBack(t / 0.18) : 1;
     const y = tx.y - outCubic(t) * cs * 1.1;
     ctx.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
