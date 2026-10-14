@@ -7,7 +7,7 @@ box.id = 'toasts'; box.setAttribute('role', 'status'); box.setAttribute('aria-li
 document.body.appendChild(box);
 const queue = [];
 let busy = false;
-const SHOW = 3600;
+const SHOW = 6000; // long enough to read the task and the theme name
 
 export function taskToast(task, theme) {
   queue.push({ task, theme });
@@ -28,4 +28,5 @@ function next() {
   el.addEventListener('pointerdown', close); // a tap dismisses it early
   requestAnimationFrame(() => el.classList.add('in'));
   setTimeout(close, SHOW);
+  setTimeout(() => el.classList.add('in'), 0);
 }
