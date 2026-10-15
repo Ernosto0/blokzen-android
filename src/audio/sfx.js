@@ -44,12 +44,16 @@ export const Sfx = {
     }
   },
   // play a loaded sample; false when it is not there yet, so the caller can fall back to the synth
-  play(name, { vol = 1, rate = 1, when = 0, wet = false } = {}) {
+  play(name, { vol = 1, rate = 1, when = 0, wet = false, bright = 0 } = {}) {
     const b = this.samples[name];
     if (!b) return false;
     const c = this.ctx, s = c.createBufferSource(), g = c.createGain();
     s.buffer = b; s.playbackRate.value = rate; g.gain.value = vol;
-    s.connect(g); g.connect(this.out);
+    if (bright > 0) { // a high shelf (in dB): the same sample, sharper
+      const sh = c.createBiquadFilter(); sh.type = 'highshelf'; sh.frequency.value = 2500; sh.gain.value = bright;
+      s.connect(sh); sh.connect(g);
+    } else s.connect(g);
+    g.connect(this.out);
     if (wet && this.snd.echo) g.connect(this.send);
     s.start(c.currentTime + when);
     return true;
@@ -79,6 +83,14 @@ export const Sfx = {
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     s.connect(f); f.connect(g); g.connect(this.out);
     s.start(t); s.stop(t + dur + 0.02);
+  },
+  // snap a frequency to the nearest note of the theme's pentatonic scale (the one the clear melody walks), in whatever octave it falls;
+  // kits run their "scattered" pitches through this so the sparkle around the melody stays in its key
+  key(f) {
+    const st = 12 * Math.log2(f / this.snd.root), oct = Math.floor(st / 12), w = st - oct * 12;
+    let best = 0;
+    for (const d of [0, 2, 4, 7, 9, 12]) if (Math.abs(d - w) < Math.abs(best - w)) best = d;
+    return this.snd.root * Math.pow(2, oct + best / 12);
   },
   note(f, { vol = 0.15, dur = 0.34, when = 0 } = {}) {
     const s = this.snd, v = vol * (s.gain || 1), d = s.pluck ? dur * 0.55 : dur;
@@ -122,13 +134,15 @@ export const Sfx = {
     this.tone(f * 2.76, { type: 'sine', dur: 0.12, vol: 0.018, attack: 0.006, when: 0.01 });
     this.hiss({ dur: 0.16, vol: 0.02, type: 'highpass', freq: 6000, to: 9500 });
   },
-  // laid under every clear: the burst of the theme's material group, a semitone higher for every step of the combo;
-  // each extra line adds a smaller, higher echo of it
+  // laid under every clear: the burst of the theme's material group. The bursts have no pitch of their own (the melody and the
+  // theme kit carry the notes), so a higher combo makes the burst sharper and a touch louder instead of shifting its pitch;
+  // each extra line adds a smaller, slightly darker echo of it
   shimmer(lines, combo) {
-    const name = 'boom-' + (this.snd.boom || 'soft'), lift = Math.pow(2, Math.min(Math.max(combo, 1) - 1, 8) / 12);
-    if (!this.samples[name]) { this.tone(300 * lift, { type: 'sine', dur: 0.12, vol: 0.08, to: 180 * lift, attack: 0.004 }); return; } // a soft thump until the samples load
-    this.play(name, { vol: 0.42, rate: lift });
-    for (let i = 1; i < Math.min(lines, 4); i++) this.play(name, { vol: 0.42 * Math.pow(0.6, i), rate: lift * Math.pow(2, i * 3 / 12), when: i * 0.075 });
+    const name = 'boom-' + (this.snd.boom || 'soft'), step = Math.min(Math.max(combo, 1) - 1, 8);
+    if (!this.samples[name]) { this.tone(160, { type: 'sine', dur: 0.12, vol: 0.08, to: 90, attack: 0.004 }); return; } // a soft thump until the samples load
+    const jit = 1 + (Math.random() - 0.5) * 0.06; // a hair of variation, so repeated clears do not sound stamped
+    this.play(name, { vol: 0.36 * (1 + step * 0.025), rate: jit, bright: step * 0.7 });
+    for (let i = 1; i < Math.min(lines, 4); i++) this.play(name, { vol: 0.36 * Math.pow(0.6, i), rate: jit * (1 - i * 0.07), when: i * 0.075, bright: step * 0.7 });
   },
   themeChange() {
     if (!this.ok()) return;
@@ -146,10 +160,13 @@ export const Sfx = {
     this.tone(90, { dur: 0.5, vol: 0.35, to: 40, when: 0.2 });
     this.play('coins', { vol: 0.18, when: 0.22, wet: true }); // the gold rain
   },
-  // a score spark lands on the counter: a tiny tick, a little higher for each one
+  // a score spark lands on the counter: a tiny tick, a step higher for each one. The sparks land while the clear melody is still ringing,
+  // so the steps climb the theme's own pentatonic scale instead of a chromatic run
   orb(i) {
     if (!this.ok()) return;
-    if (!this.play('tick', { vol: 0.07, rate: Math.pow(2, Math.min(i, 12) / 12) })) this.tone(2093 * Math.pow(2, Math.min(i, 12) / 12), { dur: 0.06, vol: 0.02 });
+    let base = this.snd.root; while (base >= 1760) base /= 2; while (base < 880) base *= 2; // the root, folded into the tick's bright register
+    const f = base * Math.pow(2, [0, 2, 4, 7, 9, 12, 14, 16, 19, 21][Math.min(i, 9)] / 12);
+    if (!this.play('tick', { vol: 0.07, rate: f / 2093 })) this.tone(f, { dur: 0.06, vol: 0.02 });
   },
   bad() { if (!this.ok()) return; this.tone(160, { type: 'square', dur: 0.09, vol: 0.04, to: 110 }); },
   deal() { if (!this.ok()) return; const kit = KITS[this.snd.kit]; if (kit) { kit.deal(); return; } this.hiss({ dur: 0.2, vol: 0.05, type: 'bandpass', freq: 500, to: 2600, q: 0.9 }); },

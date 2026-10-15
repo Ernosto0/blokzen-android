@@ -30,8 +30,9 @@ function noiseBand(out, { at = 0, dur, f0, f1, q = 1, amp, env }) {
   const i0 = Math.floor(at * SR), n = Math.min(Math.ceil(dur * SR), out.length - i0);
   let lp = 0, bp = 0;
   for (let i = 0; i < n; i++) {
-    const t = i / SR, fc = f0 * Math.pow(f1 / f0, t / dur), F = 2 * Math.sin(Math.PI * Math.min(fc, SR / 6) / SR);
-    const x = rnd() * 2 - 1, hp = x - lp - bp / q; bp += F * hp; lp += F * bp; // state-variable filter
+    const t = i / SR, fc = f0 * Math.pow(f1 / f0, t / dur), F = 2 * Math.sin(Math.PI * Math.min(fc, SR / 3) / (2 * SR));
+    const x = rnd() * 2 - 1;
+    for (let k = 0; k < 2; k++) { const hp = x - lp - bp / q; bp += F * hp; lp += F * bp; } // state-variable filter, run twice per sample so it stays stable up high
     out[i0 + i] += bp * env(t / dur) * amp;
   }
 }
@@ -71,37 +72,41 @@ function level(x, target = 0.16) {
   return finish(x.map(v => v * k * Math.min(1, 0.95 / m)), Math.min(0.95, m), 25);
 }
 const S = {};
+// The booms sit under a themed melody and a theme kit, so they must not carry a pitch of their own: every one is built from
+// noise bursts and low thumps (anything under ~250 Hz reads as weight, not as a note). Nothing here may ring at one frequency.
 const BOOMS = {
-  wood() { // wooden blocks knocked loose: one hollow knock, then a few smaller ones tumbling
-    const x = buf(0.5), W = [[1, 0.09, 1], [2.71, 0.035, 0.45], [4.95, 0.018, 0.2]];
-    modal(x, { f: 330, modes: W });
-    tick(x, { f: 2400, q: 1.5, amp: 0.5, tau: 0.004 });
-    [0.045, 0.085, 0.13, 0.19].forEach((at, i) => { modal(x, { at, f: range(480, 820), modes: W, amp: 0.55 - i * 0.1 }); tick(x, { at, f: 2800, amp: 0.25 - i * 0.04, tau: 0.003 }); });
-    return level(reverb(x, 0.08, 0.6));
+  wood() { // wooden blocks knocked loose: a dry clack with a low body, then a few smaller clacks tumbling
+    const x = buf(0.45);
+    partial(x, { f: 120, to: 70, dur: 0.15, amp: 0.7, attack: 0.002, tau: 0.04, sweep: 0.08 });
+    noiseBand(x, { dur: 0.09, f0: 1400, f1: 700, q: 0.7, amp: 0.8, env: u => Math.min(1, u * 60) * Math.exp(-u * 7) });
+    tick(x, { f: 2600, q: 0.8, amp: 0.6, tau: 0.004 });
+    [0.045, 0.085, 0.13, 0.19].forEach((at, i) => { noiseBand(x, { at, dur: 0.05, f0: range(1600, 2400), f1: 900, q: 0.7, amp: 0.4 - i * 0.07, env: u => Math.min(1, u * 60) * Math.exp(-u * 7) }); tick(x, { at, f: 3000, q: 0.8, amp: 0.2 - i * 0.03, tau: 0.003 }); });
+    return level(reverb(x, 0.07, 0.6));
   },
   glass() { // a pane breaking: a bright crack, a burst of shards, a few tinkles after
-    const x = buf(0.8);
-    noiseBand(x, { dur: 0.06, f0: 6500, f1: 4000, q: 0.7, amp: 0.7, env: u => Math.exp(-u * 5) });
-    for (let i = 0; i < 26; i++) {
-      const at = Math.pow(rnd(), 2.2) * 0.5, f = range(2600, 7200), a = 0.5 * (1 - at * 1.4) * range(0.4, 1);
-      partial(x, { f, at, dur: 0.3, amp: a, attack: 0.001, tau: range(0.03, 0.09) });
-      partial(x, { f: f * 2.76, at, dur: 0.12, amp: a * 0.3, attack: 0.001, tau: 0.02 });
+    const x = buf(0.7);
+    noiseBand(x, { dur: 0.07, f0: 6500, f1: 4000, q: 0.7, amp: 0.7, env: u => Math.exp(-u * 5) });
+    for (let i = 0; i < 40; i++) {
+      const at = Math.pow(rnd(), 2) * 0.45;
+      tick(x, { at, f: range(3000, 9000), q: 0.9, amp: 0.55 * (1 - at * 1.5) * range(0.4, 1), tau: range(0.003, 0.009) });
     }
-    return level(reverb(x, 0.22), 0.12);
+    noiseBand(x, { at: 0.02, dur: 0.4, f0: 7500, f1: 4500, q: 0.6, amp: 0.2, env: u => Math.exp(-u * 4) });
+    return level(reverb(x, 0.2), 0.12);
   },
   stone() { // a stone block cracking apart: a low thud, a gritty crunch and pebbles skittering off
     const x = buf(0.5);
     partial(x, { f: 130, to: 70, dur: 0.3, amp: 0.8, attack: 0.002, tau: 0.06, sweep: 0.12 });
-    noiseBand(x, { dur: 0.2, f0: 900, f1: 450, q: 1, amp: 0.8, env: u => Math.min(1, u * 80) * Math.exp(-u * 6) });
-    for (let i = 0; i < 9; i++) { const at = 0.03 + Math.pow(rnd(), 1.5) * 0.3; tick(x, { at, f: range(1400, 3600), q: 3, amp: 0.45 * (1 - at * 2), tau: 0.005 }); modal(x, { at, f: range(900, 1700), modes: [[1, 0.012, 0.3]] }); }
+    noiseBand(x, { dur: 0.2, f0: 900, f1: 450, q: 0.8, amp: 0.8, env: u => Math.min(1, u * 80) * Math.exp(-u * 6) });
+    for (let i = 0; i < 12; i++) { const at = 0.03 + Math.pow(rnd(), 1.5) * 0.3; tick(x, { at, f: range(1400, 3600), q: 0.9, amp: 0.45 * (1 - at * 2), tau: range(0.003, 0.007) }); }
     return level(reverb(x, 0.06, 0.5));
   },
-  metal() { // a struck metal plate: a clang with a slow beat in it, and a couple of bolts bouncing off
-    const x = buf(0.9), M = [[1, 0.3, 1], [2.76, 0.18, 0.5], [5.4, 0.09, 0.28], [8.93, 0.05, 0.14]];
-    modal(x, { f: 520, modes: M, dur: 0.9 }); modal(x, { f: 523.5, modes: M, amp: 0.6, dur: 0.9 });
-    tick(x, { f: 5000, q: 1, amp: 0.4, tau: 0.003 });
-    [0.12, 0.2, 0.26].forEach((at, i) => modal(x, { at, f: range(1800, 2800), modes: [[1, 0.06, 0.3 - i * 0.07], [2.4, 0.03, 0.1]] }));
-    return level(reverb(x, 0.15), 0.13);
+  metal() { // a struck metal plate: a short dull clank, a rattle of loose bolts and a thin shimmer of tail
+    const x = buf(0.6);
+    partial(x, { f: 110, to: 75, dur: 0.2, amp: 0.5, attack: 0.002, tau: 0.05, sweep: 0.1 });
+    noiseBand(x, { dur: 0.05, f0: 4200, f1: 3000, q: 0.8, amp: 0.9, env: u => Math.min(1, u * 60) * Math.exp(-u * 6) });
+    noiseBand(x, { dur: 0.35, f0: 3600, f1: 2200, q: 1.3, amp: 0.4, env: u => Math.min(1, u * 40) * Math.exp(-u * 5) });
+    [0.06, 0.11, 0.17, 0.24].forEach((at, i) => tick(x, { at, f: range(3200, 6200), q: 0.9, amp: 0.4 - i * 0.08, tau: 0.004 }));
+    return level(reverb(x, 0.14), 0.13);
   },
   paper() { // paper crumpled and torn: a quick rip, then a crackle of folds
     const x = buf(0.45);
@@ -115,10 +120,10 @@ const BOOMS = {
     partial(x, { f: 200, to: 130, dur: 0.25, amp: 0.45, attack: 0.012, tau: 0.07 });
     return level(x, 0.15);
   },
-  water() { // a splash: a burst of bubbles bloop up through a short wash
+  water() { // a splash: a wash with a few droplets flicked through it
     const x = buf(0.5);
-    noiseBand(x, { dur: 0.22, f0: 1800, f1: 500, q: 0.6, amp: 0.45, env: u => Math.min(1, u * 60) * Math.exp(-u * 6) });
-    for (let i = 0; i < 6; i++) { const at = Math.pow(rnd(), 1.4) * 0.2, f = range(320, 760); partial(x, { f, to: f * 2.4, at, dur: 0.12, amp: 0.6 * (1 - at * 2), attack: 0.004, tau: 0.03, sweep: 0.05 }); }
+    noiseBand(x, { dur: 0.25, f0: 1800, f1: 500, q: 0.6, amp: 0.5, env: u => Math.min(1, u * 60) * Math.exp(-u * 6) });
+    for (let i = 0; i < 7; i++) { const at = Math.pow(rnd(), 1.4) * 0.22; noiseBand(x, { at, dur: 0.05, f0: range(500, 900), f1: range(1500, 2600), q: 0.9, amp: 0.55 * (1 - at * 2), env: u => Math.sin(Math.PI * Math.sqrt(u)) * Math.exp(-u * 3) }); }
     return level(reverb(x, 0.1, 0.7));
   },
   electro() { // an arcade explosion: crushed noise falling in pitch and a square blip diving under it
@@ -128,17 +133,17 @@ const BOOMS = {
     for (let i = 0; i < Math.round(0.16 * SR); i++) { const t = i / SR, f = 880 * Math.pow(110 / 880, t / 0.16); x[i] += (Math.sin(TAU * f * t * 0.5) > 0 ? 0.3 : -0.3) * Math.exp(-t / 0.08); }
     return level(x, 0.14);
   },
-  magic() { // a spell going off: an airy rush and a quick spray of bell notes, rising
-    const x = buf(0.9), P = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
-    noiseBand(x, { dur: 0.3, f0: 1500, f1: 6500, q: 0.8, amp: 0.35, env: u => Math.sin(Math.PI * u) });
-    P.forEach((st, i) => { const f = 1046.5 * Math.pow(2, st / 12), at = i * 0.022 + rnd() * 0.01; partial(x, { f, at, dur: 0.5, amp: 0.35 * (1 - i * 0.05), attack: 0.002, tau: 0.13 }); partial(x, { f: f * 2.76, at, dur: 0.2, amp: 0.08, attack: 0.001, tau: 0.04 }); });
+  magic() { // a spell going off: an airy rush and a quick spray of sparkle, no notes of its own
+    const x = buf(0.7);
+    noiseBand(x, { dur: 0.3, f0: 1500, f1: 6500, q: 0.8, amp: 0.4, env: u => Math.sin(Math.PI * u) });
+    for (let i = 0; i < 26; i++) { const at = 0.02 + Math.pow(rnd(), 1.3) * 0.4; tick(x, { at, f: range(5000, 11000), q: 0.9, amp: 0.35 * (1 - at), tau: range(0.003, 0.008) }); }
     return level(reverb(x, 0.3), 0.12);
   },
-  drum() { // a hand drum: a slap on the rim, then a deep tom
-    const x = buf(0.55);
-    tick(x, { f: 950, q: 1.2, amp: 0.8, tau: 0.008 }); partial(x, { f: 330, dur: 0.1, amp: 0.4, attack: 0.001, tau: 0.025 });
-    partial(x, { f: 150, to: 82, at: 0.06, dur: 0.45, amp: 1, attack: 0.002, tau: 0.13, sweep: 0.15 });
-    tick(x, { at: 0.06, f: 420, q: 1, amp: 0.45, tau: 0.01 });
+  drum() { // a hand drum: a slap on the rim, then a deep thump
+    const x = buf(0.5);
+    tick(x, { f: 1100, q: 0.9, amp: 0.8, tau: 0.006 });
+    noiseBand(x, { at: 0.005, dur: 0.12, f0: 700, f1: 350, q: 0.7, amp: 0.45, env: u => Math.min(1, u * 40) * Math.exp(-u * 6) });
+    partial(x, { f: 105, to: 52, at: 0.05, dur: 0.4, amp: 1, attack: 0.002, tau: 0.11, sweep: 0.08 });
     return level(reverb(x, 0.1, 0.6));
   },
 };

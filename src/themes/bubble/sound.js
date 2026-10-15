@@ -15,8 +15,8 @@ Object.assign(KITS, {
     clear(n, combo) {
       for (let i = 0; i < n + 2; i++) blub(520 * Math.pow(2, [0, 4, 7, 12, 16, 19][i % 6] / 12), { when: 0.08 + i * 0.07, vol: 0.08 });
       S.hiss({ dur: 0.35, vol: 0.05, type: 'bandpass', freq: 1200, to: 4200, q: 1.2, when: 0.04 });
-      if (n > 1) giggle(rand(900, 1050), { when: 0.3 });
-      if (n > 3 || (combo || 0) > 2) { boing(rand(380, 440), { when: 0.62, vol: 0.14 }); S.pop({ vol: 0.14, f: 800, when: 0.9 }); }
+      if (n > 1) giggle(S.key(rand(900, 1050)), { when: 0.3 });
+      if (n > 3 || (combo || 0) > 2) { boing(S.key(rand(380, 440)), { when: 0.62, vol: 0.14 }); S.pop({ vol: 0.14, f: 800, when: 0.9 }); }
     },
     deal() { for (let i = 0; i < 3; i++) blub(rand(480, 700), { when: i * 0.08, vol: 0.06 }); },
   },

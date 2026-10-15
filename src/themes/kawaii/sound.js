@@ -18,7 +18,7 @@ Object.assign(KITS, {
     clear(n, combo) {
       for (let i = 0; i < n + 1; i++) twinkle(1318.5 * Math.pow(2, [0, 2, 4, 7, 9, 12][i % 6] / 12), { when: 0.1 + i * 0.07, vol: 0.06 });
       S.hiss({ dur: 0.3, vol: 0.04, type: 'highpass', freq: 5000, to: 11000, when: 0.05 });
-      if (n > 3 || (combo || 0) > 2) mew(rand(780, 900), { when: 0.32 });
+      if (n > 3 || (combo || 0) > 2) mew(S.key(rand(780, 900)), { when: 0.32 });
       if (n > 3) S.pop({ vol: 0.12, f: 1100, when: 0.55 });
     },
     deal() { for (let i = 0; i < 3; i++) S.tone(rand(1000, 1500), { type: 'sine', dur: 0.06, vol: 0.05, to: rand(1600, 2200), when: i * 0.07 }); },
