@@ -5,7 +5,7 @@ import { buzz, CAN_VIBRATE, iosTick, prefs } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $ } from './dom.js';
 import { state } from '../core/state.js';
-import { toggleMute } from '../game/input.js';
+import { resetConfirm, toggleMute } from '../game/input.js';
 import { menuOpen } from './menu.js';
 import { setDev } from './devmode.js';
 import { t } from '../i18n/index.js';
@@ -43,8 +43,9 @@ export function openSettings() {
 }
 export function closeSettings() {
   $('settings').hidden = true;
-  if (menuOpen) $('menuSettings').focus({ preventScroll: true });
+  $(menuOpen ? 'menuSettings' : 'settingsBtn').focus({ preventScroll: true });
 }
+$('settingsBtn').addEventListener('click', () => { resetConfirm(); openSettings(); }); // the gear in the game's top row
 $('setClose').addEventListener('click', closeSettings);
 $('settings').addEventListener('click', e => { if (e.target.id === 'settings') closeSettings(); });
 $('optSound').addEventListener('change', e => { if (e.target.checked === Sfx.muted) toggleMute(); });

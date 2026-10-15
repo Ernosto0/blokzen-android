@@ -95,10 +95,7 @@ export function toggleMute() {
   syncMute();
   if (!Sfx.muted) Sfx.pick();
 }
-$('mute').addEventListener('click', toggleMute);
 export function syncMute() {
-  $('icoOn').hidden = Sfx.muted; $('icoOff').hidden = !Sfx.muted;
-  $('mute').setAttribute('aria-label', Sfx.muted ? t('Sesi aç') : t('Sesi kapat'));
   syncSettings();
 }
 let confirmTimer = 0;

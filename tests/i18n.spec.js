@@ -75,7 +75,7 @@ test.describe('English device', () => {
     await page.click('#play');
     await page.waitForTimeout(500);
     await expect(page.locator('#restart')).toHaveAttribute('aria-label', 'New game');
-    await expect(page.locator('#mute')).toHaveAttribute('aria-label', 'Mute');
+    await expect(page.locator('#settingsBtn')).toHaveAttribute('aria-label', 'Settings');
     const g = await geometry(page);
     await drag(page, g.slot(0), g.cell(0, 0));
     await page.waitForTimeout(500);
