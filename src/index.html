@@ -104,24 +104,6 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
 </div>
 
 <div id="menu" hidden role="dialog" aria-modal="true" aria-labelledby="menuTitle">
-  <div class="mgrid">
-    <button id="menuThemes" type="button" title="Temalar">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.9-.7-1.3-.7-2.1 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5C21 6.4 17 3 12 3z"/><circle cx="7.5" cy="11.5" r="1.5" fill="var(--btn)"/><circle cx="10" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="14.6" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="17.2" cy="11" r="1.5" fill="var(--btn)"/></svg>
-      <span class="sr">Temalar</span>
-    </button>
-    <button id="menuHelp" type="button" title="Nasıl oynanır">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.3-2.6 3.9"/><circle cx="12" cy="17.3" r=".6" fill="currentColor"/></svg>
-      <span class="sr">Nasıl oynanır</span>
-    </button>
-    <button id="menuStats" type="button" title="İstatistik">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 20V13M12 20V5M19 20v-9"/></svg>
-      <span class="sr">İstatistik</span>
-    </button>
-    <button id="menuSettings" type="button" title="Ayarlar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17.4 7H20M4 17h2.6M11 17h9"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="8.8" cy="17" r="2.2"/></svg>
-      <span class="sr">Ayarlar</span>
-    </button>
-  </div>
   <div class="menu-inner">
     <div class="mhead">
       <canvas id="logo" aria-hidden="true"></canvas>
@@ -162,6 +144,24 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
         </button>
         <button id="zenNew" class="mini corner" type="button" hidden>Sıfırla</button>
       </section>
+    </div>
+    <div class="mgrid">
+      <button id="menuThemes" type="button" title="Temalar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.9-.7-1.3-.7-2.1 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5C21 6.4 17 3 12 3z"/><circle cx="7.5" cy="11.5" r="1.5" fill="var(--btn)"/><circle cx="10" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="14.6" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="17.2" cy="11" r="1.5" fill="var(--btn)"/></svg>
+        <span class="mlbl">Temalar</span>
+      </button>
+      <button id="menuHelp" type="button" title="Nasıl oynanır">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.3-2.6 3.9"/><circle cx="12" cy="17.3" r=".6" fill="currentColor"/></svg>
+        <span class="mlbl">Nasıl oynanır</span>
+      </button>
+      <button id="menuStats" type="button" title="İstatistik">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 20V13M12 20V5M19 20v-9"/></svg>
+        <span class="mlbl">İstatistik</span>
+      </button>
+      <button id="menuSettings" type="button" title="Ayarlar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17.4 7H20M4 17h2.6M11 17h9"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="8.8" cy="17" r="2.2"/></svg>
+        <span class="mlbl">Ayarlar</span>
+      </button>
     </div>
   </div>
 </div>
