@@ -13,6 +13,7 @@ public class MainActivity extends BridgeActivity {
         if (getResources().getConfiguration().smallestScreenWidthDp < 600) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
+        registerPlugin(BuzzPlugin.class); // vibration with strength (see BuzzPlugin)
         super.onCreate(savedInstanceState);
     }
 }

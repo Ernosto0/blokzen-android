@@ -1,6 +1,6 @@
 import { N, SHAPES, TUT_KEY } from '../core/constants.js';
 import { Sfx } from '../audio/sfx.js';
-import { buzz } from '../platform/haptics.js';
+import { buzz, haptic } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $, ctx } from './dom.js';
 import { state, emptyGrid, pop, theme } from '../core/state.js';
@@ -76,11 +76,11 @@ export function tutPlace(slot, r0, c0) {
     lineBlast(rows, cols, L.gx + (c0 + shape.w / 2) * L.cell, L.gy + (r0 + shape.h / 2) * L.cell, Math.min(1 + (lines - 1) * 0.2, 2), now);
     const midX = L.gx + L.B / 2 - L.pad;
     state.texts.push({ text: clean ? t('Tahta tertemiz!') : lines >= 2 ? t('Harika!') : t('Güzel!'), x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: 1300, size: L.cell * (clean ? 0.95 : 0.82), role: 'accent' });
-    if (clean) { state.flash = { t0: now + 80 }; burst(now + 60); Sfx.fullClear(); buzz([30, 40, 30, 40, 60]); }
+    if (clean) { state.flash = { t0: now + 80 }; burst(now + 60); Sfx.fullClear(); haptic.clean(); }
     if (!state.REDUCED) state.shake = { amp: Math.min(3 + lines * 3 + (clean ? 8 : 0), 20), t0: now + 60 };
     Sfx.clear(lines, 1);
-    buzz(lines >= 2 ? [18, 30, 24] : 20);
-  } else { Sfx.place(); buzz(10); }
+    haptic.clear(lines, 1);
+  } else { Sfx.place(); haptic.place(); }
   tut.next = now + (lines ? 1500 : 800);
 }
 export function tutFinish() {

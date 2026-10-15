@@ -4,7 +4,7 @@ import { bitsOf, fitsAnywhere } from '../core/bitboard.js';
 import { cellsOf, generateSet } from '../core/dealer.js';
 import { colorize, comboMult, fmtMult, levelMult, levelOf, scoreMove } from '../core/scoring.js';
 import { Sfx } from '../audio/sfx.js';
-import { buzz } from '../platform/haptics.js';
+import { haptic } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $ } from '../ui/dom.js';
 import { state, discovered, emptyGrid, freshCls, pop, settings, theme } from '../core/state.js';
@@ -192,18 +192,18 @@ export function placePiece(slot, r0, c0) {
       burst(now + 60);
       goldRain(now);
       Sfx.fullClear();
-      buzz([30, 40, 30, 40, 60]);
+      haptic.clean();
     }
 
     if (!state.REDUCED && mode().shake) state.shake = { amp: Math.min(2 + lines * 1.5 + state.combo * 0.5 + (boardClean ? 3 : 0), 8), t0: now + 60 };
     Sfx.clear(lines, state.combo);
-    if (!boardClean) buzz(lines >= 3 || state.combo >= 4 ? [24, 30, 30, 30, 40] : lines >= 2 || state.combo >= 2 ? [18, 30, 24] : 20);
+    if (!boardClean) haptic.clear(lines, state.combo);
   } else {
     gained = scoreMove(shape.size, 0, 0, false, 0, state.score).place;
     state.msc += 1;
     if (state.msc >= 3) state.combo = 0;
     Sfx.place();
-    buzz(10);
+    haptic.place();
   }
 
   state.score += gained;

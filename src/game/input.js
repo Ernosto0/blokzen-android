@@ -1,7 +1,7 @@
 import { MUTE_KEY, N } from '../core/constants.js';
 import { canUndo, doRevive, doUndo, mode } from '../modes/registry.js';
 import { Sfx } from '../audio/sfx.js';
-import { buzz } from '../platform/haptics.js';
+import { haptic } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $, cv } from '../ui/dom.js';
 import { state } from '../core/state.js';
@@ -43,7 +43,7 @@ function computeTarget() {
   const key = rows.length + cols.length ? rows.join(',') + '|' + cols.join(',') : '';
   if (key !== d.hlKey) {
     d.hlKey = key;
-    if (key) { d.hlT0 = performance.now(); Sfx.preview(rows.length + cols.length); buzz(5); }
+    if (key) { d.hlT0 = performance.now(); Sfx.preview(rows.length + cols.length); haptic.preview(); }
   }
 }
 
@@ -59,7 +59,7 @@ cv.addEventListener('pointerdown', e => {
   state.drag = { slot: i, piece: t.piece, x: p.x, y: p.y, touch: e.pointerType !== 'mouse', t0: performance.now(), target: null, id: e.pointerId, hlKey: '', hlT0: 0 };
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   computeTarget();
-  Sfx.pick(); buzz(6);
+  Sfx.pick(); haptic.pick();
 });
 // keep the dragged piece fully inside the board column / stage instead of following the finger off-screen
 function clampDrag(d, p) {
