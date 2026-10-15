@@ -47,6 +47,7 @@ test.describe('English device', () => {
   });
 
   test('no Turkish left on any screen', async ({ page }) => {
+    test.setTimeout(60_000); // it opens every screen: about 11 s alone, but it used to hit the 30 s default when the whole suite runs in parallel
     const errors = await open(page);
     const text = async sel => (await page.locator(sel).innerText()) + ' ' + (await page.locator(sel).evaluate(el => [...el.querySelectorAll('[aria-label],[title]')].map(e => e.getAttribute('aria-label') + ' ' + e.title).join(' ')));
     const clean = async (sel, what) => expect(await text(sel), what).not.toMatch(TURKISH_LETTERS);
