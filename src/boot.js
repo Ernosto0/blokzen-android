@@ -17,6 +17,7 @@ import { syncMute } from './game/input.js';
 import { openMenu } from './ui/menu.js';
 import { applyPrefs } from './ui/settings.js';
 import { frame } from './render/render.js';
+import { loadPerf } from './render/quality.js';
 import { translatePage } from './i18n/index.js';
 
 /* ---------- Boot ---------- */
@@ -61,6 +62,7 @@ export function start(data) {
   syncMute();
   // The game is set up inside a try: if one step fails (a WebView that is not laid out yet, an old engine), the observers, the frame loop
   // and the main menu below must still start, or the player is left on a dead board with no way in.
+  loadPerf(); // the quality step this phone settled on last time
   try {
     layout();
     snapTheme(settings.auto ? 0 : settings.fixed);

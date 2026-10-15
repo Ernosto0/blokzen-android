@@ -9,6 +9,7 @@ export const freshCls = () => ({ undoLeft: CLS_UNDOS, contUsed: false, hist: [],
 // A variable with a single writer stays in that module and is exported from there.
 export const state = {
   REDUCED: OS_REDUCED, // also on when the player picks low-effects mode
+  perf: 0, // automatic quality step, 0 (full) to 3 (lightest): see render/quality.js
   dealRng: null, // null: Math.random
   grid: undefined,
   tray: undefined,

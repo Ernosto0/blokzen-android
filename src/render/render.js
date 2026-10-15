@@ -20,6 +20,7 @@ import { fmtNum } from '../i18n/index.js';
 import { Sfx } from '../audio/sfx.js';
 import { DRAW as GROUP_DRAW, SPAWN as GROUP_SPAWN } from './groupfx.js';
 import { bumpScore } from '../ui/hud.js';
+import { watchFrame } from './quality.js';
 
 /* ---------- Rendering ---------- */
 function drawSprite(spr, x, y, size, scale = 1) {
@@ -66,20 +67,20 @@ const cshade = (hex, amt) => memo('s', shade, hex, amt);
 const crgba = (hex, a) => memo('r', rgba, hex, a);
 const cmix = (a, b, t) => memo('m', mixHex, a, b, t);
 // a big clear shares a fixed particle budget instead of every cell throwing its own full burst
-const PARTICLE_BUDGET = 90, PARTICLE_MAX = 140, GLOW_MAX = 60;
+const budget = () => state.perf >= 2 ? 45 : 90, pmax = () => state.perf >= 2 ? 70 : 140, glowMax = () => state.perf >= 2 ? 0 : 60; // the automatic quality halves them
 function spawnParticles(it) {
   const th = TH(), fx = th.fx;
-  const room = PARTICLE_MAX - state.particles.length;
+  const room = pmax() - state.particles.length;
   if (room <= 0) return;
   let pending = 0;
   for (const c of state.clearing) if (!c.spawned) pending++;
   let n = state.REDUCED ? 1 : it.few ? 3 : 5;
-  n = Math.max(1, Math.min(n, Math.round((PARTICLE_BUDGET - state.particles.length) / (pending + 1))));
+  n = Math.max(1, Math.min(n, Math.round((budget() - state.particles.length) / (pending + 1))));
   const cx = L.gx + (it.c + 0.5) * L.cell, cy = L.gy + (it.r + 0.5) * L.cell;
   const color = th.blocks[(it.v - 1) % 7] || th.accent;
   const k = it.k || 1, grp = GROUP_SPAWN[th.snd.boom], odd = (it.r + it.c) % 2;
   if (grp && !state.REDUCED) { // the block breaks the way the theme's material would; the theme's own particles thin out under it
-    grp(cx, cy, color, k, it.few || state.particles.length > PARTICLE_BUDGET, odd);
+    grp(cx, cy, color, k, it.few || state.particles.length > budget(), odd);
     n = odd ? 0 : Math.min(n, Math.round(1 + k));
   }
   for (let i = 0; i < n; i++) {
@@ -90,7 +91,7 @@ function spawnParticles(it) {
       rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12, color,
     }));
   }
-  if (it.gem) for (let i = 0; i < (state.REDUCED ? 2 : state.particles.length > PARTICLE_BUDGET ? 3 : 7); i++) { // a breaking gem throws a few accent sparks
+  if (it.gem) for (let i = 0; i < (state.REDUCED ? 2 : state.particles.length > budget() ? 3 : 7); i++) { // a breaking gem throws a few accent sparks
     const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, v = (0.8 + Math.random()) * L.cell * 4.5;
     state.particles.push(fxParticle({ p: 'star', g: 0.5, drag: 1.4, glow: true }, {
       x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.6 + Math.random() * 0.4,
@@ -117,7 +118,7 @@ function drawParticle(p, k, light) {
   const a = Math.min(1, k * 1.5);
   ctx.save();
   ctx.translate(p.x, p.y);
-  if (p.glow && !light && state.particles.length <= GLOW_MAX) {
+  if (p.glow && !light && state.particles.length <= glowMax()) {
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = a * 0.8;
     const gs = s * (p.kind === 'streak' ? 2.4 : 3.2);
@@ -316,8 +317,9 @@ function drawCombo(tx, t, now, th, cs) {
   const col = rainbow ? `hsl(${(now * 0.25) % 360},95%,60%)` : lv === 2 ? th.accent : COMBO_COLS[lv - 3];
   const top = rainbow ? `hsl(${(now * 0.25 + 50) % 360},100%,82%)` : mixHex(col, '#ffffff', 0.55);
   const pop = Math.max(0.01, elastic(Math.min(1, t / 0.32)));
-  const wob = Math.sin(t * 30) * Math.exp(-t * 7) * 0.24; // squash and stretch
-  const bounce = Math.abs(Math.sin(t * Math.PI * 2.4)) * Math.exp(-t * 3.6) * cs * 0.4;
+  const calm = state.REDUCED; // low effects or reduced motion: the word just pops in, no bounce or wobble
+  const wob = calm ? 0 : Math.sin(t * 30) * Math.exp(-t * 7) * 0.24; // squash and stretch
+  const bounce = calm ? 0 : Math.abs(Math.sin(t * Math.PI * 2.4)) * Math.exp(-t * 3.6) * cs * 0.4;
   const y = tx.y - bounce - outCubic(t) * cs * 1.1, size = tx.size; // rises like the other texts so the stack keeps its spacing
   ctx.font = `800 ${size}px "Baloo 2", "Trebuchet MS", sans-serif`;
   const half = ctx.measureText(tx.text).width / 2 * 1.2 + size * 0.15;
@@ -325,7 +327,7 @@ function drawCombo(tx, t, now, th, cs) {
   ctx.save();
   ctx.globalAlpha = t > 0.75 ? 1 - (t - 0.75) / 0.25 : 1;
   ctx.translate(x, y);
-  ctx.rotate(Math.sin(t * 16) * Math.exp(-t * 5) * 0.03 * Math.min(lv, 7));
+  if (!calm) ctx.rotate(Math.sin(t * 16) * Math.exp(-t * 5) * 0.03 * Math.min(lv, 7));
   ctx.scale(pop * (1 + wob), pop * (1 - wob));
   ctx.lineWidth = size * 0.26; ctx.strokeStyle = light ? 'rgba(60,30,10,.85)' : 'rgba(20,10,4,.82)';
   if (lv >= 4 && !light) { ctx.shadowColor = col; ctx.shadowBlur = size * 0.3; }
@@ -403,7 +405,9 @@ export function frame(now) {
   }
   state.particles = state.particles.filter(p => p.life < p.max);
 
-  if (!menuOpen && !state.over && !tut && !document.hidden && now - state.lastInput < 45000 && $('gallery').hidden && $('info').hidden && $('settings').hidden && $('levels').hidden) {
+  const playing = !menuOpen && !state.over && !tut && !document.hidden && now - state.lastInput < 45000 && $('gallery').hidden && $('info').hidden && $('settings').hidden && $('levels').hidden;
+  watchFrame(dt, playing);
+  if (playing) {
     const pt = mode().playTime;
     if (pt) pt(dt); else stats.playSec += dt;
     state.playAcc += dt;

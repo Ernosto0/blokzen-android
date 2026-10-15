@@ -53,6 +53,7 @@ export default {
   'Bu cihaz ya da tarayıcı titreşimi desteklemiyor': 'This device does not support vibration',
   'Hamlelerde hafif dokunuş hissi (iOS 18 ve sonrası)': 'A light tap feel on moves (iOS 18 and later)',
   'Düşük efekt modu': 'Low effects mode',
+  'Akıcı kalması için görüntü kalitesi bu cihazda otomatik düşürüldü': 'Picture quality was lowered automatically on this device to keep the game smooth',
   'Daha az parçacık, ekran sarsıntısı yok, sakin arka plan': 'Fewer particles, no screen shake, calm background',
   'Geliştirici': 'Developer',
   'Tüm temaları göster': 'Show all themes',

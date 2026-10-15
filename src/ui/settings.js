@@ -28,6 +28,7 @@ export function syncSettings() {
   if (!CAN_VIBRATE) $('vibNote').textContent = t('Bu cihaz ya da tarayıcı titreşimi desteklemiyor');
   else if (iosTick) $('vibNote').textContent = t('Hamlelerde hafif dokunuş hissi (iOS 18 ve sonrası)');
   $('optLow').checked = prefs.lowFx;
+  $('perfNote').hidden = !state.perf; // the automatic quality stepped down on this phone
   $('devGroup').hidden = !state.devMode; $('optDev').checked = state.devMode;
 }
 // About: version from package.json, the policy and contact links only when they are filled in (core/links.js)

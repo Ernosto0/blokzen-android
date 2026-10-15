@@ -1,13 +1,14 @@
 import { N } from '../core/constants.js';
 import { bgc, cv, flyc, stage } from '../ui/dom.js';
 import { gemSprites, sprites } from './sprites.js';
+import { state } from '../core/state.js';
 
 /* ---------- Layout ---------- */
 export let DPR = 1, W = 0, H = 0, L = {}, BW = 0, BH = 0, BDPR = 1;
 export function layout() {
   const rect = stage.getBoundingClientRect();
   W = rect.width; H = rect.height;
-  DPR = Math.min(window.devicePixelRatio || 1, 3);
+  DPR = Math.min(window.devicePixelRatio || 1, state.perf >= 3 ? 1.5 : state.perf >= 2 ? 2 : 3); // lower on a phone that cannot keep up
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   const B = Math.min(W, H / 1.46);
   const trayH = B * 0.42, gap = B * 0.04;
@@ -17,7 +18,7 @@ export function layout() {
   L.trayCell = Math.min(cell * 0.56, (L.slotW * 0.86) / 5, (trayH * 0.86) / 5);
   sprites.clear(); gemSprites.clear();
   BW = window.innerWidth; BH = window.innerHeight;
-  BDPR = Math.min(window.devicePixelRatio || 1, 2);
+  BDPR = Math.min(window.devicePixelRatio || 1, state.perf >= 1 ? 1 : 2); // the living background is soft: it goes to 1x first
   bgc.width = Math.round(BW * BDPR); bgc.height = Math.round(BH * BDPR);
   flyc.width = bgc.width; flyc.height = bgc.height;
 }
