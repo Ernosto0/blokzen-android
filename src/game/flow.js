@@ -315,6 +315,7 @@ export function showOver() {
   $('revive').hidden = !rv;
   $('again').className = rv ? 'ghost' : 'cta'; // with a continue on offer, a new game is the quieter choice
   m.overCard(rv); // the mode fills in its own card
+  $('finalScore').style.setProperty('--n', $('finalScore').textContent.length); // long scores shrink to fit (main.css)
   $('over').hidden = false;
   $(rv ? 'revive' : 'again').focus({ preventScroll: true });
 }
