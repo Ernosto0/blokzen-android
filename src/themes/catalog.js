@@ -177,3 +177,8 @@ export const T = THEMES.length;
 // Score needed to reach level/theme stage k within one game: 800, 2000, 3600, 5600, 8000, ...
 export const milestone = k => 200 * k * (k + 3);
 export const stageAt = s => { let k = 0; while (s >= milestone(k + 1)) k++; return k; };
+// The theme changes every THEME_EVERY levels, not on every one: the score per move grows with the level and combo multipliers,
+// so the later levels pass in a handful of moves. THEME_MIN_MOVES is a floor between two automatic changes for fast streaks.
+export const THEME_EVERY = 3, THEME_MIN_MOVES = 12;
+export const themeMilestone = j => milestone(THEME_EVERY * j);
+export const themeStageAt = s => Math.floor(stageAt(s) / THEME_EVERY);

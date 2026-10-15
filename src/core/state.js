@@ -57,7 +57,7 @@ export const emptyGrid = () => [...Array(N)].map(() => Array(N).fill(0));
 
 // theme state
 export const THEME_DUR = 1300;
-export const theme = { cur: 0, prev: 0, t0: -1e9, start: 0, stage: 0, domDone: false, mode: 'classic', prevMode: 'classic' };
+export const theme = { cur: 0, prev: 0, t0: -1e9, start: 0, stage: 0, mv: 0, domDone: false, mode: 'classic', prevMode: 'classic' };
 export let settings = { auto: true, fixed: 0, block: 'classic' };
 export let earned = new Set([0]);   // themes the player has really unlocked (saved)
 export let discovered = earned;      // themes shown as open: the same set, or every theme in developer mode

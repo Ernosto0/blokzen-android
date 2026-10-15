@@ -1,4 +1,4 @@
-import { stageAt, T, THEMES } from '../themes/catalog.js';
+import { T, THEME_MIN_MOVES, themeStageAt, THEMES } from '../themes/catalog.js';
 import { BEST_KEY, N, OLD_COLORS, SHAPES } from '../core/constants.js';
 import { bitsOf, fitsAnywhere } from '../core/bitboard.js';
 import { cellsOf, generateSet } from '../core/dealer.js';
@@ -8,7 +8,7 @@ import { haptic } from '../platform/haptics.js';
 import { store } from '../core/store.js';
 import { $ } from '../ui/dom.js';
 import { state, discovered, emptyGrid, freshCls, pop, settings, theme } from '../core/state.js';
-import { autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, TH, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
+import { anchorStart, autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, TH, stats, STATS_KEY, themesDone, touchDay } from '../themes/progress.js';
 import { curStreak, dailyStart, fmtDay, starsFor } from '../modes/daily.js';
 import { canRevive, leaveGame, mode, MODE_KEY, modeFor, MODES, saveKey, stopTimers } from '../modes/registry.js';
 import { L } from '../render/layout.js';
@@ -55,7 +55,7 @@ export function newGame() {
   state.gs = { multi: 0, calm: 0, broke: false, stars: 0, lines: 0, zcalm: 0, zrun: 0 };
   if (m.start && m.start(now)) return;
   const start = pickStartTheme();
-  theme.start = start; theme.stage = 0;
+  theme.start = start; theme.stage = 0; theme.mv = 0;
   if (start !== theme.cur) setTheme(start, now + 150, { show: true, sound: false });
   deal(now + 200);
   touchDay();
@@ -98,8 +98,13 @@ export function restore(d, keepTheme = false) {
   if (state.tray.every(t => !t)) { if (m.dealTray) m.dealTray(now); else deal(now); }
   const open = i => discovered.has(i) ? i : 0;
   if (mode().themeLocked && keepTheme) { if (!settings.auto && settings.fixed !== theme.cur) snapTheme(settings.fixed); }
-  else if (d.th) { theme.start = open(d.th.start | 0); theme.stage = d.th.stage | 0; snapTheme(settings.auto ? open((d.th.cur | 0) % T) : settings.fixed); }
-  else { theme.start = 0; theme.stage = stageAt(state.score); snapTheme(settings.auto ? autoTheme(theme.stage) : settings.fixed); }
+  else if (d.th) {
+    // older saves counted theme stages in levels: clamp to the score's theme stage and re-anchor the order on the saved theme
+    theme.stage = Math.min(d.th.stage | 0, themeStageAt(state.score)); theme.mv = state.moves;
+    snapTheme(settings.auto ? open((d.th.cur | 0) % T) : settings.fixed);
+    theme.start = settings.auto ? anchorStart(theme.stage) : open(d.th.start | 0);
+  }
+  else { theme.start = 0; theme.stage = themeStageAt(state.score); theme.mv = state.moves; snapTheme(settings.auto ? autoTheme(theme.stage) : settings.fixed); }
   refreshFits();
   state.displayScore = state.score; state.orbs = [];
   return true;
@@ -217,8 +222,8 @@ export function placePiece(slot, r0, c0) {
   }
 
   if (settings.auto) {
-    const st = stageAt(state.score);
-    if (st > theme.stage) { theme.stage = st; state.pendingTheme = { i: autoTheme(st), at: now + (lines ? 650 : 250) }; }
+    const st = themeStageAt(state.score);
+    if (st > theme.stage && state.moves - theme.mv >= THEME_MIN_MOVES) { theme.stage = st; theme.mv = state.moves; state.pendingTheme = { i: autoTheme(st), at: now + (lines ? 650 : 250) }; }
   }
   // single-game records (best score, longest combo, most moves...) only count outside zen, where a game can end;
   // totals count in every mode

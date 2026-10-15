@@ -86,6 +86,12 @@ export function autoTheme(st) {
   return order[(k + st) % order.length];
 }
 
+// the start theme that makes the auto order land on the current theme at this stage
+export function anchorStart(stage) {
+  const order = [...discovered].sort((a, b) => a - b), k = Math.max(0, order.indexOf(theme.cur));
+  return order[(((k - stage) % order.length) + order.length) % order.length];
+}
+
 export const TH = () => THEMES[theme.cur];
 
 // two puzzle tasks are measured against the level list itself, so they follow it if levels are added

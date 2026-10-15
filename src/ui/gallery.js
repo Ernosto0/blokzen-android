@@ -1,8 +1,8 @@
-import { milestone, stageAt, T, THEMES } from '../themes/catalog.js';
+import { themeMilestone, themeStageAt, T, THEMES } from '../themes/catalog.js';
 import { Sfx } from '../audio/sfx.js';
 import { $ } from './dom.js';
 import { state, discovered, earned, fresh, settings, theme } from '../core/state.js';
-import { collectionOf, stats, TH, UNLOCKS } from '../themes/progress.js';
+import { anchorStart, collectionOf, stats, TH, UNLOCKS } from '../themes/progress.js';
 import { rr, sprite } from '../render/sprites.js';
 import { paintBase } from '../render/backgrounds.js';
 import { saveMeta, setBlockMode, setTheme, updateRing } from '../themes/switching.js';
@@ -39,7 +39,7 @@ export function renderGallery() {
   const wrap = $('cards'); wrap.textContent = '';
   $('autoTheme').checked = settings.auto;
   $('galCount').textContent = t('{n}/{total} açık', { n: earned.size, total: T }) + (state.devMode ? ' · ' + t('geliştirici') : '');
-  const nextAt = milestone(theme.stage + 1);
+  const nextAt = themeMilestone(theme.stage + 1);
   $('galHint').textContent = (settings.auto
     ? t('Tema {n} puanda açık temalardan bir sonrakine geçer.', { n: fmtNum(nextAt) }) + ' '
     : t('Seçtiğin tema sabit kalır.') + ' ') + (state.devMode ? t('Geliştirici modu açık: kilitli temalar da gösteriliyor ve "Test" yazıyor.') : t('Kilitli temalar, altlarında yazan görevi tamamlayınca açılır.'));
@@ -111,9 +111,8 @@ $('gallery').addEventListener('click', e => { if (e.target.id === 'gallery') clo
 $('autoTheme').addEventListener('change', e => {
   settings.auto = e.target.checked;
   if (settings.auto) {
-    theme.stage = stageAt(state.score);
-    const order = [...discovered].sort((a, b) => a - b), k = order.indexOf(theme.cur);
-    theme.start = order[(((k - theme.stage) % order.length) + order.length) % order.length];
+    theme.stage = themeStageAt(state.score); theme.mv = state.moves;
+    theme.start = anchorStart(theme.stage);
   } else settings.fixed = theme.cur;
   saveMeta(); updateRing(); renderGallery();
 });

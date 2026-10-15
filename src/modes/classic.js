@@ -112,7 +112,7 @@ function classicUndo() {
   state.grid = p.grid.map(r => r.slice());
   state.tray = p.tray.map((t, i) => t ? { piece: { shape: SHAPES[t.s], color: t.c }, appear: now + i * 50, ret: null, fits: true } : null);
   state.score = p.score; state.displayScore = state.score; state.orbs = []; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.gs = { ...p.gs };
-  theme.stage = p.stage; state.pendingTheme = null;
+  theme.stage = p.stage; theme.mv = Math.min(theme.mv, state.moves); state.pendingTheme = null;
   state.best = Math.min(state.best, p.best); state.newRecord = p.newRecord;
   for (const k of REC_KEYS) stats[k] = Math.min(stats[k], p.rec[k]);
   store.set(STATS_KEY, stats);
