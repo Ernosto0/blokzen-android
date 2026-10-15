@@ -490,7 +490,7 @@ body.lowfx .pchip { transition: none; }
 @media (prefers-reduced-motion: reduce) { .toast, .toast.out { transition: opacity .2s; transform: none; } }
 
 /* Tablets: a wider game column so the board is not a narrow strip in the middle of the screen */
-@media (min-width: 640px) and (min-height: 700px) { :root { --game-w: 560px; } }
+@media (min-width: 640px) and (min-height: 700px) { :root { --game-w: 600px; } .scorebox { margin-top: 26px; } } /* the score sits a little lower, clear of the tool buttons */
 /* ...with bigger tool buttons, and the undo button down in the bottom-left corner where a thumb rests */
 @media (min-width: 640px) and (min-height: 700px) {
   .tools { gap: 12px; }
