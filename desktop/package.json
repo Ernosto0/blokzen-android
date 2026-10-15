@@ -1,0 +1,7 @@
+{
+  "name": "blokzen-desktop",
+  "version": "1.0.0",
+  "description": "Blokzen for Windows (Electron shell around the web game)",
+  "main": "main.js",
+  "private": true
+}
