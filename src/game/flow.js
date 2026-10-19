@@ -18,6 +18,7 @@ import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
 import { tut } from '../ui/tutorial.js';
 import { t, fmtNum } from '../i18n/index.js';
+import { askReview } from '../platform/review.js';
 import { bowPraise, cleanPraise, praiseFor } from './praise.js';
 
 /* ---------- Game flow ---------- */
@@ -322,6 +323,7 @@ export function showOver() {
   m.overCard(rv); // the mode fills in its own card
   $('finalScore').style.setProperty('--n', $('finalScore').textContent.length); // long scores shrink to fit (main.css)
   $('over').hidden = false;
+  if (!rv && m.id === 'classic') askReview(state.score, state.newRecord, () => state.over && !$('over').hidden); // a good game: Google's rating sheet may slide up
   $(rv ? 'revive' : 'again').focus({ preventScroll: true });
 }
 

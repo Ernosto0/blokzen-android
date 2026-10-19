@@ -29,6 +29,8 @@ export default {
   'Sürüm {v}': 'Version {v}',
   'Gizlilik politikası': 'Privacy policy',
   'İletişim': 'Contact',
+  "Blokzen'i değerlendir": 'Rate Blokzen',
+  "Google Play'de puan ver, yorum yaz": 'Rate and review it on Google Play',
   'Devam et': 'Continue',
   'Tekrar': 'Retry',
   'Tekrar oyna': 'Play again',

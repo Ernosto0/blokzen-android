@@ -9,7 +9,7 @@ import { resetConfirm, toggleMute } from '../game/input.js';
 import { menuOpen } from './menu.js';
 import { setDev } from './devmode.js';
 import { t } from '../i18n/index.js';
-import { CONTACT_EMAIL, PRIVACY_URL } from '../core/links.js';
+import { CONTACT_EMAIL, PRIVACY_URL, STORE_URL } from '../core/links.js';
 
 /* ---------- Settings ---------- */
 function savePrefs() { store.set(PREFS_KEY, prefs); }
@@ -33,6 +33,7 @@ export function syncSettings() {
 }
 // About: version from package.json, the policy and contact links only when they are filled in (core/links.js)
 $('aboutVer').textContent = t('Sürüm {v}', { v: __APP_VERSION__ });
+if (STORE_URL) { $('aboutRate').href = STORE_URL; $('aboutRate').hidden = false; }
 if (PRIVACY_URL) { $('aboutPrivacy').href = PRIVACY_URL; $('aboutPrivacy').hidden = false; }
 if (CONTACT_EMAIL) { $('aboutContact').href = 'mailto:' + CONTACT_EMAIL; $('aboutContact').hidden = false; }
 export function openSettings() {

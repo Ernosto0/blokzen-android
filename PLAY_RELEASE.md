@@ -309,7 +309,7 @@ Play Console'a ilk yüklemeden önce kod tarafında yapılması gerekenler. Önc
 ## 🟢 14. Yayından sonra da yapılabilir
 
 - [ ] **Bulut kayıt:** İlerleme sadece `localStorage`'da duruyor ([store.js](src/core/store.js)). `allowBackup="true"` olduğu için Android Otomatik Yedekleme WebView verisini kısmen geri getirebilir, ama bunu cihaz değiştirerek doğrula. Kalıcı çözüm Play Games Services ile Saved Games.
-- [ ] **Uygulama içi değerlendirme:** `@capacitor-community/in-app-review` ile birkaç başarılı oyundan sonra puan iste.
+- [x] **Uygulama içi değerlendirme:** `@capacitor-community/in-app-review` 8.0.0 eklendi ([review.js](src/platform/review.js)). Klasik oyun sonunda, en az 5 oyun ve 2 gün sonra, rekor ya da ortalama üstü skorda, 90 günde en fazla bir kez Play'in penceresi istenir. Ayarlar → Hakkında'da "Blokzen'i değerlendir" satırı var. **Cihazda doğrula:** pencere sadece Play'den (internal test) kurulan sürümde açılır, debug APK'da açılmaz.
 - [ ] **JS hata görünürlüğü:** Play Console Android Vitals sadece native çökmeleri gösteriyor, WebView içindeki JS hatalarını göstermiyor. Bir hata raporlama aracı eklenirse Veri Güvenliği formu da güncellenmeli.
 - [ ] **Şablon dosyalar:** `com/getcapacitor/myapp` altındaki örnek testler ([ExampleInstrumentedTest.java](android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java), [ExampleUnitTest.java](android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java)) silinebilir.
 
