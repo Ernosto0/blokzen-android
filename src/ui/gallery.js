@@ -111,7 +111,7 @@ $('gallery').addEventListener('click', e => { if (e.target.id === 'gallery') clo
 $('autoTheme').addEventListener('change', e => {
   settings.auto = e.target.checked;
   if (settings.auto) {
-    theme.stage = themeStageAt(state.score); theme.mv = state.moves;
+    theme.stage = themeStageAt(state.score); theme.mv = state.moves; theme.tAt = performance.now();
     theme.start = anchorStart(theme.stage);
   } else settings.fixed = theme.cur;
   saveMeta(); updateRing(); renderGallery();

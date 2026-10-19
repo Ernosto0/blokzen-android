@@ -178,7 +178,9 @@ export const T = THEMES.length;
 export const milestone = k => 200 * k * (k + 3);
 export const stageAt = s => { let k = 0; while (s >= milestone(k + 1)) k++; return k; };
 // The theme changes every THEME_EVERY levels, not on every one: the score per move grows with the level and combo multipliers,
-// so the later levels pass in a handful of moves. THEME_MIN_MOVES is a floor between two automatic changes for fast streaks.
-export const THEME_EVERY = 3, THEME_MIN_MOVES = 12;
+// so the later levels pass in a handful of moves (at 100k points and high combos a single move is worth a whole level).
+// Past the first levels the score hardly limits it any more, so two automatic changes are at least THEME_MIN_MOVES moves
+// AND THEME_MIN_MS apart: the theme stays for a minute or more however fast the streak.
+export const THEME_EVERY = 3, THEME_MIN_MOVES = 30, THEME_MIN_MS = 75000;
 export const themeMilestone = j => milestone(THEME_EVERY * j);
 export const themeStageAt = s => Math.floor(stageAt(s) / THEME_EVERY);
