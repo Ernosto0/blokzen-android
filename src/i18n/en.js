@@ -1,6 +1,8 @@
 // English for every Turkish string in the game. The Turkish text is the key; {name} marks a value filled in by t().
 // An array is [one, other] and is picked by the n value. Strings missing here show in Turkish (npm run check:i18n lists them).
 export default {
+  'En dolu sıraları temizle': 'Clear the fullest rows',
+  'Oyun başına 1 kez': 'Once per game',
   /* ---- menu and shell ---- */
   'Geç': 'Skip',
   'En iyi skor': 'Best score',

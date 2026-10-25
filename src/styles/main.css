@@ -319,6 +319,74 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .orow { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
 .card .orow .ghost { margin-top: 0; }
 
+/* Results float over the whole game. Every colour follows the live theme tokens,
+   including light themes; no board-sized scrim or separate panel edge. */
+#over {
+  position: fixed; inset: 0; z-index: 3;
+  overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+  box-sizing: border-box;
+  padding: max(28px, env(safe-area-inset-top, 0px)) 20px max(28px, env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  background: radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--bg) 76%, transparent), color-mix(in srgb, var(--bg) 94%, transparent));
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+#over .card {
+  width: 100%; max-width: 360px; padding: 20px 8px;
+  margin-block: auto; gap: 8px; justify-items: center;
+  animation: result-rise .38s cubic-bezier(.2,.8,.25,1) both;
+}
+#app:has(#over:not([hidden])) > :is(.top, .scorebox, .goalrow, .puzrow) { opacity: .12; }
+#overTitle { font-size: 1rem; letter-spacing: .1em; text-wrap: balance; }
+#over #finalScore { margin-block: 8px 0; color: var(--fg); text-shadow: 0 3px 0 color-mix(in srgb, var(--ink) 12%, transparent); }
+#over #finalScore.txt { font-size: clamp(1.8rem, 8vw, 2.8rem); line-height: 1.15; text-wrap: balance; }
+#over .sub { font-size: .95rem; line-height: 1.4; text-wrap: balance; }
+#over #overSub { display: flex; align-items: center; justify-content: center; gap: 7px; }
+#over[data-mode="classic"] #overSub::before {
+  content: ''; width: 19px; height: 19px; flex: none; background: var(--accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m2 6 5 4 5-7 5 7 5-4-3 14H5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m2 6 5 4 5-7 5 7 5-4-3 14H5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+#over #overNote { margin-top: 16px; color: var(--fg); }
+#overLimit { margin-top: -5px; color: var(--muted); font-size: .78rem; }
+#over .cta, #over #again.ghost {
+  width: min(100%, 280px); min-height: 58px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  border-radius: 999px; padding: 12px 24px; margin-top: 16px;
+  transition: transform .12s, box-shadow .12s;
+}
+#over .cta {
+  background: linear-gradient(color-mix(in srgb, var(--accent) 82%, white), var(--accent) 60%);
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--accent) 55%, white), 0 6px 0 color-mix(in srgb, var(--accent) 74%, black), 0 12px 20px rgba(0,0,0,.16);
+  font-size: 1.3rem;
+}
+#over #again.ghost {
+  min-height: 48px; margin-top: 10px; font-size: 1rem;
+  background: color-mix(in srgb, var(--btn) 78%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 12%, transparent), 0 3px 0 color-mix(in srgb, var(--btn) 80%, black);
+}
+#over .cta:active { transform: translateY(4px); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent) 55%, white), 0 2px 0 color-mix(in srgb, var(--accent) 74%, black); }
+#over .orow { margin-top: 20px; gap: 8px; width: 100%; }
+#over .orow .ghost {
+  min-height: 48px; padding: 10px 14px; margin: 0; border-radius: 999px;
+  background: transparent; box-shadow: none; color: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: .9rem;
+}
+#over .orow .ghost:active { background: var(--btn); color: var(--fg); }
+#over #puzUndo::before, #over #toMenu::before {
+  content: ''; width: 20px; height: 20px; flex: none; background: currentColor;
+  -webkit-mask: var(--result-icon) center / contain no-repeat;
+  mask: var(--result-icon) center / contain no-repeat;
+}
+#over #puzUndo { --result-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 4-6 6 6 6M3 10h11a6 6 0 0 1 0 12'/%3E%3C/svg%3E"); }
+#over #toMenu { --result-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9'/%3E%3C/svg%3E"); }
+#over #newRec:not([hidden]) { animation: result-record .7s ease-out both; }
+@keyframes result-rise { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes result-record { from { opacity: 0; transform: scale(.85); } 65% { transform: scale(1.08); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #over, #over .card, #over #newRec:not([hidden]) { animation: none; } #over button { transition: none; } }
+.lowfx #over, .lowfx #over .card, .lowfx #over #newRec:not([hidden]) { animation: none; }
+.lowfx #over { backdrop-filter: none; -webkit-backdrop-filter: none; background: color-mix(in srgb, var(--bg) 96%, transparent); }
+
 /* Stats: daily section and the last seven days */
 .stats-wrap { display: grid; gap: 8px; }
 .stats-wrap h3 { margin: 6px 2px 0; color: var(--muted); font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }

@@ -2,6 +2,7 @@
 // reorganised without changing it. Boards are seeded so every number is deterministic.
 import { test, expect } from '@playwright/test';
 import { N, baseSeed, nearClear, watchErrors, seed, geometry, drag } from './helpers.js';
+import { THEMES } from '../src/themes/catalog.js';
 
 const today = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
 const KEYS = { classic: 'blokzen.game.v2', daily: 'blokzen.daily.game', zen: 'blokzen.zen.game', puzzle: 'blokzen.puzzle.game' };
@@ -36,13 +37,42 @@ async function openLast(page, mode, save) {
 }
 
 test.describe('game over', () => {
+  for (const [theme, width, height] of [['sunset', 393, 852], ['gelato', 320, 568], ['dusk', 740, 360]]) {
+    test(`results stay usable in ${theme} at ${width}×${height}`, async ({ page }, testInfo) => {
+      await page.setViewportSize({ width, height });
+      const errors = watchErrors(page);
+      const save = checker('classic', { score: 123456789, cls: { u: 3, c: false, h: [nearClear()] } });
+      await seed(page, { ...baseSeed(THEMES.findIndex(t => t.id === theme)), 'blokzen.mode': 'classic', [KEYS.classic]: save });
+      await page.goto('/');
+      await expect(page.locator('#over')).toBeVisible({ timeout: 5000 });
+      await hideMenu(page);
+      // Large scores and all four actions must fit horizontally, even on a narrow phone.
+      for (const id of ['finalScore', 'revive', 'again', 'puzUndo', 'toMenu']) {
+        const el = page.locator('#' + id);
+        await expect(el).toBeVisible();
+        const box = await el.boundingBox();
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(width);
+        if (id !== 'finalScore') expect(box.height).toBeGreaterThanOrEqual(44);
+      }
+      // A short landscape screen may scroll, but the menu action must remain reachable.
+      await page.locator('#toMenu').scrollIntoViewIfNeeded();
+      await expect(page.locator('#toMenu')).toBeInViewport();
+      await page.screenshot({ path: testInfo.outputPath('results.png') });
+      await page.click('#toMenu');
+      await expect(page.locator('#menu')).toBeVisible();
+      expect(real(errors)).toEqual([]);
+    });
+  }
+
   test('classic: card with a second chance', async ({ page }) => {
     const errors = await openLast(page, 'classic', checker('classic'));
     await expect(page.locator('#over')).toBeVisible({ timeout: 5000 });
     expect(await text(page, 'overTitle')).toBe('Yer kalmadı');
     expect(await text(page, 'finalScore')).toBe('120');
     expect(await text(page, 'overSub')).toBe('En iyi: 0');
-    expect(await text(page, 'overNote')).toContain('Devam edersen');
+    expect(await text(page, 'overNote')).toBe('En dolu sıraları temizle');
+    await expect(page.locator('#overLimit')).toBeVisible();
     expect(await text(page, 'again')).toBe('Tekrar oyna');
     await expect(page.locator('#revive')).toBeVisible();
     await expect(page.locator('#puzUndo')).toBeHidden();

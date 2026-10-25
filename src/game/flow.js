@@ -312,6 +312,8 @@ export function checkOver(now) {
 export function showOver() {
   if (!state.over) return; // a new game started meanwhile
   const m = mode(), lvl = !!m.levelCard;
+  $('over').dataset.mode = m.id;
+  $('overLimit').hidden = true;
   $('finalScore').classList.toggle('txt', lvl);
   $('overStars').classList.toggle('big', lvl);
   $('puzRetry').hidden = $('puzLevels').hidden = $('puzUndo').hidden = !lvl;

@@ -174,7 +174,8 @@ defineMode({
     const un = canUndo();
     $('puzUndo').hidden = !un;
     if (un) $('puzUndo').textContent = t('Geri al · {n}', { n: state.cls.undoLeft });
-    const note = rv ? t('Devam edersen en dolu sıralar temizlenir. Oyun başına bir kez.') : un ? t('{n} geri alma hakkın kaldı.', { n: state.cls.undoLeft }) : '';
+    const note = rv ? t('En dolu sıraları temizle') : un ? t('{n} geri alma hakkın kaldı.', { n: state.cls.undoLeft }) : '';
+    $('overLimit').hidden = !rv;
     $('overNote').textContent = note;
     $('overNote').hidden = !note;
   },
