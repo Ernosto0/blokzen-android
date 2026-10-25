@@ -5,7 +5,7 @@ import { closeMenu, inProgress, menuOpen, openMenu } from './menu.js';
 import { closeLevels } from './levels.js';
 import { closeInfo } from './info.js';
 import { closeSettings } from './settings.js';
-import { closeGallery } from './gallery.js';
+import { closeGallery, closeThemeDetail } from './gallery.js';
 import { endTutorial, tut } from './tutorial.js';
 
 /* ---------- Going back ----------
@@ -17,7 +17,7 @@ export function goBack() {
   if (!$('levels').hidden) { closeLevels(); return true; }
   if (!$('info').hidden) { closeInfo(); return true; }
   if (!$('settings').hidden) { closeSettings(); return true; }
-  if (!$('gallery').hidden) { closeGallery(); return true; }
+  if (!$('gallery').hidden) { if (closeThemeDetail()) return true; closeGallery(); return true; }
   if (menuOpen) return false;
   if ($('restart').classList.contains('confirm')) { resetConfirm(); return true; }
   openMenu();

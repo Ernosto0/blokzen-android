@@ -1,0 +1,79 @@
+/* Full screen collections share the result screen's live theme and tactile actions. */
+#gallery.collection-screen {
+  padding: 0; overflow: hidden; background: var(--bg); backdrop-filter: none;
+  -webkit-backdrop-filter: none; box-sizing: border-box;
+}
+.collection-screen .collection-sheet {
+  width: 100%; max-width: 760px; height: 100%; margin: 0; padding: 0;
+  background: transparent; border-radius: 0; box-shadow: none;
+  display: flex; flex-direction: column; gap: 0; animation: result-rise .22s ease-out;
+}
+.collection-head {
+  flex: none; padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 16px; background: var(--bg); z-index: 1;
+}
+.screen-title { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.screen-title h2 { font-size: 2rem; }
+.screen-title .count { padding: 0; font-variant-numeric: tabular-nums; }
+.collection-screen .iconbtn, .theme-detail .iconbtn {
+  flex: none; width: 48px; height: 48px; border-radius: 50%;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 12%, transparent), 0 3px 0 color-mix(in srgb, var(--btn) 80%, black);
+}
+.collection-tabs { display: flex; gap: 8px; overflow-x: auto; touch-action: pan-x; overscroll-behavior-x: contain; scrollbar-width: none; padding: 3px 2px 5px; }
+.collection-tabs button, .filter-tabs button, .text-button {
+  flex: none; border: 0; padding: 10px 16px; min-height: 44px; border-radius: 10px;
+  font: 700 .94rem/1.2 var(--font); background: var(--btn); color: var(--fg); cursor: pointer;
+}
+.collection-tabs button[aria-pressed="true"] { background: var(--accent); color: var(--ink); }
+.gallery-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; justify-content: space-between; }
+.filter-tabs { display: flex; gap: 2px; }
+.filter-tabs button { padding: 10px 12px; background: transparent; color: var(--muted); }
+.filter-tabs button[aria-pressed="true"] { color: var(--fg); background: var(--btn); }
+.text-button { background: transparent; color: var(--muted); padding-inline: 10px; }
+.text-button[aria-expanded="true"] { color: var(--fg); background: var(--btn); }
+.appearance { display: grid; gap: 8px; max-height: 32dvh; overflow-y: auto; touch-action: pan-y; }
+.appearance .switch, .appearance .seg { background: transparent; padding: 6px 2px; }
+.appearance .switch .lbl { flex: 1; order: -1; }
+.appearance .seg-row { background: var(--btn); }
+.appearance .seg-row button { min-height: 44px; }
+.collection-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+  padding: 8px max(20px, env(safe-area-inset-right, 0px)) max(28px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); }
+#gallery .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+#gallery .tcard {
+  position: relative; border: 0; border-radius: 20px; padding: 0 0 8px;
+  background: transparent; gap: 5px; text-align: left; cursor: pointer; align-content: start;
+  transition: transform .12s ease-out;
+}
+#gallery .tcard:active { transform: scale(.97); }
+#gallery .tcard canvas { border-radius: 20px; box-shadow: 0 4px 0 color-mix(in srgb, var(--board) 80%, var(--fg) 20%); margin-bottom: 7px; }
+#gallery .tname { font-size: 1.1rem; line-height: 1.25; padding-inline: 4px; overflow-wrap: anywhere; }
+#gallery .tstate { padding-inline: 4px; font-size: .8rem; }
+#gallery .tprog { padding-inline: 4px; font-size: .8rem; white-space: normal; overflow-wrap: anywhere; }
+#gallery .theme-check { position: absolute; top: 9px; right: 9px; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--ink); display: grid; place-items: center; font-weight: 800; box-shadow: 0 2px 4px color-mix(in srgb, var(--board) 30%, transparent); }
+.empty-state { color: var(--muted); text-align: center; margin-block: 40px; }
+.theme-detail { position: fixed; inset: 0; z-index: 7; background: var(--bg); overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; display: flex; justify-content: center; }
+.detail-inner { width: 100%; max-width: 400px; margin-block: auto; box-sizing: border-box; padding: max(20px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(32px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; text-align: center; animation: result-rise .22s ease-out; }
+#detailPreview { width: min(100%, 32vh); justify-self: center; aspect-ratio: 1; border-radius: 28px; box-shadow: 0 5px 0 color-mix(in srgb, var(--board) 80%, var(--fg) 20%); }
+.detail-inner h2 { margin: 4px 0 0; font-size: 2rem; line-height: 1.1; overflow-wrap: anywhere; }
+.detail-status { margin: 0; color: var(--muted); }
+.detail-task { line-height: 1.4; }
+.detail-task p { margin: 4px 0 12px; }
+.detail-task .tbar { height: 8px; margin-bottom: 10px; }
+#detailProgress { color: var(--muted); font-variant-numeric: tabular-nums; }
+.game-action { min-height: 52px; border-radius: 14px; padding: 12px 20px; width: 100%; max-width: 280px; justify-self: center; margin: 8px 0; background: var(--accent); box-shadow: none; transition: transform .12s ease-out; }
+.game-action:active { transform: translateY(1px); }
+@media (min-width: 620px) { #gallery .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-height: 500px) {
+  .collection-head { padding-top: max(10px, env(safe-area-inset-top, 0px)); gap: 8px; }
+  .screen-title h2 { font-size: 1.5rem; }
+  .detail-inner { max-width: 660px; grid-template-columns: 1fr 1fr; align-content: center; align-items: center; gap: 8px 24px; }
+  #detailClose { grid-column: 1 / -1; }
+  #detailPreview { grid-column: 1; grid-row: 2 / 6; width: min(100%, 52vh); }
+  .detail-inner h2, .detail-status, .detail-task, #detailUse { grid-column: 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .collection-screen, .collection-screen .collection-sheet, .detail-inner { animation: none; }
+  #gallery button { transition: none; }
+}
+.lowfx .collection-screen, .lowfx .collection-screen .collection-sheet, .lowfx .detail-inner { animation: none; }
+.lowfx #gallery button { transition: none; }

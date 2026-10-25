@@ -1,6 +1,16 @@
 // English for every Turkish string in the game. The Turkish text is the key; {name} marks a value filled in by t().
 // An array is [one, other] and is picked by the n value. Strings missing here show in Turkish (npm run check:i18n lists them).
 export default {
+  'Tümü': 'All',
+  'Açık': 'Unlocked',
+  'Koleksiyonlar': 'Collections',
+  'Tema filtresi': 'Theme filter',
+  'Koleksiyon ilerlemesi': 'Collection progress',
+  'Görünüm': 'Appearance',
+  'Bu görünümde tema yok.': 'No themes in this view.',
+  'Koleksiyona dön': 'Back to collection',
+  'Görevi gör': 'View task',
+  'Kullan': 'Use theme',
   'En dolu sıraları temizle': 'Clear the fullest rows',
   'Oyun başına 1 kez': 'Once per game',
   /* ---- menu and shell ---- */
@@ -515,7 +525,7 @@ export const HELP_EN = [
   '<b>Emptying the whole board</b> gives a big bonus. As your score grows, your level and score multiplier rise too.',
   'When all three pieces are used, new ones arrive. The game ends when none of them fit.',
   'In <b>Classic</b> you get <b>3 undos</b> per game. When there is no room left you can <b>continue</b> once: the fullest lines are cleared and play goes on.',
-  'Locked <b>themes</b> unlock when you complete the task written under them.',
+  'Tap a locked theme to see its task. Complete the task to unlock the theme.',
   'In <b>Daily</b> everyone plays the same starting board with the same first pieces that day. Reach three target scores to collect <b>stars</b>. You can retry as often as you like; the best score of the day counts.',
   'Get at least one star every day and your <b>streak</b> grows. Skip a day and the streak starts over.',
   'In <b>Zen</b> the game never ends. When no piece fits, the board takes a <b>breath</b>: the fullest lines quietly empty and play goes on. No levels, no record pressure, no screen shake. Single-game records do not count, only total progress and play time.',

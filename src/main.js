@@ -1,6 +1,7 @@
 import './compat.js';
 import './styles/fonts.css';
 import './styles/main.css';
+import './styles/screens.css';
 
 // Every theme registers its blocks, backgrounds, particles and sounds.
 import './themes/register.js';
@@ -18,6 +19,7 @@ import './ui/devmode.js';
 import './ui/gallery.js';
 import './ui/tutorial.js';
 import './ui/back.js';
+import './ui/dialogs.js';
 import './platform/backbutton.js';
 
 import { bindModeButtons } from './ui/menu.js';

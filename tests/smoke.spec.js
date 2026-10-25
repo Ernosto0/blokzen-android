@@ -1,5 +1,6 @@
 // Smoke tests: boot, every mode, every theme (both block looks) with a line clear, every dialog.
 // They don't compare pixels; they catch runtime errors and check that the game still plays.
+import { PRIVACY_URL } from '../src/core/links.js';
 import { test, expect } from '@playwright/test';
 import { THEME_COUNT, N, allThemes, baseSeed, nearClear, watchErrors, seed, geometry, drag } from './helpers.js';
 
@@ -106,5 +107,8 @@ test('settings show the app version', async ({ page }) => {
   await page.goto('/');
   await page.click('#menuSettings');
   await expect(page.locator('#aboutVer')).toHaveText(/\d+\.\d+\.\d+/);
-  await expect(page.locator('#aboutPrivacy')).toBeHidden(); // no policy URL configured yet: no empty link
+  if (PRIVACY_URL) {
+    await expect(page.locator('#aboutPrivacy')).toBeVisible();
+    await expect(page.locator('#aboutPrivacy')).toHaveAttribute('href', PRIVACY_URL);
+  } else await expect(page.locator('#aboutPrivacy')).toBeHidden();
 });

@@ -80,7 +80,7 @@ for (const { th, i } of withTask) {
   });
 }
 
-test('gallery: every locked theme shows its task and progress, an opened one shows its name', async ({ page }) => {
+test('gallery: locked themes hide names and show progress; tapping reveals the task', async ({ page }) => {
   const errors = watchErrors(page);
   const target = withTask.find(({ th }) => th.id === 'neon'), half = 75;
   await seed(page, fresh({ [STATS]: { totalLines: half }, [META]: { v: 2, disc: [0, target.i], fresh: [target.i], auto: false, fixed: 0, block: 'classic' } }));
@@ -94,9 +94,15 @@ test('gallery: every locked theme shows its task and progress, an opened one sho
     if (th.id === 'neon') { await expect(card).not.toHaveClass(/locked/); await expect(card.locator('.tname')).toHaveText(th.name); continue; }
     await expect(card, th.id).toHaveClass(/locked/);
     await expect(card.locator('.tname'), th.id).toHaveText('???'); // a locked theme keeps its name a surprise
-    await expect(card.locator('.tgoal'), th.id).toHaveText(th.unlock.text);
+    await expect(card.locator('.tgoal'), th.id).toHaveCount(0);
     await expect(card.locator('.tprog'), th.id).toBeAttached();
   }
+  await page.click('#tcard-ocean');
+  await expect(page.locator('#detailName')).toHaveText('???');
+  await expect(page.locator('#detailGoal')).toHaveText(THEMES.find(t => t.id === 'ocean').unlock.text);
+  await expect(page.locator('#detailUse')).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#themeDetail')).toBeHidden();
   // a half-done task shows its progress bar half full
   const gum = withTask.find(({ th }) => th.id === 'gum').th; // 400 lines: 75 done
   await expect(page.locator('#tcard-' + gum.id + ' .tbar i')).toHaveAttribute('style', /width:\s*18\.75%/);
@@ -110,12 +116,15 @@ test('gallery: an opened theme can be picked and is kept', async ({ page }) => {
   await page.goto('/');
   await page.click('#menuThemes');
   await page.click('#tcard-sunset');
+  await expect(page.locator('#detailPreview')).toBeVisible();
+  expect((await page.evaluate(k => JSON.parse(localStorage.getItem(k)), META)).auto).toBe(true);
+  await page.click('#detailUse');
   await expect(page.locator('#gallery')).toBeHidden();
   const meta = await page.evaluate(k => JSON.parse(localStorage.getItem(k)), META);
   expect(meta.fixed).toBe(sunset);
   expect(meta.auto).toBe(false);
   expect(meta.fresh).toEqual([]);
-  // a locked card does nothing
+  // a locked card opens its task without changing the selected theme
   await page.click('#menuThemes');
   await page.click('#tcard-ocean', { force: true });
   await expect(page.locator('#gallery')).toBeVisible();

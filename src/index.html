@@ -183,7 +183,7 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
       <li><span>Tahtayı <b>tamamen boşaltmak</b> büyük bonus verir. Puan arttıkça seviye ve puan çarpanı da yükselir.</span></li>
       <li><span>Üç parça bitince yenileri gelir. Hiçbiri sığmadığında oyun biter.</span></li>
       <li><span><b>Klasik</b> modda her oyunda <b>3 geri alma</b> hakkın var. Yer kalmadığında bir kez <b>devam</b> edebilirsin: en dolu sıralar temizlenir ve oyun sürer.</span></li>
-      <li><span>Kilitli <b>temalar</b>, altlarında yazan görevi tamamlayınca açılır.</span></li>
+      <li><span>Kilitli bir temaya dokun, görevini gör. Görevi tamamlayınca tema açılır.</span></li>
       <li><span><b>Günlük</b> modda herkes o günün aynı başlangıç tahtası ve aynı ilk parçalarıyla oynar. Üç hedef puana ulaşıp <b>yıldız</b> topla. İstediğin kadar tekrar deneyebilirsin, günün en iyi skoru sayılır.</span></li>
       <li><span>Her gün en az bir yıldız alırsan <b>serin</b> büyür. Bir gün atlarsan seri sıfırdan başlar.</span></li>
       <li><span><b>Zen</b> modunda oyun hiç bitmez. Hiçbir parça sığmayınca tahta bir <b>nefes</b> alır: en dolu sıralar sessizce boşalır ve oyun sürer. Seviye, rekor baskısı ve ekran sarsıntısı yok. Tek oyun rekorları sayılmaz, toplam ilerleme ve oyun süresi sayılır.</span></li>
@@ -269,29 +269,44 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
   </div>
 </div>
 
-<div id="gallery" class="scrim" hidden role="dialog" aria-modal="true" aria-labelledby="galTitle">
-  <div class="sheet">
-    <div class="sheet-head">
-      <h2 id="galTitle">Temalar</h2>
-      <span class="count" id="galCount"></span>
-      <button id="galClose" class="iconbtn" type="button" aria-label="Kapat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-    </div>
-    <label class="switch" for="autoTheme">
-      <input type="checkbox" id="autoTheme">
-      <span class="track"></span>
-      <span class="lbl"><b>Otomatik değiştir</b><small>Puan arttıkça açık temalar arasında geçilir</small></span>
-    </label>
-    <div class="seg">
-      <span class="seg-lbl" id="segLbl">Blok görünümü</span>
-      <div class="seg-row" role="radiogroup" aria-labelledby="segLbl">
-        <button type="button" id="modeClassic" role="radio" aria-checked="true"><canvas aria-hidden="true"></canvas>Klasik</button>
-        <button type="button" id="modeSoft" role="radio" aria-checked="false"><canvas aria-hidden="true"></canvas>Yumuşak</button>
+<div id="gallery" class="scrim collection-screen" hidden role="dialog" aria-modal="true" aria-labelledby="galTitle">
+  <div class="sheet collection-sheet">
+    <div class="collection-head">
+      <div class="sheet-head">
+        <div class="screen-title"><h2 id="galTitle">Temalar</h2><span class="count" id="galCount"></span></div>
+        <button id="galClose" class="iconbtn" type="button" aria-label="Kapat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="collection-tabs" id="galCollections" role="group" aria-label="Koleksiyonlar"></div>
+      <div class="gallery-toolbar">
+        <div class="filter-tabs" id="galFilters" role="group" aria-label="Tema filtresi"></div>
+        <button class="text-button" id="galAppearance" type="button" aria-expanded="false" aria-controls="galOptions">Görünüm</button>
+      </div>
+      <div class="appearance" id="galOptions" hidden>
+        <label class="switch" for="autoTheme">
+          <input type="checkbox" id="autoTheme"><span class="track"></span>
+          <span class="lbl"><b>Otomatik değiştir</b><small id="galHint"></small></span>
+        </label>
+        <div class="seg">
+          <span class="seg-lbl" id="segLbl">Blok görünümü</span>
+          <div class="seg-row" role="radiogroup" aria-labelledby="segLbl">
+            <button type="button" id="modeClassic" role="radio" aria-checked="true"><canvas aria-hidden="true"></canvas>Klasik</button>
+            <button type="button" id="modeSoft" role="radio" aria-checked="false"><canvas aria-hidden="true"></canvas>Yumuşak</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="cards" id="cards"></div>
-    <p class="hint" id="galHint"></p>
+    <div class="collection-scroll" id="galScroll"><div class="cards" id="cards"></div><p class="empty-state" id="galEmpty" hidden>Bu görünümde tema yok.</p></div>
+  </div>
+  <div class="theme-detail" id="themeDetail" hidden role="dialog" aria-modal="true" aria-labelledby="detailName">
+    <div class="detail-inner">
+      <button id="detailClose" class="iconbtn" type="button" aria-label="Koleksiyona dön"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button>
+      <canvas id="detailPreview" aria-hidden="true"></canvas>
+      <h2 id="detailName"></h2><p class="detail-status" id="detailStatus"></p>
+      <div id="detailTask" class="detail-task"><p id="detailGoal"></p><div class="tbar" id="detailBar"><i></i></div><p id="detailProgress"></p></div>
+      <button id="detailUse" class="cta game-action" type="button">Kullan</button>
+    </div>
   </div>
 </div>
 </body>
