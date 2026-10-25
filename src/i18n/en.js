@@ -41,6 +41,7 @@ export default {
   'Bulmaca': 'Puzzle',
   'Zen': 'Zen',
   'Sıfırla': 'Reset',
+  'Onayla': 'Confirm',
   'Nasıl oynanır': 'How to play',
   'İstatistik': 'Stats',
   'İstatistikler': 'Statistics',

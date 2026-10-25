@@ -71,13 +71,13 @@ function classicStatus() {
 let newTimer = 0;
 function resetNew() {
   clearTimeout(newTimer);
-  const b = $('menuNew'); b.classList.remove('confirm'); b.textContent = t('Yeni oyun');
+  const b = $('menuNew'); b.classList.remove('confirm'); b.textContent = t('Yeni oyun'); b.removeAttribute('aria-label');
 }
 $('menuNew').addEventListener('click', () => {
   Sfx.unlock();
   const b = $('menuNew');
   if (b.classList.contains('confirm')) { resetNew(); switchMode('classic'); newGame(); closeMenu(); return; }
-  b.classList.add('confirm'); b.textContent = t('Silinecek · Onayla');
+  b.classList.add('confirm'); b.textContent = t('Onayla'); b.setAttribute('aria-label', t('Silinecek · Onayla'));
   newTimer = setTimeout(resetNew, 3000);
 });
 

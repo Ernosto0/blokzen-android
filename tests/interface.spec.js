@@ -65,6 +65,62 @@ test('the play action follows the featured mode after switching', async ({ page 
   await expect(page.locator('body')).toHaveClass(/zen/);
 });
 
+for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+  test(`featured reset controls fit the menu at ${viewport.width}×${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport); await seed(page, fresh); await page.goto('/');
+    const markInProgress = async key => {
+      await page.evaluate(key => {
+        const game = JSON.parse(localStorage.getItem(key));
+        game.moves = 1;
+        localStorage.setItem(key, JSON.stringify(game));
+      }, key);
+      await page.reload();
+    };
+    const checkControl = async id => {
+      const button = page.locator(id), card = page.locator('.mode.featured'), actions = page.locator('#featuredActions');
+      await expect(button).toBeVisible();
+      await expect(actions.locator(id)).toBeVisible();
+      for (const label of ['normal', 'confirm']) {
+        const b = await button.boundingBox(), c = await card.boundingBox(), a = await actions.boundingBox(), hero = await page.locator('#menuHero').boundingBox();
+        expect(b.x).toBeGreaterThanOrEqual(c.x);
+        expect(b.x + b.width).toBeLessThanOrEqual(c.x + c.width);
+        expect(b.x + b.width).toBeLessThanOrEqual(viewport.width);
+        expect(b.x).toBeGreaterThanOrEqual(hero.x + hero.width);
+        expect(b.y).toBeGreaterThanOrEqual(a.y);
+        expect(b.y + b.height).toBeLessThanOrEqual(a.y + a.height);
+        if (label === 'normal') await button.click();
+      }
+      await expect(button).toHaveClass(/confirm/);
+      await expect(button).toHaveText('Onayla');
+      await expect(button).toHaveAttribute('aria-label', 'Silinecek · Onayla');
+    };
+    await markInProgress('blokzen.game.v2');
+    await checkControl('#menuNew');
+    await page.click('#menuNew'); await expect(page.locator('#menu')).toBeHidden();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('blokzen.game.v2')).moves)).toBe(0);
+    await page.click('#menuBtn'); await page.click('#playZen');
+    await markInProgress('blokzen.zen.game');
+    await checkControl('#zenNew');
+    await page.click('#menuHero'); await expect(page.locator('#menu')).toBeHidden();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('blokzen.zen.game')).moves)).toBe(1);
+  });
+}
+
+test('English reset confirmation fits beside Continue on a narrow phone', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'en-US', viewport: { width: 320, height: 568 } });
+  const page = await context.newPage(); await seed(page, fresh); await page.goto('/');
+  await page.evaluate(() => {
+    const key = 'blokzen.game.v2', game = JSON.parse(localStorage.getItem(key));
+    game.moves = 1; localStorage.setItem(key, JSON.stringify(game));
+  });
+  await page.reload();
+  await page.click('#menuNew');
+  await expect(page.locator('#menuNew')).toHaveText('Confirm');
+  const button = await page.locator('#menuNew').boundingBox(), actions = await page.locator('#featuredActions').boundingBox();
+  expect(button.x + button.width).toBeLessThanOrEqual(actions.x + actions.width);
+  await context.close();
+});
+
 for (const viewport of [{ width: 320, height: 568 }, { width: 740, height: 360 }]) {
   test(`all screens stay reachable with keyboard and reduced motion at ${viewport.width}×${viewport.height}`, async ({ page }) => {
     test.setTimeout(60_000);

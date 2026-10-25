@@ -45,13 +45,13 @@ function zenStatus() {
 let newTimer = 0;
 function resetNew() {
   clearTimeout(newTimer);
-  const z = $('zenNew'); z.classList.remove('confirm'); z.textContent = t('Sıfırla');
+  const z = $('zenNew'); z.classList.remove('confirm'); z.textContent = t('Sıfırla'); z.removeAttribute('aria-label');
 }
 $('zenNew').addEventListener('click', () => {
   Sfx.unlock();
   const b = $('zenNew');
   if (b.classList.contains('confirm')) { resetNew(); switchMode('zen'); newGame(); closeMenu(); return; }
-  b.classList.add('confirm'); b.textContent = t('Silinecek · Onayla');
+  b.classList.add('confirm'); b.textContent = t('Onayla'); b.setAttribute('aria-label', t('Silinecek · Onayla'));
   newTimer = setTimeout(resetNew, 3000);
 });
 

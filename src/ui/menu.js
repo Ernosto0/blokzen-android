@@ -42,11 +42,17 @@ export function drawLogo() {
 
 export function resetMenuNew() { for (const m of Object.values(MODES)) if (m.resetNew) m.resetNew(); }
 function renderMenu() {
+  const actions = $('featuredActions');
+  for (const [button, card] of [['menuNew', 'modeClassicCard'], ['zenNew', 'modeZenCard']]) {
+    if (actions.contains($(button))) $(card).append($(button));
+  }
   for (const m of Object.values(MODES)) if (m.renderCard) m.renderCard();
   const active = $(mode().button).closest('.mode');
   document.querySelectorAll('.mode').forEach(el => el.classList.toggle('featured', el === active));
-  // Keep one featured mode: its artwork and primary play action live in the same card.
-  active.append($('menuHero'));
+  // Keep the featured play and optional reset actions together without nesting buttons.
+  active.append(actions);
+  const reset = active.id === 'modeClassicCard' ? $('menuNew') : active.id === 'modeZenCard' ? $('zenNew') : null;
+  if (reset && !reset.hidden) actions.append(reset);
   active.parentElement.prepend(active);
   const h = mode().hero();
   $('heroLbl').textContent = h.label; $('heroSub').textContent = h.sub;

@@ -116,19 +116,23 @@
 #menu .mode-txt { gap: 5px; padding-right: 4px; }
 #menu .mode-txt b { font-size: 1.35rem; }
 #menu .mode-txt small { font-size: .86rem; line-height: 1.35; text-wrap: balance; }
-#menu .mode.featured { background: transparent; box-shadow: none; border-radius: 0; flex-direction: column; align-items: stretch; gap: 8px; padding-bottom: 6px; }
-#menu .featured .mode-main { padding: 4px 8px 4px 0; min-height: 112px; }
+#menu .mode.featured { background: transparent; box-shadow: none; border-radius: 0; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; padding-bottom: 6px; }
+#menu .featured .mode-main { flex: none; width: 100%; padding: 4px 8px 4px 0; min-height: 112px; }
 #menu .featured .mode-art { width: 108px; height: 108px; border-radius: 26px; }
 #menu .featured .mode-txt b { font-size: 1.8rem; }
 #menu .featured .mode-txt small { font-size: .92rem; }
-#menu .hero { margin: 0 auto 10px; min-height: 54px; border-radius: 14px; padding: 12px 20px; justify-content: center; gap: 10px; text-align: center; }
+#menu .featured-actions { width: 100%; max-width: 280px; min-height: 54px; margin: 0 auto 10px; display: flex; align-items: stretch; border-radius: 14px; background: var(--accent); color: var(--ink); }
+#menu .featured-actions:has(.mini) { max-width: 320px; }
+#menu .featured-actions .hero { flex: 1; min-width: 0; width: auto; max-width: none; margin: 0; min-height: 54px; border-radius: 14px; padding: 12px 14px; justify-content: flex-start; gap: 8px; text-align: left; background: transparent; }
+#menu .featured-actions:not(:has(.mini)) .hero { justify-content: center; }
 #menu .hero-txt b { font-size: 1.3rem; }
 #menu .hero svg { width: 20px; height: 20px; }
 #menu #heroSub { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 #menu .corner { position: static; flex: none; margin: 0 12px 0 0; }
 #menu .mini { min-height: 44px; padding: 10px 12px; border-radius: 10px; }
-#menu .mode:has(.corner:not([hidden])) .mode-main { flex-basis: 65%; }
-#menu .featured .corner { order: 3; margin: 0 0 0 auto; }
+#menu .mode:not(.featured):has(.corner:not([hidden])) .mode-main { flex-basis: 65%; }
+#menu .featured-actions .mini { flex: none; align-self: center; margin: 5px 5px 5px 0; padding-inline: 10px; background: color-mix(in srgb, var(--ink) 14%, transparent); color: var(--ink); white-space: nowrap; }
+#menu .featured-actions .mini.confirm { background: var(--ink); color: var(--accent); }
 #menu .mgrid { gap: 4px; padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--muted) 20%, transparent); }
 #menu .mgrid button { min-height: 72px; padding: 12px 0 6px; gap: 7px; background: transparent; box-shadow: none; border-radius: 16px; color: var(--muted); }
 #menu .mgrid button:active { background: var(--btn); color: var(--fg); }

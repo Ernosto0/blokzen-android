@@ -111,10 +111,12 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
       <h1 class="mtitle" id="menuTitle">Blokzen</h1>
       <p class="mtag" id="menuTag" aria-live="polite"></p>
     </div>
-    <button id="menuHero" class="hero game-action" type="button" aria-describedby="heroSub">
-      <span class="hero-txt"><b id="heroLbl"></b><small id="heroSub"></small></span>
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg>
-    </button>
+    <div id="featuredActions" class="featured-actions">
+      <button id="menuHero" class="hero game-action" type="button" aria-describedby="heroSub">
+        <span class="hero-txt"><b id="heroLbl"></b><small id="heroSub"></small></span>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg>
+      </button>
+    </div>
     <h2 class="modes-h">Modlar</h2>
     <div class="modes">
       <section class="mode" id="modeClassicCard" aria-labelledby="classicName">
