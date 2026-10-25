@@ -167,50 +167,53 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
   </div>
 </div>
 
-<div id="info" class="scrim" hidden role="dialog" aria-modal="true" aria-labelledby="infoTitle">
-  <div class="sheet">
-    <div class="sheet-head">
+<div id="info" class="scrim collection-screen" hidden role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+  <div class="sheet collection-sheet">
+    <div class="collection-head"><div class="sheet-head">
       <h2 id="infoTitle">Nasıl oynanır</h2>
       <span class="count"></span>
       <button id="infoClose" class="iconbtn" type="button" aria-label="Kapat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
+    </div></div>
+    <div class="collection-scroll">
+    <div class="help-content" id="helpBody">
+      <ol class="visual-steps">
+        <li><svg viewBox="0 0 80 80" fill="none" aria-hidden="true"><rect class="diagram-board" x="8" y="6" width="64" height="64" rx="12"/><path class="diagram-grid" d="M24 8v60M40 8v60M56 8v60M10 22h60M10 38h60M10 54h60"/><g class="diagram-block"><rect x="27" y="25" width="12" height="12" rx="3"/><rect x="43" y="25" width="12" height="12" rx="3"/><rect x="43" y="41" width="12" height="12" rx="3"/></g><path class="diagram-arrow" d="m20 75 9-20m-9 4 9-4 3 9"/></svg><div><h3><span class="step-number">1</span>Yerleştir</h3><span data-rule="0">Alttaki üç parçadan birini sürükle ve <b>8×8</b> tahtada boş bir yere bırak. Parçalar döndürülemez.</span></div></li>
+        <li><svg viewBox="0 0 80 80" fill="none" aria-hidden="true"><rect class="diagram-board" x="8" y="6" width="64" height="64" rx="12"/><path class="diagram-grid" d="M24 8v60M40 8v60M56 8v60M10 22h60M10 38h60M10 54h60"/><g class="diagram-block"><rect x="11" y="25" width="12" height="12" rx="3"/><rect x="27" y="25" width="12" height="12" rx="3"/><rect x="43" y="25" width="12" height="12" rx="3"/><rect x="59" y="25" width="10" height="12" rx="3"/></g><path class="diagram-arrow" d="m3 29 5 2-5 2m74-4-5 2 5 2"/></svg><div><h3><span class="step-number">2</span>Sıraları temizle</h3><span data-rule="1">Bir <b>satır</b> ya da <b>sütun</b> tamamen dolunca temizlenir. Aynı hamlede ne kadar çok sıra, o kadar çok puan.</span></div></li>
+        <li><svg viewBox="0 0 80 80" fill="none" aria-hidden="true"><rect class="diagram-board" x="8" y="6" width="64" height="64" rx="12"/><path class="diagram-grid" d="M24 8v60M40 8v60M56 8v60M10 22h60M10 38h60M10 54h60"/><g class="diagram-block"><rect x="11" y="41" width="12" height="12" rx="3"/><rect x="11" y="57" width="12" height="10" rx="3"/><rect x="27" y="57" width="12" height="10" rx="3"/></g><path class="diagram-arrow" d="m44 19 7-3 4 7-8 3-3-7zm9 29 4-2 3 4-5 3z"/></svg><div><h3><span class="step-number">3</span>Yer aç</h3><span data-rule="4">Üç parça bitince yenileri gelir. Hiçbiri sığmadığında oyun biter.</span></div></li>
+      </ol>
+      <h3 class="section-label">Mod kuralları</h3>
+      <div class="help-modes">
+        <details class="help-mode"><summary>Klasik</summary><div><p data-rule="2">Art arda temizlemeler <b>kombo</b> yapar ve puanı katlar. Üç hamle boyunca hiç sıra temizlemezsen kombo biter.</p><p data-rule="3">Tahtayı <b>tamamen boşaltmak</b> büyük bonus verir. Puan arttıkça seviye ve puan çarpanı da yükselir.</p><p data-rule="5"><b>Klasik</b> modda her oyunda <b>3 geri alma</b> hakkın var. Yer kalmadığında bir kez <b>devam</b> edebilirsin: en dolu sıralar temizlenir ve oyun sürer.</p></div></details>
+        <details class="help-mode"><summary>Günlük</summary><div><p data-rule="7"><b>Günlük</b> modda herkes o günün aynı başlangıç tahtası ve aynı ilk parçalarıyla oynar. Üç hedef puana ulaşıp <b>yıldız</b> topla. İstediğin kadar tekrar deneyebilirsin, günün en iyi skoru sayılır.</p><p data-rule="8">Her gün en az bir yıldız alırsan <b>serin</b> büyür. Bir gün atlarsan seri sıfırdan başlar.</p></div></details>
+        <details class="help-mode"><summary>Zen</summary><div><p data-rule="9"><b>Zen</b> modunda oyun hiç bitmez. Hiçbir parça sığmayınca tahta bir <b>nefes</b> alır: en dolu sıralar sessizce boşalır ve oyun sürer. Seviye, rekor baskısı ve ekran sarsıntısı yok. Tek oyun rekorları sayılmaz, toplam ilerleme ve oyun süresi sayılır.</p><p data-rule="10"><b>Zen koleksiyonundaki</b> on bir tema, dünyanın farklı kültürlerinden esinlenir ve sadece Zen'de oynayarak açılır.</p></div></details>
+        <details class="help-mode"><summary>Bulmaca</summary><div><p data-rule="11"><b>Bulmaca</b> modunda her bölümün sabit bir tahtası, sırası belli parçaları ve tek bir hedefi var: <b>taşları</b> temizlemek, tahtayı boşaltmak, bir puana ya da bir komboya ulaşmak. Taş, ancak bulunduğu satır ya da sütun temizlenince gider. Hedefe ne kadar az parçayla ulaşırsan o kadar çok <b>yıldız</b> alırsın. Her denemede son hamleni bir kez <b>geri alabilirsin</b>. Bulmaca rekorları ve diğer tema görevlerini etkilemez.</p><p data-rule="12"><b>Bulmaca koleksiyonundaki</b> temalar akıl oyunlarından esinlenir ve sadece bölüm çözerek açılır: bir bölümü son parçayla bitirmek, tek hamlede üç taş kırmak gibi. Finali <b>Satranç</b>, bütün bölümleri 3 yıldızla bitirince açılır.</p></div></details>
+        <details class="help-mode"><summary>Temalar</summary><div><p data-rule="6">Kilitli bir temaya dokun, görevini gör. Görevi tamamlayınca tema açılır.</p></div></details>
+      </div>
     </div>
-    <ol class="rules" id="helpBody">
-      <li><span>Alttaki üç parçadan birini sürükle ve <b>8×8</b> tahtada boş bir yere bırak. Parçalar döndürülemez.</span></li>
-      <li><span>Bir <b>satır</b> ya da <b>sütun</b> tamamen dolunca temizlenir. Aynı hamlede ne kadar çok sıra, o kadar çok puan.</span></li>
-      <li><span>Art arda temizlemeler <b>kombo</b> yapar ve puanı katlar. Üç hamle boyunca hiç sıra temizlemezsen kombo biter.</span></li>
-      <li><span>Tahtayı <b>tamamen boşaltmak</b> büyük bonus verir. Puan arttıkça seviye ve puan çarpanı da yükselir.</span></li>
-      <li><span>Üç parça bitince yenileri gelir. Hiçbiri sığmadığında oyun biter.</span></li>
-      <li><span><b>Klasik</b> modda her oyunda <b>3 geri alma</b> hakkın var. Yer kalmadığında bir kez <b>devam</b> edebilirsin: en dolu sıralar temizlenir ve oyun sürer.</span></li>
-      <li><span>Kilitli bir temaya dokun, görevini gör. Görevi tamamlayınca tema açılır.</span></li>
-      <li><span><b>Günlük</b> modda herkes o günün aynı başlangıç tahtası ve aynı ilk parçalarıyla oynar. Üç hedef puana ulaşıp <b>yıldız</b> topla. İstediğin kadar tekrar deneyebilirsin, günün en iyi skoru sayılır.</span></li>
-      <li><span>Her gün en az bir yıldız alırsan <b>serin</b> büyür. Bir gün atlarsan seri sıfırdan başlar.</span></li>
-      <li><span><b>Zen</b> modunda oyun hiç bitmez. Hiçbir parça sığmayınca tahta bir <b>nefes</b> alır: en dolu sıralar sessizce boşalır ve oyun sürer. Seviye, rekor baskısı ve ekran sarsıntısı yok. Tek oyun rekorları sayılmaz, toplam ilerleme ve oyun süresi sayılır.</span></li>
-      <li><span><b>Zen koleksiyonundaki</b> on bir tema, dünyanın farklı kültürlerinden esinlenir ve sadece Zen'de oynayarak açılır.</span></li>
-      <li><span><b>Bulmaca</b> modunda her bölümün sabit bir tahtası, sırası belli parçaları ve tek bir hedefi var: <b>taşları</b> temizlemek, tahtayı boşaltmak, bir puana ya da bir komboya ulaşmak. Taş, ancak bulunduğu satır ya da sütun temizlenince gider. Hedefe ne kadar az parçayla ulaşırsan o kadar çok <b>yıldız</b> alırsın. Her denemede son hamleni bir kez <b>geri alabilirsin</b>. Bulmaca rekorları ve diğer tema görevlerini etkilemez.</span></li>
-      <li><span><b>Bulmaca koleksiyonundaki</b> temalar akıl oyunlarından esinlenir ve sadece bölüm çözerek açılır: bir bölümü son parçayla bitirmek, tek hamlede üç taş kırmak gibi. Finali <b>Satranç</b>, bütün bölümleri 3 yıldızla bitirince açılır.</span></li>
-    </ol>
     <div class="stats-wrap" id="statsBody" hidden></div>
     <button id="helpTut" class="ghost" type="button">Rehberi baştan izle</button>
+    </div>
   </div>
 </div>
 
-<div id="settings" class="scrim" hidden role="dialog" aria-modal="true" aria-labelledby="setTitle">
-  <div class="sheet">
-    <div class="sheet-head">
+<div id="settings" class="scrim collection-screen" hidden role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="sheet collection-sheet">
+    <div class="collection-head"><div class="sheet-head">
       <h2 id="setTitle">Ayarlar</h2>
       <span class="count"></span>
       <button id="setClose" class="iconbtn" type="button" aria-label="Kapat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
-    </div>
+    </div></div>
+    <div class="collection-scroll">
     <div class="set-group">
-      <h3>Ses</h3>
+      <h3><svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h4l5-4v12l-5-4H4zM17 8a7 7 0 0 1 0 8M19 5a11 11 0 0 1 0 14"/></svg>Ses</h3>
       <label class="switch" for="optSound">
         <input type="checkbox" id="optSound">
         <span class="track"></span>
-        <span class="lbl"><b>Ses efektleri</b><small>Yerleştirme, temizleme ve kombo sesleri</small></span>
+        <span class="lbl"><b>Ses efektleri</b><small>Yerleştirme ve temizleme sesleri</small></span>
       </label>
       <div class="range" id="volRow">
         <div class="range-head"><b id="volLbl">Efekt ses seviyesi</b><span id="volVal">100%</span></div>
@@ -218,7 +221,7 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
       </div>
     </div>
     <div class="set-group">
-      <h3>Dokunuş ve görüntü</h3>
+      <h3><svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="4"/><path d="M10 18h4M9 7l3 3 3-3"/></svg>Dokunuş ve görüntü</h3>
       <label class="switch" for="optVib" id="vibRow">
         <input type="checkbox" id="optVib">
         <span class="track"></span>
@@ -227,11 +230,11 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
       <label class="switch" for="optLow">
         <input type="checkbox" id="optLow">
         <span class="track"></span>
-        <span class="lbl"><b>Düşük efekt modu</b><small>Daha az parçacık, ekran sarsıntısı yok, sakin arka plan</small><small id="perfNote" hidden>Akıcı kalması için görüntü kalitesi bu cihazda otomatik düşürüldü</small></span>
+        <span class="lbl"><b>Düşük efekt modu</b><small>Daha az hareket ve parçacık</small><small id="perfNote" hidden>Akıcı kalması için görüntü kalitesi bu cihazda otomatik düşürüldü</small></span>
       </label>
     </div>
     <div class="set-group" id="devGroup" hidden>
-      <h3>Geliştirici</h3>
+      <h3><svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-16-2 20"/></svg>Geliştirici</h3>
       <label class="switch" for="optDev">
         <input type="checkbox" id="optDev">
         <span class="track"></span>
@@ -239,7 +242,7 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
       </label>
     </div>
     <div class="set-group" id="aboutGroup">
-      <h3>Hakkında</h3>
+      <h3><svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.1"/></svg>Hakkında</h3>
       <a class="rate" id="aboutRate" href="#" target="_blank" rel="noopener" hidden>
         <span class="rate-stars" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg></span>
         <span class="lbl"><b>Blokzen'i değerlendir</b><small>Google Play'de puan ver, yorum yaz</small></span>
@@ -250,6 +253,7 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
         <a id="aboutPrivacy" href="#" target="_blank" rel="noopener" hidden>Gizlilik politikası</a>
         <a id="aboutContact" href="#" hidden>İletişim</a>
       </div>
+    </div>
     </div>
   </div>
 </div>

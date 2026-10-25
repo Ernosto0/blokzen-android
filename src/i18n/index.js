@@ -35,5 +35,5 @@ export function translatePage() {
   if (lang === 'tr') return;
   document.title = 'Blokzen';
   walk(document.body);
-  document.querySelectorAll('#helpBody li > span').forEach((el, i) => { if (HELP_EN[i]) el.innerHTML = HELP_EN[i]; });
+  document.querySelectorAll('#helpBody [data-rule]').forEach(el => { const rule = HELP_EN[+el.dataset.rule]; if (rule) el.innerHTML = rule; });
 }

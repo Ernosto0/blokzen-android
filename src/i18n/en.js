@@ -1,6 +1,14 @@
 // English for every Turkish string in the game. The Turkish text is the key; {name} marks a value filled in by t().
 // An array is [one, other] and is picked by the n value. Strings missing here show in Turkish (npm run check:i18n lists them).
 export default {
+  'Yerleştir': 'Place a piece',
+  'Sıraları temizle': 'Clear lines',
+  'Yer aç': 'Make room',
+  'Mod kuralları': 'Mode rules',
+  'Yerleştirme ve temizleme sesleri': 'Placement and clearing sounds',
+  'Daha az hareket ve parçacık': 'Less motion and fewer particles',
+  'Günlük {a} · Bulmaca {b}': 'Daily {a} · Puzzle {b}',
+
   'Tümü': 'All',
   'Açık': 'Unlocked',
   'Koleksiyonlar': 'Collections',
@@ -517,7 +525,7 @@ export default {
   'Bulmacada bütün bölümleri 3 yıldızla bitir. Koleksiyonun finali': 'Finish every Puzzle level with 3 stars. The collection finale',
 };
 
-// The 13 rules on the "How to play" sheet, in page order (they hold markup, so they are matched by position)
+// Stable data-rule IDs for the illustrated steps and expandable mode rules (these contain markup).
 export const HELP_EN = [
   'Drag one of the three pieces at the bottom and drop it on an empty spot on the <b>8×8</b> board. Pieces cannot be rotated.',
   'When a <b>row</b> or <b>column</b> is completely filled, it clears. The more lines in one move, the more points.',

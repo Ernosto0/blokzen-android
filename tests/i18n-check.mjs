@@ -24,10 +24,9 @@ for (const g of PUZZLE_GROUPS) want(g.name, 'group ' + g.id);
 for (const l of LEVELS) want(l.title, 'level ' + l.id);
 
 const html = readFileSync('src/index.html', 'utf8').replace(/<script[\s\S]*?<\/script>/g, '').replace(/<svg[\s\S]*?<\/svg>/g, '');
-const helpBody = html.match(/<ol class="rules" id="helpBody">([\s\S]*?)<\/ol>/)[1];
-const helpN = (helpBody.match(/<li>/g) || []).length;
-if (helpN !== HELP_EN.length) need.set(`(help list: ${helpN} rules in index.html, ${HELP_EN.length} in HELP_EN)`, 'index.html');
-const page = html.replace(helpBody, '');
+const rules = [...html.matchAll(/<(?:span|p) data-rule="(\d+)">([\s\S]*?)<\/(?:span|p)>/g)];
+if (rules.length !== HELP_EN.length || new Set(rules.map(m => +m[1])).size !== HELP_EN.length || rules.some(m => !HELP_EN[+m[1]])) need.set('(help rules do not match HELP_EN)', 'index.html');
+const page = html.replace(/<(?:span|p) data-rule="\d+">[\s\S]*?<\/(?:span|p)>/g, '');
 for (const m of page.matchAll(/(?:aria-label|title)="([^"]+)"/g)) want(m[1], 'index.html attr');
 for (const m of page.replace(/<[^>]*>/g, '\n').split('\n')) { const s = m.trim(); if (s && /\p{L}{2}/u.test(s)) want(s, 'index.html'); }
 

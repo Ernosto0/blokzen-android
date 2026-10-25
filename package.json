@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "playwright test",
     "check:i18n": "node tests/i18n-check.mjs",
-    "sync": "npm run build && cap sync android"
+    "sync": "npm run build && cap sync android",
+    "capture:ui": "node tests/capture-ui.mjs"
   },
   "license": "ISC",
   "private": true,

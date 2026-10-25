@@ -5,7 +5,7 @@ import { state, earned } from '../core/state.js';
 import { dayKey, fmtDur, stats } from '../themes/progress.js';
 import { curStreak, daily, dayDate, dayShift, fmtDay, WEEKDAYS } from '../modes/daily.js';
 import { LEVELS } from '../modes/puzzle-levels.js';
-import { bestStars, puzSolved, puzTotalStars } from '../modes/puzzle.js';
+import { GOAL_ICON, bestStars, puzSolved, puzTotalStars } from '../modes/puzzle.js';
 import { STAR_SVG } from '../game/flow.js';
 import { fmtN, menuOpen } from './menu.js';
 import { t } from '../i18n/index.js';
@@ -24,8 +24,21 @@ function renderStats() {
     }
     wrap.appendChild(grid);
   };
+  const hero = document.createElement('div'); hero.className = 'stats-highlights';
+  const highlight = (label, value, icon, note = '') => {
+    const el = document.createElement('div'); el.className = 'stat-highlight';
+    const art = document.createElement('span'); art.className = 'highlight-icon'; art.innerHTML = icon;
+    const name = document.createElement('span'); name.textContent = label;
+    const number = document.createElement('b'); number.textContent = value;
+    el.append(art, name, number);
+    if (note) { const small = document.createElement('small'); small.textContent = note; el.append(small); }
+    hero.append(el);
+  };
+  highlight(t('En iyi skor'), fmtN(Math.max(state.best, stats.bestScore)), GOAL_ICON.score);
+  highlight(t('Şu anki seri'), t('{n} gün', { n: fmtN(curStreak()) }), '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 3c1 5-6 6-6 12a5 5 0 0 0 10 0c0-4-4-6-4-12Z"/></svg>');
+  highlight(t('Toplam yıldız'), fmtN(stats.dailyStars + puzTotalStars()), STAR_SVG, t('Günlük {a} · Bulmaca {b}', { a: fmtN(stats.dailyStars), b: fmtN(puzTotalStars()) }));
+  wrap.append(hero);
   group(t('Genel'), [
-    [t('En iyi skor'), fmtN(Math.max(state.best, stats.bestScore)), true],
     [t('Oynanan oyun'), fmtN(stats.games)],
     [t('Toplam puan'), fmtN(stats.totalScore)],
     [t('Yerleştirilen blok'), fmtN(stats.totalPlaced)],
@@ -39,7 +52,6 @@ function renderStats() {
     [t('Açık temalar'), `${earned.size}/${T}`],
   ]);
   group(t('Günlük meydan okuma'), [
-    [t('Şu anki seri'), t('{n} gün', { n: fmtN(curStreak()) }), true],
     [t('En uzun seri'), t('{n} gün', { n: fmtN(Math.max(daily.best, stats.dailyBestStreak)) })],
     [t('Toplam yıldız'), fmtN(stats.dailyStars)],
     [t('Üç yıldızlı gün'), fmtN(stats.dailyThree)],
@@ -86,11 +98,12 @@ export function openInfo(kind) {
   $('helpBody').hidden = !help; $('statsBody').hidden = help; $('helpTut').hidden = !help;
   if (!help) renderStats();
   $('info').hidden = false;
+  $('info').querySelector('.collection-scroll').scrollTop = 0;
   $('infoClose').focus({ preventScroll: true });
 }
 export function closeInfo() {
   $('info').hidden = true;
-  if (menuOpen) $('play').focus({ preventScroll: true });
+  if (menuOpen) $( $('helpBody').hidden ? 'menuStats' : 'menuHelp').focus({ preventScroll: true });
 }
 $('infoClose').addEventListener('click', closeInfo);
 $('info').addEventListener('click', e => { if (e.target.id === 'info') closeInfo(); });
