@@ -111,7 +111,7 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
       <h1 class="mtitle" id="menuTitle">Blokzen</h1>
       <p class="mtag" id="menuTag" aria-live="polite"></p>
     </div>
-    <button id="menuHero" class="hero" type="button" aria-describedby="heroSub">
+    <button id="menuHero" class="hero game-action" type="button" aria-describedby="heroSub">
       <span class="hero-txt"><b id="heroLbl"></b><small id="heroSub"></small></span>
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg>
     </button>
@@ -254,18 +254,19 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
   </div>
 </div>
 
-<div id="levels" class="scrim" hidden role="dialog" aria-modal="true" aria-labelledby="lvTitle">
-  <div class="sheet">
-    <div class="sheet-head">
-      <h2 id="lvTitle">Bölümler</h2>
-      <span class="count" id="lvCount"></span>
-      <button id="lvClose" class="iconbtn" type="button" aria-label="Kapat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
+<div id="levels" class="scrim collection-screen" hidden role="dialog" aria-modal="true" aria-labelledby="lvTitle">
+  <div class="sheet collection-sheet">
+    <div class="collection-head">
+      <div class="sheet-head">
+        <div class="screen-title"><h2 id="lvTitle">Bölümler</h2><span class="count" id="lvCount"></span></div>
+        <button id="lvClose" class="iconbtn" type="button" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <button class="lvnext game-action" id="lvNext" type="button"></button>
     </div>
-    <div class="lvbody" id="lvBody"></div>
-    <div class="lvnext" id="lvNext"></div>
-    <p class="hint">Bir bölümü bitirmek sonrakini açar. Yıldızlar, hedefe ulaştığında elinde kalan parça sayısına göre verilir.</p>
+    <div class="collection-scroll">
+      <div class="lvbody" id="lvBody"></div>
+      <p class="hint level-hint">Bir bölümü bitirmek sonrakini açar. Yıldızlar, hedefe ulaştığında elinde kalan parça sayısına göre verilir.</p>
+    </div>
   </div>
 </div>
 

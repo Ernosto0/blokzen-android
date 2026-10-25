@@ -43,10 +43,15 @@ export function drawLogo() {
 export function resetMenuNew() { for (const m of Object.values(MODES)) if (m.resetNew) m.resetNew(); }
 function renderMenu() {
   for (const m of Object.values(MODES)) if (m.renderCard) m.renderCard();
+  const active = $(mode().button).closest('.mode');
+  document.querySelectorAll('.mode').forEach(el => el.classList.toggle('featured', el === active));
+  // Keep one featured mode: its artwork and primary play action live in the same card.
+  active.append($('menuHero'));
+  active.parentElement.prepend(active);
   const h = mode().hero();
   $('heroLbl').textContent = h.label; $('heroSub').textContent = h.sub;
   resetMenuNew(); syncMute();
-  drawLogo();
+  requestAnimationFrame(drawLogo);
 }
 export function openMenu(focus = true) {
   if (state.drag) return;
@@ -66,7 +71,7 @@ export function startMode(m) {
   closeMenu();
   if (firstRun) startTutorial();
 }
-// the big button starts the mode played last; every mode's card has a main button too: it starts the mode, or does what the mode says.
+// The primary action belongs to the featured mode; the other cards start their own mode.
 // Called once all modes have registered (main.js); at load time the modes are not all defined yet.
 export function bindModeButtons() {
   $('menuHero').addEventListener('click', () => { const m = mode(); if (m.play) m.play(); else startMode(m.id); });

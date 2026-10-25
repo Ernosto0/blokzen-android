@@ -4,21 +4,24 @@ import { state } from '../core/state.js';
 import { LEVELS, PUZZLE_GROUPS } from '../modes/puzzle-levels.js';
 import { bestStars, GOAL_ICON, goalText, levelOpen, MINI_STAR, nextLevelIndex, puzTotalStars, puzzleStatus, startLevel } from '../modes/puzzle.js';
 import { copyText, resetShare, shareText } from '../game/flow.js';
-import { menuOpen } from './menu.js';
+import { menuOpen, startMode } from './menu.js';
 import { openInfo } from './info.js';
 import { openSettings } from './settings.js';
 import { openGallery } from './gallery.js';
-import { t } from '../i18n/index.js';
+import { t, fmtNum } from '../i18n/index.js';
 
 /* ---------- Puzzle level list ---------- */
 const LOCK_SVG = '<svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>';
 function renderLevels() {
   const body = $('lvBody'); body.textContent = '';
   $('lvCount').textContent = t('{a} / {b} yıldız', { a: puzTotalStars(), b: LEVELS.length * 3 });
-  const nx = nextLevelIndex(), cur = state.mode === 'puzzle' && puzzleStatus().prog ? state.puz.li : -1;
+  const nx = nextLevelIndex(), status = puzzleStatus(), cur = status.prog ? status.li : -1;
   let i0 = 0;
   PUZZLE_GROUPS.forEach((grp, gi) => {
     const h = document.createElement('h3'); h.className = 'gal-sec'; h.textContent = t('{n}. grup', { n: gi + 1 }) + ' · ' + t(grp.name);
+    const count = document.createElement('span'); count.className = 'group-stars';
+    count.textContent = '★ ' + fmtNum(grp.levels.reduce((n, lv) => n + bestStars(lv.id), 0)) + ' / ' + fmtNum(grp.levels.length * 3);
+    h.append(count);
     const grid2 = document.createElement('div'); grid2.className = 'lvgrid';
     grp.levels.forEach((lv, j) => {
       const i = i0 + j, open = levelOpen(i), st = bestStars(lv.id);
@@ -28,6 +31,9 @@ function renderLevels() {
       b.innerHTML = open
         ? `<span class="lvg">${GOAL_ICON[lv.goal.type]}</span><b>${i + 1}</b><span class="lvs">${[0, 1, 2].map(k => MINI_STAR(k < st)).join('')}</span>`
         : `<b>${i + 1}</b>${LOCK_SVG}`;
+      const title = document.createElement('span'); title.className = 'lv-name'; title.textContent = t(lv.title);
+      b.append(title);
+      if (i === nx && open) b.setAttribute('aria-current', 'step');
       b.title = `${i + 1} · ${t(lv.title)}` + (lv.master ? ' ' + t('(usta bölümü)') : '');
       b.setAttribute('aria-label', t('Bölüm {n}', { n: i + 1 }) + `, ${t(lv.title)}${lv.master ? ', ' + t('usta bölümü') : ''}. ` + (open ? t('Hedef: {g}', { g: goalText(lv) }) + '. ' + (st ? t('{n} yıldız', { n: st }) : t('Henüz çözülmedi')) : t('Kilitli, önceki bölümü bitir')));
       if (!open) b.setAttribute('aria-disabled', 'true');
@@ -45,7 +51,11 @@ function renderLevels() {
     nxEl.firstChild.textContent = (cur >= 0 ? t('Yarım kalan:') : t('Sıradaki:')) + ` ${show + 1} · ${t(lv.title)}`;
     nxEl.lastChild.textContent = t('Hedef: {g}', { g: goalText(lv) }) + ' · ' + t('{n} parça', { n: lv.pieces.length });
     nxEl.hidden = false;
-  } else nxEl.hidden = true;
+    nxEl.onclick = () => {
+      if (cur >= 0) { closeLevels(); startMode('puzzle'); }
+      else startLevel(show);
+    };
+  } else { nxEl.hidden = true; nxEl.onclick = null; }
 }
 export function openLevels() {
   Sfx.unlock(); Sfx.pick();

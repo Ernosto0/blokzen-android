@@ -77,3 +77,80 @@
 }
 .lowfx .collection-screen, .lowfx .collection-screen .collection-sheet, .lowfx .detail-inner { animation: none; }
 .lowfx #gallery button { transition: none; }
+
+/* Levels are generous buttons with visible earned stars and a single next action. */
+#levels.collection-screen { padding: 0; overflow: hidden; background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
+#levels .lvnext { border: 0; color: var(--ink); text-align: left; cursor: pointer; font-family: var(--font); max-width: none; margin: 0 0 4px; gap: 5px; padding: 15px 20px; }
+#levels .lvnext b { font-size: 1.15rem; line-height: 1.25; }
+#levels .lvnext span { color: inherit; opacity: .8; font-size: .85rem; line-height: 1.3; }
+#levels .lvbody { gap: 18px; }
+#levels .gal-sec { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; font-size: .9rem; letter-spacing: .03em; }
+.group-stars { color: var(--accent); font-variant-numeric: tabular-nums; }
+#levels .lvgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 12px; }
+#levels .lv { min-height: 126px; aspect-ratio: auto; align-content: center; gap: 9px; border-radius: 22px; padding: 20px 5px 12px; border: 0; background: var(--btn); box-shadow: inset 0 2px 0 color-mix(in srgb, var(--fg) 8%, transparent), 0 4px 0 color-mix(in srgb, var(--btn) 80%, black); }
+#levels .lv b { font-size: 2rem; }
+#levels .lv.next { background: var(--accent); color: var(--ink); box-shadow: inset 0 2px 0 color-mix(in srgb, var(--accent) 55%, white), 0 4px 0 color-mix(in srgb, var(--accent) 74%, black); }
+#levels .lv.next :is(.lv-name, .lvg) { color: var(--ink); }
+#levels .lv.next .lvs svg { stroke: var(--ink); }
+#levels .lv.next .lvs svg.on { fill: var(--ink); }
+#levels .lv.locked { opacity: 1; background: color-mix(in srgb, var(--btn) 55%, var(--bg)); color: var(--muted); box-shadow: none; }
+#levels .lv.locked .lv-name { opacity: .8; }
+#levels .lv .lvs svg { width: 18px; height: 18px; }
+#levels .lv .lvg { top: 10px; left: 10px; }
+#levels .lv .lvg svg { width: 16px; height: 16px; }
+#levels .lv-name { font: 600 .8rem/1.2 var(--font); color: var(--muted); min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+#levels .lv.master::after { top: 12px; right: 12px; }
+.level-hint { margin: 24px 8px 0; font-size: .85rem; line-height: 1.4; }
+@media (min-width: 620px) { #levels .lvgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-height: 500px) { #levels .collection-head { gap: 8px; } #levels .lvnext { padding: 10px 18px; } }
+
+/* The last played mode owns the play action: there is no separate repeated hero card. */
+#menu { background: color-mix(in srgb, var(--bg) 96%, transparent); touch-action: pan-y; overscroll-behavior: contain; padding-inline: max(20px, env(safe-area-inset-left, 0px)) max(20px, env(safe-area-inset-right, 0px)); }
+#menu .menu-inner { max-width: 420px; gap: 20px; padding-block: 8px; }
+#menu .mhead { gap: 14px; margin-bottom: 4px; }
+#menu .modes-h { display: none; }
+#menu .modes { display: flex; flex-direction: column; gap: 14px; }
+#menu .mode { border-radius: 24px; background: var(--btn); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 8%, transparent), 0 4px 0 color-mix(in srgb, var(--btn) 80%, black); flex-wrap: wrap; align-items: center; }
+#menu .mode-main { flex-direction: row; align-items: center; gap: 16px; padding: 14px; min-height: 96px; box-sizing: border-box; }
+#menu .mode-art { width: 72px; height: 72px; border-radius: 18px; }
+#menu .mode-txt { gap: 5px; padding-right: 4px; }
+#menu .mode-txt b { font-size: 1.35rem; }
+#menu .mode-txt small { font-size: .86rem; line-height: 1.35; text-wrap: balance; }
+#menu .mode.featured { background: transparent; box-shadow: none; border-radius: 0; flex-direction: column; align-items: stretch; gap: 8px; padding-bottom: 6px; }
+#menu .featured .mode-main { padding: 4px 8px 4px 0; min-height: 112px; }
+#menu .featured .mode-art { width: 108px; height: 108px; border-radius: 26px; }
+#menu .featured .mode-txt b { font-size: 1.8rem; }
+#menu .featured .mode-txt small { font-size: .92rem; }
+#menu .hero { margin: 0 auto 10px; min-height: 54px; border-radius: 14px; padding: 12px 20px; justify-content: center; gap: 10px; text-align: center; }
+#menu .hero-txt b { font-size: 1.3rem; }
+#menu .hero svg { width: 20px; height: 20px; }
+#menu #heroSub { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+#menu .corner { position: static; flex: none; margin: 0 12px 0 0; }
+#menu .mini { min-height: 44px; padding: 10px 12px; border-radius: 10px; }
+#menu .mode:has(.corner:not([hidden])) .mode-main { flex-basis: 65%; }
+#menu .featured .corner { order: 3; margin: 0 0 0 auto; }
+#menu .mgrid { gap: 4px; padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--muted) 20%, transparent); }
+#menu .mgrid button { min-height: 72px; padding: 12px 0 6px; gap: 7px; background: transparent; box-shadow: none; border-radius: 16px; color: var(--muted); }
+#menu .mgrid button:active { background: var(--btn); color: var(--fg); }
+#menu .mgrid svg { width: 24px; height: 24px; }
+#menu .mlbl { font-size: .78rem; font-weight: 600; }
+@media (max-height: 760px) and (orientation: portrait) {
+  #menu .menu-inner { gap: 14px; }
+  #menu .mode-main { min-height: 80px; padding: 10px 12px; gap: 12px; }
+  #menu .mode-art { width: 60px; height: 60px; }
+  #menu .featured .mode-main { min-height: 90px; }
+  #menu .featured .mode-art { width: 84px; height: 84px; }
+}
+@media (orientation: landscape) and (min-width: 620px) {
+  #menu .menu-inner { max-width: 860px; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 14px 28px; align-items: center; }
+  #menu .mhead { grid-column: 1; grid-row: 1; justify-self: center; }
+  #menu .modes { display: contents; }
+  #menu .mode { grid-column: 2; justify-self: stretch; }
+  #menu .mode.featured { grid-column: 1; grid-row: 2 / 4; }
+  #menu .featured .mode-main { width: 100%; min-height: 96px; }
+  #menu .featured .mode-art { width: 86px; height: 86px; }
+  #menu .featured .mode-txt b { font-size: 1.5rem; }
+  #menu .mgrid { grid-column: 1; grid-row: 4; }
+}
+@media (prefers-reduced-motion: reduce) { #menu button { transition: none; } }
+.lowfx #menu, .lowfx #logo { animation: none; }
