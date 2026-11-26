@@ -113,11 +113,10 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
     </div>
     <div id="featuredActions" class="featured-actions">
       <button id="menuHero" class="hero game-action" type="button" aria-describedby="heroSub">
-        <span class="hero-txt"><b id="heroLbl"></b><small id="heroSub"></small></span>
+        <span class="hero-txt"><b id="heroLbl"></b><small id="heroSub" class="sr"></small></span>
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg>
       </button>
     </div>
-    <h2 class="modes-h">Modlar</h2>
     <div class="modes">
       <section class="mode" id="modeClassicCard" aria-labelledby="classicName">
         <button id="play" class="mode-main" type="button" aria-describedby="classicSub">
@@ -150,19 +149,19 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
     </div>
     <div class="mgrid">
       <button id="menuThemes" type="button" title="Temalar">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.9-.7-1.3-.7-2.1 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5C21 6.4 17 3 12 3z"/><circle cx="7.5" cy="11.5" r="1.5" fill="var(--btn)"/><circle cx="10" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="14.6" cy="7.4" r="1.5" fill="var(--btn)"/><circle cx="17.2" cy="11" r="1.5" fill="var(--btn)"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7m-3.5-3.5v7"/></svg>
         <span class="mlbl">Temalar</span>
       </button>
       <button id="menuHelp" type="button" title="Nasıl oynanır">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.3-2.6 3.9"/><circle cx="12" cy="17.3" r=".6" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.3-2.6 3.9"/><circle cx="12" cy="17.3" r=".6" fill="currentColor"/></svg>
         <span class="mlbl">Nasıl oynanır</span>
       </button>
       <button id="menuStats" type="button" title="İstatistik">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 20V13M12 20V5M19 20v-9"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20V13M12 20V5M19 20v-9"/></svg>
         <span class="mlbl">İstatistik</span>
       </button>
       <button id="menuSettings" type="button" title="Ayarlar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17.4 7H20M4 17h2.6M11 17h9"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="8.8" cy="17" r="2.2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17.4 7H20M4 17h2.6M11 17h9"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="8.8" cy="17" r="2.2"/></svg>
         <span class="mlbl">Ayarlar</span>
       </button>
     </div>
@@ -173,7 +172,6 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
   <div class="sheet collection-sheet">
     <div class="collection-head"><div class="sheet-head">
       <h2 id="infoTitle">Nasıl oynanır</h2>
-      <span class="count"></span>
       <button id="infoClose" class="iconbtn" type="button" aria-label="Kapat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
@@ -204,7 +202,6 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
   <div class="sheet collection-sheet">
     <div class="collection-head"><div class="sheet-head">
       <h2 id="setTitle">Ayarlar</h2>
-      <span class="count"></span>
       <button id="setClose" class="iconbtn" type="button" aria-label="Kapat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
@@ -246,7 +243,7 @@ document.documentElement.classList.add("booting"); setTimeout(function () { docu
     <div class="set-group" id="aboutGroup">
       <h3><svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.1"/></svg>Hakkında</h3>
       <a class="rate" id="aboutRate" href="#" target="_blank" rel="noopener" hidden>
-        <span class="rate-stars" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.3 6.37L12 17.05l-5.72 3.17 1.3-6.37L2.8 9.45l6.45-.75z"/></svg></span>
+        <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.4 1.1 6.3-5.7-3-5.7 3 1.1-6.3-4.6-4.4 6.4-.9z"/></svg>
         <span class="lbl"><b>Blokzen'i değerlendir</b><small>Google Play'de puan ver, yorum yaz</small></span>
         <svg class="rate-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
       </a>

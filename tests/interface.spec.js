@@ -63,6 +63,9 @@ test('the play action follows the featured mode after switching', async ({ page 
   await expect(page.locator('.mode.featured')).toHaveCount(1);
   await page.click('#menuHero'); await expect(page.locator('#menu')).toBeHidden();
   await expect(page.locator('body')).toHaveClass(/zen/);
+  await page.click('#menuBtn'); await page.click('#playPuzzle'); await page.click('#menuBtn');
+  await expect(page.locator('#modePuzzleCard #featuredActions #puzzleLevels')).toBeVisible();
+  await page.click('#puzzleLevels'); await expect(page.locator('#levels')).toBeVisible();
 });
 
 for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
@@ -128,6 +131,7 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 740, height: 360 }
     await page.emulateMedia({ reducedMotion: 'reduce' }); await page.setViewportSize(viewport);
     await seed(page, fresh); await page.goto('/');
     expect(await page.locator('#menu').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await expect(page.locator('#menu .mgrid')).toBeInViewport({ ratio: 1 });
     for (const [button, screen, close] of [['menuHelp', 'info', 'infoClose'], ['menuStats', 'info', 'infoClose'], ['menuSettings', 'settings', 'setClose'], ['puzzleLevels', 'levels', 'lvClose']]) {
       await page.click('#' + button);
       const dialog = page.locator('#' + screen);
