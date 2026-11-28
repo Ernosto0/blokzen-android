@@ -111,14 +111,14 @@ function classicUndo() {
   while (state.cls.hist.length > state.cls.undoLeft) state.cls.hist.shift();
   state.grid = p.grid.map(r => r.slice());
   state.tray = p.tray.map((t, i) => t ? { piece: { shape: SHAPES[t.s], color: t.c }, appear: now + i * 50, ret: null, fits: true } : null);
-  state.score = p.score; state.displayScore = state.score; state.orbs = []; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.gs = { ...p.gs };
+  state.score = p.score; state.displayScore = state.score; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.gs = { ...p.gs };
   theme.stage = p.stage; theme.mv = Math.min(theme.mv, state.moves); theme.tAt = performance.now(); state.pendingTheme = null;
   state.best = Math.min(state.best, p.best); state.newRecord = p.newRecord;
   for (const k of REC_KEYS) stats[k] = Math.min(stats[k], p.rec[k]);
   store.set(STATS_KEY, stats);
   state.cls.pendingEnd = false;
   state.over = false; $('over').hidden = true;
-  state.clearing = []; state.beams = []; state.rings = []; state.texts = []; state.shake = null; state.flash = null;
+  state.clearing = []; state.beams = []; state.texts = []; state.shake = null; state.flash = null;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) pop[r][c] = state.grid[r][c] ? now + (r + c) * 10 : 0;
   state.texts.push({ text: state.cls.undoLeft ? t('Geri alındı · {n} hak kaldı', { n: state.cls.undoLeft }) : t('Geri alındı · son hak'), x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1100, size: L.cell * 0.56, role: 'fg' });
   if (Sfx.ok()) { Sfx.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 3000, to: 600, q: 0.8 }); Sfx.pick(); }

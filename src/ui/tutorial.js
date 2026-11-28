@@ -8,7 +8,7 @@ import { TH } from '../themes/progress.js';
 import { clamp01, inOut, lerp } from '../core/util.js';
 import { L } from '../render/layout.js';
 import { rr } from '../render/sprites.js';
-import { burst, lineBlast } from '../themes/switching.js';
+import { celebrateFullClear, markClearedLines } from '../themes/switching.js';
 import { checkOver, newGame, refreshFits, restore, snapshot } from '../game/flow.js';
 import { updateHud } from './hud.js';
 import { resetConfirm } from '../game/input.js';
@@ -69,17 +69,19 @@ export function tutPlace(slot, r0, c0) {
     for (const c of cols) for (let r = 0; r < N; r++) { const k = r * N + c, d = Math.abs(r + 0.5 - centerR); hit.set(k, hit.has(k) ? Math.min(hit.get(k), d) : d); }
     for (const [k, d] of hit) {
       const r = (k / N) | 0, c = k % N;
-      state.clearing.push({ r, c, v: state.grid[r][c], t0: now + 60, delay: d * 26, spawned: false, few: hit.size > 16 });
+      state.clearing.push({ r, c, v: state.grid[r][c], t0: now + 24, delay: state.REDUCED ? 0 : d * 12, spawned: false, few: hit.size > 16 });
       state.grid[r][c] = 0; pop[r][c] = 0;
     }
     const clean = state.grid.every(row => row.every(v => !v));
-    lineBlast(rows, cols, L.gx + (c0 + shape.w / 2) * L.cell, L.gy + (r0 + shape.h / 2) * L.cell, Math.min(1 + (lines - 1) * 0.2, 2), now);
+    markClearedLines(rows, cols, now);
     const midX = L.gx + L.B / 2 - L.pad;
-    state.texts.push({ text: clean ? t('Tahta tertemiz!') : lines >= 2 ? t('Harika!') : t('Güzel!'), x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: 1300, size: L.cell * (clean ? 0.95 : 0.82), role: 'accent' });
-    if (clean) { state.flash = { t0: now + 80 }; burst(now + 60); Sfx.fullClear(); haptic.clean(); }
-    if (!state.REDUCED) state.shake = { amp: Math.min(3 + lines * 3 + (clean ? 8 : 0), 20), t0: now + 60 };
-    Sfx.clear(lines, 1);
-    haptic.clear(lines, 1);
+    state.texts.push({ clear: true, text: clean ? t('Tertemiz!') : t('{n} sıra temizlendi', { n: lines }), x: midX, y: L.gy + L.cell * 3.4, t0: now + 90, dur: clean ? 1190 : 880, size: L.cell * (clean ? 1.06 : 0.68), role: 'accent' });
+    if (clean) {
+      celebrateFullClear(now);
+      Sfx.fullClear(); haptic.clean();
+    } else {
+      Sfx.clear(lines, 1); haptic.clear(lines, 1);
+    }
   } else { Sfx.place(); haptic.place(); }
   tut.next = now + (lines ? 1500 : 800);
 }

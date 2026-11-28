@@ -2,7 +2,7 @@ import { T, THEME_MIN_MOVES, THEME_MIN_MS, themeStageAt, THEMES } from '../theme
 import { BEST_KEY, N, OLD_COLORS, SHAPES } from '../core/constants.js';
 import { bitsOf, fitsAnywhere } from '../core/bitboard.js';
 import { cellsOf, generateSet } from '../core/dealer.js';
-import { colorize, comboMult, fmtMult, levelMult, levelOf, scoreMove } from '../core/scoring.js';
+import { colorize, fmtMult, levelMult, levelOf, scoreMove } from '../core/scoring.js';
 import { Sfx } from '../audio/sfx.js';
 import { haptic } from '../platform/haptics.js';
 import { store } from '../core/store.js';
@@ -12,14 +12,13 @@ import { anchorStart, autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, TH, sta
 import { curStreak, dailyStart, fmtDay, starsFor } from '../modes/daily.js';
 import { canRevive, leaveGame, mode, MODE_KEY, modeFor, MODES, saveKey, stopTimers } from '../modes/registry.js';
 import { L } from '../render/layout.js';
-import { burst, edgeBurst, goldRain, lineBlast, pickStartTheme, scoreOrbs, setTheme, snapTheme } from '../themes/switching.js';
+import { celebrateFullClear, edgeBurst, markClearedLines, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
 import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
 import { tut } from '../ui/tutorial.js';
 import { t, fmtNum } from '../i18n/index.js';
 import { askReview } from '../platform/review.js';
-import { bowPraise, cleanPraise, praiseFor } from './praise.js';
 
 /* ---------- Game flow ---------- */
 export function deal(now = performance.now()) {
@@ -49,7 +48,7 @@ export function newGame() {
   state.grid = emptyGrid();
   const m = mode();
   m.setup(now);
-  state.score = 0; state.displayScore = 0; state.orbs = []; state.combo = 0; state.msc = 0; state.moves = 0; state.fulls = 0; state.over = false; state.newRecord = false; state.pendingTheme = null;
+  state.score = 0; state.displayScore = 0; state.combo = 0; state.msc = 0; state.moves = 0; state.fulls = 0; state.over = false; state.newRecord = false; state.pendingTheme = null;
   state.cls = freshCls();
   $('over').hidden = true;
   stopTimers();
@@ -107,7 +106,7 @@ export function restore(d, keepTheme = false) {
   }
   else { theme.start = 0; theme.stage = themeStageAt(state.score); theme.mv = state.moves; theme.tAt = performance.now(); snapTheme(settings.auto ? autoTheme(theme.stage) : settings.fixed); }
   refreshFits();
-  state.displayScore = state.score; state.orbs = [];
+  state.displayScore = state.score;
   return true;
 }
 
@@ -121,7 +120,7 @@ export function switchMode(m) {
   leaveGame();
   if (!state.over && state.grid) save();
   state.mode = m; store.set(MODE_KEY, m);
-  state.pendingTheme = null; state.banner = null; state.texts = []; state.orbs = []; state.shake = null; state.flash = null; state.drag = null;
+  state.pendingTheme = null; state.banner = null; state.texts = []; state.beams = []; state.shake = null; state.flash = null; state.drag = null;
   state.over = false; $('over').hidden = true;
   stopTimers();
   const d = store.get(saveKey());
@@ -157,7 +156,7 @@ export function placePiece(slot, r0, c0) {
 
   if (lines) {
     state.combo += 1; state.msc = 0;
-    const k = Math.min(1 + (lines - 1) * 0.2 + Math.max(0, state.combo - 1) * 0.1, 2); // how hard this clear hits
+    const intensity = Math.min(1 + (lines - 1) * 0.2, 1.7);
     const centerR = r0 + shape.h / 2, centerC = c0 + shape.w / 2;
     const hit = new Map();
     for (const r of rows) for (let c = 0; c < N; c++) hit.set(r * N + c, Math.abs(c + 0.5 - centerC));
@@ -168,42 +167,39 @@ export function placePiece(slot, r0, c0) {
     let gemHit = 0;
     for (const [k, d] of hit) {
       const r = (k / N) | 0, c = k % N, gem = m.cellCleared ? m.cellCleared(r, c) : 0; // 1 for a gem: the puzzle takes it off its board
-      state.clearing.push({ r, c, v: state.grid[r][c], t0: now + 60, delay: d * 26, spawned: false, few: hit.size > 16, gem, k });
+      state.clearing.push({ r, c, v: state.grid[r][c], t0: now + 24, delay: state.REDUCED ? 0 : d * 12, spawned: false, few: hit.size > 16, gem, intensity });
       state.grid[r][c] = 0; pop[r][c] = 0;
       gemHit += gem;
     }
-    lineBlast(rows, cols, pcx, pcy, k, now);
-    edgeBurst(rows, cols);
+    markClearedLines(rows, cols, now);
+    if (lines > 1) edgeBurst(rows, cols);
     if (m.cleared) m.cleared({ gemHit, rows: rows.length, cols: cols.length });
     const boardClean = state.grid.every(row => row.every(v => !v));
     const sc = scoreMove(shape.size, lines, state.combo, boardClean, state.fulls, state.score);
     gained = sc.place + sc.clear + sc.full;
-    const pts = sc.clear + sc.full;
-    const grow = Math.min(1.7, 1 + pts / 2500);
-
-    state.texts.push({ text: '+' + fmtNum(pts), x: pcx, y: pcy, t0: now + 80, dur: 950, size: L.cell * 0.62 * grow, role: pts >= 400 ? 'accent' : 'fg' });
-    let praise = boardClean ? (state.fulls ? t('Tertemiz ×{n}!', { n: state.fulls + 1 }) : cleanPraise()) : praiseFor(lines, state.combo);
-    if (gemHit && !boardClean && m.gemPraise) praise = m.gemPraise(gemHit);
-    if (praise) state.texts.push({ text: praise, x: midX, y: L.gy + L.cell * 2.6, t0: now + 120, dur: boardClean ? 1500 : 1100, size: L.cell * (boardClean ? 1.0 : 0.82), role: 'accent' });
-    if (rows.length && cols.length && TH().fx.edge) state.texts.push({ text: bowPraise(), x: pcx, y: pcy - L.cell * 0.9, t0: now + 160, dur: 1000, size: L.cell * 0.7, role: 'accent' });
-    if (state.combo >= 2) { // a big bouncy combo word that grows and changes colour as the combo climbs, the multiplier under it
-      const cy = L.gy + L.cell * (praise ? (boardClean ? 3.9 : 3.7) : 2.8), size = L.cell * 0.7 * Math.min(1.7, 1 + (state.combo - 2) * 0.1);
-      state.texts.push({ text: t('Kombo ×{c}', { c: state.combo }), sub: t('Puan {m}', { m: fmtMult(comboMult(state.combo)) }), x: midX, y: cy, t0: now + 200, dur: 1300, size, combo: state.combo });
-    }
-    scoreOrbs([...hit.keys()].map(k => [(k / N) | 0, k % N]), pts, TH().accent, now);
+    let detail = '';
+    if (boardClean) detail = t('Tertemiz!');
+    else if (gemHit && m.gemLabel) detail = m.gemLabel(gemHit);
+    else if (state.combo >= 2) detail = t('Kombo ×{c}', { c: state.combo });
+    else if (lines > 1) detail = t('{n} sıra temizlendi', { n: lines });
+    // A normal clear follows the piece; milestones earn a headline over the board.
+    state.texts = state.texts.filter(tx => !tx.clear);
+    state.texts.push({
+      clear: true, text: detail || '+' + fmtNum(gained), sub: detail ? '+' + fmtNum(gained) : '',
+      x: detail ? midX : pcx, y: detail ? L.gy + L.cell * 3.55 : Math.max(L.gy + L.cell * 0.65, pcy - L.cell * 0.45),
+      t0: now + 90, dur: boardClean ? 1190 : detail ? 1010 : 620,
+      size: L.cell * (boardClean ? 1.06 : detail ? 0.9 : 0.62), role: detail ? 'accent' : 'fg',
+    });
     if (boardClean) {
       state.fulls++;
-      state.texts.push({ text: t('+{n} bonus', { n: fmtNum(sc.full) }), x: midX, y: L.gy + L.cell * (state.combo >= 2 ? 6 : 5.2), t0: now + 320, dur: 1400, size: L.cell * 0.6, role: 'accent' });
-      state.flash = { t0: now + 80, a: 0.12, dur: 600 };
-      burst(now + 60);
-      goldRain(now);
+      celebrateFullClear(now);
+      if (!state.REDUCED && m.shake) state.shake = { amp: Math.min(L.cell * 0.05, 2.5), t0: now + 28 };
       Sfx.fullClear();
       haptic.clean();
+    } else {
+      Sfx.clear(lines, state.combo);
+      haptic.clear(lines, state.combo);
     }
-
-    if (!state.REDUCED && mode().shake) state.shake = { amp: Math.min(2 + lines * 1.5 + state.combo * 0.5 + (boardClean ? 3 : 0), 8), t0: now + 60 };
-    Sfx.clear(lines, state.combo);
-    if (!boardClean) haptic.clear(lines, state.combo);
   } else {
     gained = scoreMove(shape.size, 0, 0, false, 0, state.score).place;
     state.msc += 1;

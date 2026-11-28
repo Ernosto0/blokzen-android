@@ -2,11 +2,11 @@ import { THEMES } from '../themes/catalog.js';
 import { mixHex, rgba, shade } from '../core/color.js';
 import { GREY, N, SHAPES } from '../core/constants.js';
 import { store } from '../core/store.js';
-import { $, ctx, elScore, fctx, flyc } from '../ui/dom.js';
+import { $, ctx, elScore } from '../ui/dom.js';
 import { state, pop, theme, THEME_DUR } from '../core/state.js';
 import { checkUnlocks, stats, STATS_KEY, TH } from '../themes/progress.js';
-import { clamp01, inOut, lerp, outBack, outCubic } from '../core/util.js';
-import { BDPR, BH, BW, DPR, H, L, W } from './layout.js';
+import { clamp01, inOut, lerp, outCubic } from '../core/util.js';
+import { DPR, H, L, W } from './layout.js';
 import { drawGemOn, rr, sprite } from './sprites.js';
 import { drawBg } from './backgrounds.js';
 import { applyDomColors, setTheme } from '../themes/switching.js';
@@ -17,9 +17,7 @@ import { drawTutHand, tut, TUT, tutFinish, tutGo } from '../ui/tutorial.js';
 import { PARTS } from '../themes/registry.js';
 import { mode } from '../modes/registry.js';
 import { fmtNum } from '../i18n/index.js';
-import { Sfx } from '../audio/sfx.js';
 import { DRAW as GROUP_DRAW, SPAWN as GROUP_SPAWN } from './groupfx.js';
-import { bumpScore } from '../ui/hud.js';
 import { watchFrame } from './quality.js';
 
 /* ---------- Rendering ---------- */
@@ -66,41 +64,33 @@ function memo(tag, fn, a, b, c) {
 const cshade = (hex, amt) => memo('s', shade, hex, amt);
 const crgba = (hex, a) => memo('r', rgba, hex, a);
 const cmix = (a, b, t) => memo('m', mixHex, a, b, t);
-// a big clear shares a fixed particle budget instead of every cell throwing its own full burst
-const budget = () => state.perf >= 2 ? 45 : 90, pmax = () => state.perf >= 2 ? 70 : 140, glowMax = () => state.perf >= 2 ? 0 : 60; // the automatic quality halves them
+const glowMax = () => state.perf >= 2 ? 0 : 60;
 function spawnParticles(it) {
-  const th = TH(), fx = th.fx;
-  const room = pmax() - state.particles.length;
-  if (room <= 0) return;
-  let pending = 0;
-  for (const c of state.clearing) if (!c.spawned) pending++;
-  let n = state.REDUCED ? 1 : it.few ? 3 : 5;
-  n = Math.max(1, Math.min(n, Math.round((budget() - state.particles.length) / (pending + 1))));
-  const cx = L.gx + (it.c + 0.5) * L.cell, cy = L.gy + (it.r + 0.5) * L.cell;
+  const limit = state.perf >= 2 ? 16 : 36;
+  if (state.REDUCED || state.particles.length >= limit) return;
+  const odd = (it.r + it.c) % 2;
+  if (odd && !it.gem) return;
+
+  const th = TH(), fx = th.fx, cs = L.cell;
+  const cx = L.gx + (it.c + 0.5) * cs, cy = L.gy + (it.r + 0.5) * cs;
   const color = th.blocks[(it.v - 1) % 7] || th.accent;
-  const k = it.k || 1, grp = GROUP_SPAWN[th.snd.boom], odd = (it.r + it.c) % 2;
-  if (grp && !state.REDUCED) { // the block breaks the way the theme's material would; the theme's own particles thin out under it
-    grp(cx, cy, color, k, it.few || state.particles.length > budget(), odd);
-    n = odd ? 0 : Math.min(n, Math.round(1 + k));
+  const group = GROUP_SPAWN[th.snd.boom], first = state.particles.length;
+  if (group) group(cx, cy, color, it.intensity || 1, it.few || state.perf >= 2, odd);
+  for (let i = first; i < state.particles.length; i++) {
+    const p = state.particles[i];
+    p.vx *= 0.68; p.vy *= 0.68; p.max *= 0.64;
   }
-  for (let i = 0; i < n; i++) {
-    const a = Math.random() * Math.PI * 2, v = (0.6 + Math.random()) * L.cell * 4 * Math.sqrt(k);
-    state.particles.push(fxParticle(fx, {
-      x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - L.cell * 4,
-      life: 0, max: 0.55 + Math.random() * 0.35, size: L.cell * (0.14 + Math.random() * 0.14),
-      rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12, color,
+
+  // A theme's own shape accents the material; a puzzle stone uses the theme accent instead.
+  if (state.particles.length < limit && (it.gem || !group || (it.r + it.c) % 4 === 0)) {
+    state.particles.push(fxParticle(it.gem ? { p: 'g-shard', g: 0.6, drag: 1.4 } : { ...fx, glow: false }, {
+      x: cx, y: cy, vx: (Math.random() - 0.5) * cs * 3, vy: -cs * (1 + Math.random() * 2),
+      life: 0, max: 0.34 + Math.random() * 0.16, size: cs * (0.12 + Math.random() * 0.08),
+      rot: Math.random() * 6, vr: (Math.random() - 0.5) * 6, color: it.gem ? th.accent : color,
     }));
   }
-  if (it.gem) for (let i = 0; i < (state.REDUCED ? 2 : state.particles.length > budget() ? 3 : 7); i++) { // a breaking gem throws a few accent sparks
-    const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, v = (0.8 + Math.random()) * L.cell * 4.5;
-    state.particles.push(fxParticle({ p: 'star', g: 0.5, drag: 1.4, glow: true }, {
-      x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.6 + Math.random() * 0.4,
-      size: L.cell * (0.18 + Math.random() * 0.14), rot: Math.random() * 6, vr: (Math.random() - 0.5) * 8, color: th.accent,
-    }));
-  }
+  if (state.particles.length > limit) state.particles.length = limit;
 }
-// the theme's highlight color for light effects (glows need a hex color)
-const hiCol = th => /^#[0-9a-f]{6}$/i.test(th.fx.flash || '') ? th.fx.flash : '#ffffff';
 // soft round glow, cached per color, drawn additively
 const glows = new Map();
 function glowSprite(color) {
@@ -192,15 +182,6 @@ function drawParticle(p, k, light) {
       ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fill();
       break;
     }
-    case 'goldCoin': { // the clean-board shower: a coin spinning as it falls
-      const r = s * 0.62, w = Math.max(0.12, Math.abs(Math.cos(p.life * 9 + p.ph)));
-      ctx.rotate(p.rot * 0.15); ctx.scale(w, 1);
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#c08a1c'; ctx.fill();
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.78, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill();
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2); ctx.lineWidth = Math.max(1, r * 0.14); ctx.strokeStyle = '#e0a82a'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.3, r * 0.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fill();
-      break;
-    }
     case 'star': {
       ctx.rotate(p.rot * 0.3);
       const r = s * 0.8, q = r * 0.22;
@@ -218,164 +199,69 @@ function drawParticle(p, k, light) {
   ctx.restore();
 }
 
-// a four-pointed sparkle with a soft glow behind it
-function sparkle(x, y, r, color, a, light) {
-  if (!light) { ctx.globalAlpha = a * 0.7; const g = r * 3.4; ctx.drawImage(glowSprite(color), x - g / 2, y - g / 2, g, g); }
-  ctx.globalAlpha = a;
-  const q = r * 0.2;
-  ctx.beginPath(); ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x + q, y - q, x + r, y); ctx.quadraticCurveTo(x + q, y + q, x, y + r);
-  ctx.quadraticCurveTo(x - q, y + q, x - r, y); ctx.quadraticCurveTo(x - q, y - q, x, y - r);
-  ctx.fillStyle = light ? color : '#ffffff'; ctx.fill();
+function lineOutline(line, cs) {
+  const horizontal = line.row !== undefined;
+  const x = L.gx + (horizontal ? 0 : line.col * cs);
+  const y = L.gy + (horizontal ? line.row * cs : 0);
+  rr(ctx, x + 2, y + 2, (horizontal ? N : 1) * cs - 4, (horizontal ? 1 : N) * cs - 4, cs * 0.12);
 }
-const lineRect = (b, cs) => b.row !== undefined ? [L.gx, L.gy + b.row * cs, N * cs, cs, true] : [L.gx + b.col * cs, L.gy, cs, N * cs, false];
-// while dragging: the lines this drop would clear glow, a band of light runs along them and sparkles twinkle on them
-function drawPreview(now, d, th, cs, FR, pulse) {
-  const tg = d.target, n = tg.rows.length + tg.cols.length;
-  const light = !!th.light, hc = hiCol(th), lc = light ? th.accent : hc;
-  const intro = outCubic(clamp01((now - d.hlT0) / 220)), k = Math.min(1 + (n - 1) * 0.25, 1.75);
-  const rects = [...tg.rows.map(row => lineRect({ row }, cs)), ...tg.cols.map(col => lineRect({ col }, cs))];
+// Keep the existing block colors visible inside a stable target outline.
+function drawPreview(now, drag, th, cs) {
+  const alpha = state.REDUCED ? 1 : outCubic(clamp01((now - drag.hlT0) / 80));
+  const { rows, cols } = drag.target;
   ctx.save();
-  if (!light) ctx.globalCompositeOperation = 'lighter';
-  // glowing frame around each line
-  if (!state.REDUCED) { ctx.shadowColor = lc; ctx.shadowBlur = cs * 0.45 * k; }
-  ctx.lineWidth = Math.max(2, cs * 0.07); ctx.strokeStyle = lc;
-  for (const [x, y, w, h] of rects) {
-    ctx.globalAlpha = intro * (0.5 + 0.3 * pulse);
-    rr(ctx, x + 1, y + 1, w - 2, h - 2, cs * FR); ctx.stroke();
-  }
-  ctx.shadowBlur = 0;
-  if (state.REDUCED) { ctx.restore(); return; }
-  // a band of light sweeping along the lines
-  const ph = ((now - d.hlT0) / 820) % 1;
-  for (const [x, y, w, h, horiz] of rects) {
-    const len = horiz ? w : h, bw = cs * 1.6, p = -bw + ph * (len + bw * 2);
-    const g = horiz ? ctx.createLinearGradient(x + p - bw, 0, x + p + bw, 0) : ctx.createLinearGradient(0, y + p - bw, 0, y + p + bw);
-    g.addColorStop(0, rgba(lc, 0)); g.addColorStop(0.5, rgba(lc, Math.min(0.75, 0.42 * k))); g.addColorStop(1, rgba(lc, 0));
-    ctx.save(); rr(ctx, x, y, w, h, cs * FR); ctx.clip();
-    ctx.globalAlpha = intro; ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
-    ctx.restore();
-  }
-  // twinkling sparkles, each cell on its own beat
-  for (const key of tg.hl) {
-    const hsh = ((key * 2654435761) >>> 0) / 4294967296, t = ((now / 1000) * (0.9 + 0.4 * k) + hsh * 7.3) % 1;
-    if (t > 0.4) continue;
-    const r = (key / N) | 0, c = key % N, hx = (hsh * 13.7) % 1, hy = (hsh * 29.3) % 1;
-    sparkle(L.gx + (c + 0.2 + 0.6 * hx) * cs, L.gy + (r + 0.2 + 0.6 * hy) * cs, cs * 0.2 * k * Math.sin(t / 0.4 * Math.PI), hc, intro, light);
+  ctx.globalAlpha = alpha;
+  for (const line of [...rows.map(row => ({ row })), ...cols.map(col => ({ col }))]) {
+    lineOutline(line, cs);
+    ctx.strokeStyle = th.board; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = th.accent; ctx.lineWidth = 2; ctx.stroke();
   }
   ctx.restore();
-  // small motes of light drift up off the lines
-  const every = 150 / k;
-  if (!d.moteT || now - d.moteT > 500) d.moteT = now;
-  while (now - d.moteT > every) {
-    d.moteT += every;
-    const keys = [...tg.hl], key = keys[(Math.random() * keys.length) | 0], r = (key / N) | 0, c = key % N;
-    state.particles.push(fxParticle({ p: 'star', g: -0.12, drag: 2.2, glow: true }, {
-      x: L.gx + (c + Math.random()) * cs, y: L.gy + (r + Math.random()) * cs, vx: (Math.random() - 0.5) * cs, vy: -cs * (0.8 + Math.random()),
-      life: 0, max: 0.5 + Math.random() * 0.3, size: cs * (0.12 + Math.random() * 0.1), rot: Math.random() * 6, vr: 2, color: Math.random() < 0.6 ? hc : th.accent,
-    }));
-  }
 }
-// a clear: a beam of light flares along each line, shockwaves ring out from where the piece landed
-function drawBlast(now, th, cs) {
-  const light = !!th.light, hc = hiCol(th), lc = light ? th.accent : hc;
+function drawClearedLines(now, th, cs) {
+  const duration = state.REDUCED ? 120 : 210;
+  state.beams = state.beams.filter(line => now - line.t0 < duration);
   ctx.save();
-  for (const b of state.beams) {
-    const t = (now - b.t0) / 380;
-    if (t < 0 || t >= 1) continue;
-    const [x, y, w, h, horiz] = lineRect(b, cs), e = outCubic(t);
-    const grow = cs * 0.3 * e, wide = cs * (0.3 + 0.35 * e); // a beam reaches a little past the board's ends and widens as it fades
-    const a = (1 - t) * (1 - t);
-    const cx = x + w / 2, cy = y + h / 2;
-    const g = horiz ? ctx.createLinearGradient(0, cy - wide, 0, cy + wide) : ctx.createLinearGradient(cx - wide, 0, cx + wide, 0);
-    g.addColorStop(0, rgba(lc, 0)); g.addColorStop(0.5, rgba(lc, 0.38)); g.addColorStop(1, rgba(lc, 0));
-    ctx.globalAlpha = a; ctx.fillStyle = g;
-    if (horiz) ctx.fillRect(x - grow, cy - wide, w + grow * 2, wide * 2); else ctx.fillRect(cx - wide, y - grow, wide * 2, h + grow * 2);
-    // bright core
-    const core = cs * 0.05 * (1 - t);
-    ctx.globalAlpha = a * 0.5; ctx.fillStyle = light ? th.accent : '#ffffff';
-    if (horiz) ctx.fillRect(x - grow, cy - core / 2, w + grow * 2, core); else ctx.fillRect(cx - core / 2, y - grow, core, h + grow * 2);
+  ctx.strokeStyle = th.accent;
+  ctx.lineWidth = 2;
+  for (const line of state.beams) {
+    const t = (now - line.t0) / duration;
+    if (t < 0) continue;
+    ctx.globalAlpha = 0.75 * (1 - t);
+    lineOutline(line, cs);
+    ctx.stroke();
   }
-  state.beams = state.beams.filter(b => now - b.t0 < 380);
-  ctx.strokeStyle = lc;
-  for (const ring of state.rings) {
-    const t = (now - ring.t0) / ring.dur;
-    if (t < 0 || t >= 1) continue;
-    ctx.globalAlpha = 0.4 * (1 - t);
-    ctx.strokeStyle = ring.color || lc;
-    ctx.lineWidth = Math.max(1, ring.w * (1 - t));
-    ctx.beginPath(); ctx.arc(ring.x, ring.y, Math.max(1, ring.rad * outCubic(t)), 0, Math.PI * 2); ctx.stroke();
-  }
-  state.rings = state.rings.filter(ring => now - ring.t0 < ring.dur);
   ctx.restore();
 }
+function drawClearText(tx, t, th, cs) {
+  const maxWidth = L.B - cs * 0.75;
+  const alpha = Math.min(1, t / 0.07, (1 - t) / 0.24);
+  const entry = outCubic(clamp01(t / 0.18));
+  const scale = state.REDUCED ? 1 : 0.82 + 0.18 * entry;
+  const y = tx.y - (state.REDUCED ? 0 : cs * (0.38 * entry + 0.22 * t));
+  const size = tx.size * scale;
 
-// the combo word: pops in with an elastic squash and stretch, bounces, wobbles, and gets hotter in colour as the combo climbs
-const COMBO_COLS = ['#ffd23f', '#ffa630', '#ff6b4a', '#ff4fa3'];
-const elastic = x => x >= 1 ? 1 : 1 - Math.pow(2, -9 * x) * Math.cos(x * 9.5);
-function drawCombo(tx, t, now, th, cs) {
-  const lv = tx.combo, rainbow = lv >= 7, light = !!th.light;
-  const col = rainbow ? `hsl(${(now * 0.25) % 360},95%,60%)` : lv === 2 ? th.accent : COMBO_COLS[lv - 3];
-  const top = rainbow ? `hsl(${(now * 0.25 + 50) % 360},100%,82%)` : mixHex(col, '#ffffff', 0.55);
-  const pop = Math.max(0.01, elastic(Math.min(1, t / 0.32)));
-  const calm = state.REDUCED; // low effects or reduced motion: the word just pops in, no bounce or wobble
-  const wob = calm ? 0 : Math.sin(t * 30) * Math.exp(-t * 7) * 0.24; // squash and stretch
-  const bounce = calm ? 0 : Math.abs(Math.sin(t * Math.PI * 2.4)) * Math.exp(-t * 3.6) * cs * 0.4;
-  const y = tx.y - bounce - outCubic(t) * cs * 1.1, size = tx.size; // rises like the other texts so the stack keeps its spacing
   ctx.font = `800 ${size}px "Baloo 2", "Trebuchet MS", sans-serif`;
-  const half = ctx.measureText(tx.text).width / 2 * 1.2 + size * 0.15;
+  const half = Math.min(maxWidth, ctx.measureText(tx.text).width) / 2 + cs * 0.25;
   const x = Math.max(L.bx + half, Math.min(L.bx + L.B - half, tx.x));
-  ctx.save();
-  ctx.globalAlpha = t > 0.75 ? 1 - (t - 0.75) / 0.25 : 1;
-  ctx.translate(x, y);
-  if (!calm) ctx.rotate(Math.sin(t * 16) * Math.exp(-t * 5) * 0.03 * Math.min(lv, 7));
-  ctx.scale(pop * (1 + wob), pop * (1 - wob));
-  ctx.lineWidth = size * 0.26; ctx.strokeStyle = light ? 'rgba(60,30,10,.85)' : 'rgba(20,10,4,.82)';
-  if (lv >= 4 && !light) { ctx.shadowColor = col; ctx.shadowBlur = size * 0.3; }
-  ctx.strokeText(tx.text, 0, 0);
-  ctx.shadowBlur = 0;
-  const g = ctx.createLinearGradient(0, -size * 0.45, 0, size * 0.4);
-  g.addColorStop(0, top); g.addColorStop(0.55, col); g.addColorStop(1, rainbow ? col : shade(col, -0.12));
-  ctx.fillStyle = g; ctx.fillText(tx.text, 0, 0);
-  ctx.restore();
-  if (tx.sub) { // the multiplier rides under the word, steady, fading in after the pop
-    const ss = size * 0.55, sy = y + size * 0.5 + ss * 0.7;
-    ctx.globalAlpha = clamp01((t - 0.08) / 0.15) * (t > 0.75 ? 1 - (t - 0.75) / 0.25 : 1);
-    ctx.font = `800 ${ss}px "Baloo 2", "Trebuchet MS", sans-serif`;
-    ctx.lineWidth = ss * 0.22; ctx.strokeStyle = rgba(th.stroke, 0.88);
-    ctx.strokeText(tx.sub, x, sy); ctx.fillStyle = th.fg; ctx.fillText(tx.sub, x, sy);
-    ctx.globalAlpha = 1;
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = th.light ? th.stroke : th.board;
+  ctx.lineWidth = Math.max(2, size * 0.13);
+  ctx.strokeText(tx.text, x, y, maxWidth);
+  ctx.fillStyle = tx.role === 'accent' ? th.accent : th.fg;
+  ctx.fillText(tx.text, x, y, maxWidth);
+
+  if (tx.sub) {
+    ctx.globalAlpha = alpha * (state.REDUCED ? 1 : clamp01((t - 0.045) / 0.13));
+    const subSize = cs * 0.52;
+    ctx.font = `700 ${subSize}px "Baloo 2", "Trebuchet MS", sans-serif`;
+    ctx.lineWidth = Math.max(2, subSize * 0.14);
+    const subY = y + size * 0.5 + subSize * 0.58;
+    ctx.strokeText(tx.sub, x, subY, maxWidth);
+    ctx.fillStyle = th.fg;
+    ctx.fillText(tx.sub, x, subY, maxWidth);
   }
-}
-// score sparks, drawn on the canvas over the HUD: each one curves up to the counter, leaves a short trail and flashes as it lands
-let flyDirty = false;
-function drawOrbs(now, th) {
-  if (!state.orbs.length && !flyDirty) return;
-  fctx.setTransform(BDPR, 0, 0, BDPR, 0, 0);
-  fctx.clearRect(0, 0, BW, BH);
-  flyDirty = state.orbs.length > 0;
-  const light = !!th.light;
-  if (!light) fctx.globalCompositeOperation = 'lighter';
-  const at = (o, u) => { const e = u * u * (3 - 2 * u), a = 1 - e; return [a * a * o.sx + 2 * a * e * o.mx + e * e * o.tx, a * a * o.sy + 2 * a * e * o.my + e * e * o.ty]; };
-  for (const o of state.orbs) {
-    const u = (now - o.t0) / o.dur;
-    if (u < 0) continue;
-    if (u >= 1) {
-      if (!o.done) { o.done = true; bumpScore(); Sfx.orb(o.i); }
-      const f = (now - o.t0 - o.dur) / 260; // the landing flash
-      if (f < 1) { fctx.globalAlpha = 1 - f; const r = o.size * (1.5 + f * 4); fctx.drawImage(glowSprite(o.color), o.tx - r, o.ty - r, r * 2, r * 2); }
-      continue;
-    }
-    for (let j = 4; j >= 0; j--) { // trail
-      const [x, y] = at(o, Math.max(0, u - j * 0.035)), r = o.size * (1 - j * 0.16) * (j ? 1.6 : 2.6);
-      fctx.globalAlpha = j ? 0.5 * (1 - j / 5) : 1;
-      fctx.drawImage(glowSprite(o.color), x - r, y - r, r * 2, r * 2);
-    }
-    const [x, y] = at(o, u);
-    fctx.globalAlpha = 1; fctx.fillStyle = '#ffffff';
-    fctx.beginPath(); fctx.arc(x, y, o.size * 0.42, 0, Math.PI * 2); fctx.fill();
-  }
-  fctx.globalAlpha = 1; fctx.globalCompositeOperation = 'source-over';
-  state.orbs = state.orbs.filter(o => now - o.t0 - o.dur < 260);
+  ctx.globalAlpha = 1;
 }
 
 let last = performance.now();
@@ -386,12 +272,9 @@ export function frame(now) {
   if (state.pendingTheme && now >= state.pendingTheme.at) { const p = state.pendingTheme; state.pendingTheme = null; setTheme(p.i, now, { unlocked: !!p.unlocked, finale: !!p.finale }); if (!state.over) save(); }
   applyDomColors(now);
 
-  let held = 0; // points still flying up as sparks: the counter adds them as they land
-  for (const o of state.orbs) if (!o.done) held += o.val;
-  const shown = state.score - held;
-  if (state.orbs.length) state.displayScore = shown; // while sparks fly the counter steps up with each one that lands
-  else state.displayScore += (shown - state.displayScore) * Math.min(1, dt * 9);
-  if (Math.abs(shown - state.displayScore) < 0.5) state.displayScore = shown;
+  const shown = state.score;
+  if (state.REDUCED || Math.abs(shown - state.displayScore) < 0.5) state.displayScore = shown;
+  else state.displayScore += (shown - state.displayScore) * Math.min(1, dt * 15);
   const ds = Math.round(state.displayScore);
   if (ds !== state.shownScore) { state.shownScore = ds; elScore.textContent = fmtNum(ds); }
 
@@ -415,7 +298,6 @@ export function frame(now) {
   }
   drawBg(now, dt);
   draw(now);
-  drawOrbs(now, TH());
   if (menuOpen) drawLogo();
   requestAnimationFrame(frame);
 }
@@ -429,13 +311,13 @@ function draw(now) {
   const flipping = now - theme.t0 < THEME_DUR + 200 && (tp !== ti || pm !== theme.mode);
   const bm = inOut(clamp01((now - theme.t0) / THEME_DUR));
 
-  let sx = 0, sy = 0;
+  let offset = 0;
   if (state.shake) {
-    const t = (now - state.shake.t0) / 280;
-    if (t >= 1) state.shake = null;
-    else if (t > 0) { const a = state.shake.amp * Math.pow(1 - t, 2); sx = (Math.random() * 2 - 1) * a; sy = (Math.random() * 2 - 1) * a; }
+    const t = (now - state.shake.t0) / 150;
+    if (t >= 1 || state.REDUCED) state.shake = null;
+    else if (t > 0) offset = state.shake.amp * Math.sin(t * Math.PI) * (1 - t);
   }
-  ctx.save(); ctx.translate(sx, sy);
+  ctx.save(); ctx.translate(0, offset);
 
   // board
   rr(ctx, L.bx, L.by, L.B, L.B, L.B * (theme.mode === 'classic' ? 0.022 : 0.035));
@@ -446,7 +328,6 @@ function draw(now) {
   const dragColor = state.drag && state.drag.piece.color;
   const pzg = !tut && mode().boardGems ? mode().boardGems() : null; // gems on the board
   const greyRows = state.over && !(pzg && state.puz.won) ? Math.floor((now - state.overT0) / 70) : -1; // a won level does not grey out
-  const pulse = 0.5 + 0.5 * Math.sin(now / 90);
 
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const x = L.gx + c * cs, y = L.gy + r * cs;
@@ -457,21 +338,13 @@ function draw(now) {
     let s = 1;
     const a = pop[r][c];
     if (a) {
-      const t = clamp01((now - a) / 240);
-      s = 0.6 + 0.4 * outBack(t);
+      const t = state.REDUCED ? 1 : clamp01((now - a) / 115);
+      s = 0.9 + 0.1 * outCubic(t);
       if (t >= 1) pop[r][c] = 0;
     }
     if (state.over && r < greyRows) v = GREY;
-    const lit = tgt && tgt.hl && tgt.hl.has(r * N + c);
-    if (lit) { v = dragColor; if (!state.REDUCED) s *= 1 + 0.035 * pulse; }
     drawFlip(sprite(tp, v, 0, pm), sprite(ti, v), x, y, cs, ft, s);
     if (pzg && pzg[r][c]) drawGemOn(ctx, ti, x, y, cs, DPR, 0.86 * s);
-    if (lit) {
-      ctx.globalAlpha = 0.12 + 0.12 * pulse;
-      rr(ctx, x + cs * FI, y + cs * FI, cs * (1 - 2 * FI), cs * (1 - 2 * FI), cs * FR);
-      ctx.fillStyle = '#fff'; ctx.fill();
-      ctx.globalAlpha = 1;
-    }
   }
 
   if (tut && !tut.next && !state.drag && state.tray.some(Boolean) && !TUT[tut.step].free) {
@@ -485,56 +358,37 @@ function draw(now) {
     const spr = sprite(ti, dragColor), clears = tgt.hl && tgt.hl.size;
     for (const [dr, dc] of state.drag.piece.shape.cells) {
       const x = L.gx + (tgt.c + dc) * cs, y = L.gy + (tgt.r + dr) * cs;
-      ctx.globalAlpha = clears ? 0.72 : 0.38;
+      ctx.globalAlpha = clears ? 0.74 : 0.44;
       ctx.drawImage(spr, x, y, cs, cs);
-      if (clears) {
-        ctx.globalAlpha = 0.12 + 0.12 * pulse;
-        rr(ctx, x + cs * FI, y + cs * FI, cs * (1 - 2 * FI), cs * (1 - 2 * FI), cs * FR);
-        ctx.fillStyle = '#fff'; ctx.fill();
-      }
     }
     ctx.globalAlpha = 1;
-    if (clears) drawPreview(now, state.drag, th, cs, FR, pulse);
+    if (clears) drawPreview(now, state.drag, th, cs);
   }
 
+  const clearDuration = state.REDUCED ? 90 : 170;
   for (const it of state.clearing) {
-    const t = (now - it.t0 - it.delay) / 300;
-    const x = L.gx + it.c * cs, y = L.gy + it.r * cs;
+    const t = (now - it.t0 - (state.REDUCED ? 0 : it.delay)) / clearDuration;
+    if (t >= 1) continue;
+    const x = L.gx + it.c * cs, y = L.gy + it.r * cs, k = clamp01(t);
     if (t >= 0 && !it.spawned) { it.spawned = true; spawnParticles(it); }
-    const spr = sprite(ti, it.v);
-    const fl = th.fx.flash || shade(th.blocks[(it.v - 1) % 7] || th.accent, 0.45);
-    if (t < 0) {
-      drawSprite(spr, x, y, cs, 1);
-      if (now > it.t0) {
-        ctx.globalAlpha = 0.35;
-        rr(ctx, x + cs * FI, y + cs * FI, cs * (1 - 2 * FI), cs * (1 - 2 * FI), cs * FR);
-        ctx.fillStyle = fl; ctx.fill(); ctx.globalAlpha = 1;
-      }
-    } else if (t < 1) {
-      const s = 1 - t * t;
-      ctx.globalAlpha = 1 - t * 0.4;
-      drawSprite(spr, x, y, cs, s * (1 + 0.15 * Math.sin(t * Math.PI)));
-      ctx.globalAlpha = (1 - t) * 0.35;
-      const w = cs * (1 - 2 * FI) * s;
-      rr(ctx, x + (cs - w) / 2, y + (cs - w) / 2, w, w, cs * FR * s);
-      ctx.fillStyle = fl; ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-    if (it.gem && t < 1) { // the gem lifts off its block and fades as the line clears
-      const k = clamp01(t);
-      ctx.globalAlpha = 1 - k;
-      drawGemOn(ctx, ti, x, y - cs * 0.5 * outCubic(k), cs, DPR, 0.86 * (1 + 0.5 * k));
-      ctx.globalAlpha = 1;
-    }
+    ctx.globalAlpha = 1 - k;
+    drawSprite(sprite(ti, it.v), x, y, cs, state.REDUCED ? 1 : 1 - 0.18 * outCubic(k));
+    if (it.gem) drawGemOn(ctx, ti, x, y - (state.REDUCED ? 0 : cs * 0.22 * k), cs, DPR, 0.86);
+    ctx.globalAlpha = 1;
   }
-  state.clearing = state.clearing.filter(it => (now - it.t0 - it.delay) / 300 < 1);
-  if (state.beams.length || state.rings.length) drawBlast(now, th, cs);
+  state.clearing = state.clearing.filter(it => now - it.t0 - (state.REDUCED ? 0 : it.delay) < clearDuration);
+  if (state.beams.length) drawClearedLines(now, th, cs);
   if (state.flash) {
-    const t = (now - state.flash.t0) / (state.flash.dur || 700);
+    const t = (now - state.flash.t0) / (state.flash.dur || 380);
     if (t >= 1) state.flash = null;
     else if (t > 0) {
-      rr(ctx, L.bx, L.by, L.B, L.B, L.B * 0.03);
-      ctx.fillStyle = rgba(th.accent, (state.flash.a ?? 0.35) * (1 - t) * (1 - t)); ctx.fill();
+      const sweep = state.flash.sweep && !state.REDUCED;
+      const inset = sweep ? 2 + L.B * 0.39 * (1 - outCubic(t)) : 2;
+      const size = L.B - inset * 2;
+      rr(ctx, L.bx + inset, L.by + inset, size, size, Math.min(size * 0.15, cs * 0.23));
+      ctx.strokeStyle = rgba(th.accent, (state.flash.a ?? 0.65) * (1 - t));
+      ctx.lineWidth = sweep ? Math.max(2, cs * 0.09 * (1 - t)) : 2;
+      ctx.stroke();
     }
   }
   ctx.restore();
@@ -545,11 +399,15 @@ function draw(now) {
     if (!t || (state.drag && state.drag.slot === i)) continue;
     let cx = L.bx + L.slotW * (i + 0.5), cy = L.trayY + L.trayH / 2, c2 = L.trayCell;
     let alpha = t.fits ? 1 : 0.32;
-    const ta = (now - t.appear) / 340;
+    const ta = (now - t.appear) / 160;
     if (ta < 1) {
       if (ta <= 0) continue;
-      c2 *= Math.max(0.01, outBack(ta));
-      cy += (1 - outCubic(ta)) * L.trayH * 0.3;
+      if (!state.REDUCED) {
+        const e = outCubic(ta);
+        c2 *= 0.93 + 0.07 * e;
+        cy += (1 - e) * L.cell * 0.2;
+        alpha *= e;
+      }
     }
     if (t.ret) {
       const tr = clamp01((now - t.ret.t0) / 180), e = outCubic(tr);
@@ -572,11 +430,10 @@ function draw(now) {
   for (const tx of state.texts) {
     const t = (now - tx.t0) / tx.dur;
     if (t < 0 || t >= 1) continue;
-    if (tx.combo) { drawCombo(tx, t, now, th, cs); continue; }
-    const sc = t < 0.18 ? outBack(t / 0.18) : 1;
-    const y = tx.y - outCubic(t) * cs * 1.1;
-    ctx.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
-    ctx.font = `800 ${Math.max(1, tx.size * sc)}px "Baloo 2", "Trebuchet MS", sans-serif`;
+    if (tx.clear) { drawClearText(tx, t, th, cs); continue; }
+    const y = tx.y - (state.REDUCED ? 0 : outCubic(t) * cs * 0.35);
+    ctx.globalAlpha = Math.min(1, t / 0.10, (1 - t) / 0.25);
+    ctx.font = `700 ${tx.size}px "Baloo 2", "Trebuchet MS", sans-serif`;
     ctx.lineWidth = tx.size * 0.22;
     ctx.strokeStyle = rgba(th.stroke, 0.88);
     const half = ctx.measureText(tx.text).width / 2 + tx.size * 0.15;
@@ -608,7 +465,7 @@ function draw(now) {
       ctx.fillStyle = th.accent;
       ctx.fillText(state.banner.sub, cx + slide, cy - cs * 0.55);
       try { ctx.letterSpacing = '0px'; } catch (e) {}
-      const fs = cs * 0.86 * (0.85 + 0.15 * outBack(inT));
+      const fs = cs * 0.86;
       ctx.font = `800 ${fs}px "Baloo 2", "Trebuchet MS", sans-serif`;
       ctx.lineWidth = fs * 0.16; ctx.strokeStyle = rgba(th.stroke, 0.9);
       ctx.strokeText(state.banner.name, cx - slide, cy + cs * 0.22);

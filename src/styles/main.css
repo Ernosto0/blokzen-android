@@ -36,7 +36,6 @@ html.native #app { padding-top: max(10px, env(safe-area-inset-top, 0px)); paddin
   #app { padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
 }
 #bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-#fly { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 #app {
   position: relative; z-index: 1;
   height: 100%;
@@ -68,7 +67,7 @@ html.native #app { padding-top: max(10px, env(safe-area-inset-top, 0px)); paddin
   display: inline-block;
   transition: transform .12s;
 }
-#score.bump { transform: scale(1.12); }
+#score.bump { transform: scale(1.045); }
 .subrow { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 2px; min-height: 1.4rem; }
 .lvl {
   display: inline-flex; align-items: center;

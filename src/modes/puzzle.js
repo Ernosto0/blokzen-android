@@ -18,7 +18,6 @@ import { readPrev } from './classic.js';
 import { applyPrefs } from '../ui/settings.js';
 import { drawGemOn, rr, sprite } from '../render/sprites.js';
 import { t, lang } from '../i18n/index.js';
-import { gemPraise } from '../game/praise.js';
 
 // best stars per level id; levels that have been lost once, and those later won with three stars (chalkboard theme) (saved)
 // clean: levels solved with three stars in one attempt that never ran out and never used the undo (cipher theme)
@@ -212,10 +211,10 @@ function puzUndo() {
   const p = state.puz.prev, now = performance.now();
   state.grid = p.grid.map(r => r.slice()); state.puz.gems = p.gems.map(r => r.slice());
   state.tray = p.tray.map((t, i) => t ? { piece: { shape: SHAPES[t.s], color: t.c }, appear: now + i * 50, ret: null, fits: true } : null);
-  state.score = p.score; state.displayScore = state.score; state.orbs = []; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.puz.seq = p.seq;
+  state.score = p.score; state.displayScore = state.score; state.combo = p.combo; state.msc = p.msc; state.moves = p.moves; state.fulls = p.fulls; state.puz.seq = p.seq;
   state.puz.prev = null; state.puz.undoUsed = true; state.puz.fail = '';
   state.over = false; $('over').hidden = true;
-  state.clearing = []; state.beams = []; state.rings = []; state.texts = []; state.shake = null; state.flash = null;
+  state.clearing = []; state.beams = []; state.texts = []; state.shake = null; state.flash = null;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) pop[r][c] = state.grid[r][c] ? now + (r + c) * 10 : 0;
   state.texts.push({ text: t('Geri alındı'), x: L.gx + L.B / 2 - L.pad, y: L.gy + L.cell * 3.2, t0: now + 60, dur: 1000, size: L.cell * 0.6, role: 'fg' });
   if (Sfx.ok()) { Sfx.hiss({ dur: 0.3, vol: 0.06, type: 'bandpass', freq: 3000, to: 600, q: 0.8 }); Sfx.pick(); }
@@ -287,7 +286,7 @@ defineMode({
     stats.puzzleGemsTotal += gemHit; // every gem ever broken (alchemy theme)
     if (rows && cols) stats.puzzleCross++; // a row and a column in the same move (magic cube theme)
   },
-  gemPraise(gemHit) { return !countGems(state.puz.gems) ? t('Son taş!') : gemHit > 1 ? t('{n} taş birden!', { n: gemHit }) : gemPraise(); },
+  gemLabel(n) { return countGems(state.puz.gems) ? t('{n} taş temizlendi', { n }) : t('Son taş temizlendi'); },
   afterMove({ lines }) { stats.puzzlePlaced++; stats.puzzleLines += lines; },
   // a level: its own counters only, no level-ups, theme steps or records; only the puzzle collection's tasks move
   finishMove(now) {

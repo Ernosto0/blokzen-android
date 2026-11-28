@@ -8,7 +8,7 @@
 //   restartLabel what the restart button announces
 //   volume       sound level factor
 //   levels       score levels: the level multiplier, level-up banner and level badge
-//   shake        the board shakes on a clear
+//   shake        the board settles when it is completely cleared
 //   records      single-game records (best score, longest combo...) count; totals always do
 //   countsGame   a finished game counts as one played game
 //   themeLocked  the theme never changes mid-game; unlocks wait for the end card
@@ -34,7 +34,7 @@
 //   resetNew()     puts the card's "new game" button back to rest;  play()  what the card's main button does (default: start the mode)
 //   remember()     called before a piece is placed (what undo will restore)
 //   cellCleared(r, c)  a cell is cleared: return 1 if it held something special (a gem) and take it off
-//   cleared({ gemHit, rows, cols }), gemPraise(gemHit)   what a clear means to the mode
+//   cleared({ gemHit, rows, cols }), gemLabel(gemHit)   what a clear means to the mode
 //   afterMove({ now, midX, lines })   the mode's bookkeeping after every move
 //   finishMove(now)  ends the move its own way (return true), else the shared ending runs
 //   skipOver()     true when there is nothing to check (a won level)
