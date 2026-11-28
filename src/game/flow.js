@@ -12,7 +12,7 @@ import { anchorStart, autoTheme, checkUnlocks, DONE_KEY, playHeldUnlock, TH, sta
 import { curStreak, dailyStart, fmtDay, starsFor } from '../modes/daily.js';
 import { canRevive, leaveGame, mode, MODE_KEY, modeFor, MODES, saveKey, stopTimers } from '../modes/registry.js';
 import { L } from '../render/layout.js';
-import { edgeBurst, markClearedLines, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
+import { celebrateFullClear, edgeBurst, markClearedLines, pickStartTheme, setTheme, snapTheme } from '../themes/switching.js';
 import { bumpScore, updateHud } from '../ui/hud.js';
 import { fmtN } from '../ui/menu.js';
 import { applyPrefs } from '../ui/settings.js';
@@ -178,20 +178,21 @@ export function placePiece(slot, r0, c0) {
     const sc = scoreMove(shape.size, lines, state.combo, boardClean, state.fulls, state.score);
     gained = sc.place + sc.clear + sc.full;
     let detail = '';
-    if (boardClean) detail = t('Tahta temizlendi');
+    if (boardClean) detail = t('Tertemiz!');
     else if (gemHit && m.gemLabel) detail = m.gemLabel(gemHit);
     else if (state.combo >= 2) detail = t('Kombo ×{c}', { c: state.combo });
     else if (lines > 1) detail = t('{n} sıra temizlendi', { n: lines });
-    // One score label per clear. Special moves add one line of context.
+    // A normal clear follows the piece; milestones earn a headline over the board.
     state.texts = state.texts.filter(tx => !tx.clear);
     state.texts.push({
-      clear: true, text: '+' + fmtNum(gained), sub: detail,
-      x: detail ? midX : pcx, y: detail ? L.gy + L.cell * 3.4 : Math.max(L.gy + L.cell * 0.65, pcy - L.cell * 0.45),
-      t0: now + 90, dur: detail ? 880 : 620, size: L.cell * (detail ? 0.68 : 0.57), role: detail ? 'accent' : 'fg',
+      clear: true, text: detail || '+' + fmtNum(gained), sub: detail ? '+' + fmtNum(gained) : '',
+      x: detail ? midX : pcx, y: detail ? L.gy + L.cell * 3.55 : Math.max(L.gy + L.cell * 0.65, pcy - L.cell * 0.45),
+      t0: now + 90, dur: boardClean ? 1190 : detail ? 1010 : 620,
+      size: L.cell * (boardClean ? 1.06 : detail ? 0.9 : 0.62), role: detail ? 'accent' : 'fg',
     });
     if (boardClean) {
       state.fulls++;
-      state.flash = { t0: now + 70, a: 0.72, dur: 380 };
+      celebrateFullClear(now);
       if (!state.REDUCED && m.shake) state.shake = { amp: Math.min(L.cell * 0.05, 2.5), t0: now + 28 };
       Sfx.fullClear();
       haptic.clean();

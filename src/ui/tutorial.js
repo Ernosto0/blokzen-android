@@ -8,7 +8,7 @@ import { TH } from '../themes/progress.js';
 import { clamp01, inOut, lerp } from '../core/util.js';
 import { L } from '../render/layout.js';
 import { rr } from '../render/sprites.js';
-import { markClearedLines } from '../themes/switching.js';
+import { celebrateFullClear, markClearedLines } from '../themes/switching.js';
 import { checkOver, newGame, refreshFits, restore, snapshot } from '../game/flow.js';
 import { updateHud } from './hud.js';
 import { resetConfirm } from '../game/input.js';
@@ -75,9 +75,9 @@ export function tutPlace(slot, r0, c0) {
     const clean = state.grid.every(row => row.every(v => !v));
     markClearedLines(rows, cols, now);
     const midX = L.gx + L.B / 2 - L.pad;
-    state.texts.push({ text: clean ? t('Tahta temizlendi') : t('{n} sıra temizlendi', { n: lines }), x: midX, y: L.gy + L.cell * 3.4, t0: now + 90, dur: 880, size: L.cell * 0.68, role: 'accent' });
+    state.texts.push({ clear: true, text: clean ? t('Tertemiz!') : t('{n} sıra temizlendi', { n: lines }), x: midX, y: L.gy + L.cell * 3.4, t0: now + 90, dur: clean ? 1190 : 880, size: L.cell * (clean ? 1.06 : 0.68), role: 'accent' });
     if (clean) {
-      state.flash = { t0: now + 70, a: 0.72, dur: 380 };
+      celebrateFullClear(now);
       Sfx.fullClear(); haptic.clean();
     } else {
       Sfx.clear(lines, 1); haptic.clear(lines, 1);

@@ -233,26 +233,33 @@ function drawClearedLines(now, th, cs) {
   }
   ctx.restore();
 }
-function drawClearLabel(tx, t, th, cs) {
-  const size = tx.size, rise = state.REDUCED ? 0 : cs * 0.28 * outCubic(t);
-  const y = tx.y - rise, subSize = cs * 0.36;
-  ctx.font = `700 ${size}px "Baloo 2", "Trebuchet MS", sans-serif`;
-  const width = ctx.measureText(tx.text).width;
-  ctx.font = `600 ${subSize}px "Baloo 2", "Trebuchet MS", sans-serif`;
-  const pad = cs * 0.27, w = Math.min(L.B, Math.max(width, ctx.measureText(tx.sub).width) + pad * 2);
-  const h = cs * (tx.sub ? 1.48 : 0.9);
-  const x = Math.max(L.bx + w / 2, Math.min(L.bx + L.B - w / 2, tx.x));
-  ctx.globalAlpha = Math.min(1, t / 0.09, (1 - t) / 0.22);
-  rr(ctx, x - w / 2, y - h / 2, w, h, cs * 0.17);
-  ctx.fillStyle = th.btn; ctx.fill();
-  ctx.strokeStyle = rgba(th.fg, 0.18); ctx.lineWidth = 1; ctx.stroke();
-  ctx.font = `700 ${size}px "Baloo 2", "Trebuchet MS", sans-serif`;
+function drawClearText(tx, t, th, cs) {
+  const maxWidth = L.B - cs * 0.75;
+  const alpha = Math.min(1, t / 0.07, (1 - t) / 0.24);
+  const entry = outCubic(clamp01(t / 0.18));
+  const scale = state.REDUCED ? 1 : 0.82 + 0.18 * entry;
+  const y = tx.y - (state.REDUCED ? 0 : cs * (0.38 * entry + 0.22 * t));
+  const size = tx.size * scale;
+
+  ctx.font = `800 ${size}px "Baloo 2", "Trebuchet MS", sans-serif`;
+  const half = Math.min(maxWidth, ctx.measureText(tx.text).width) / 2 + cs * 0.25;
+  const x = Math.max(L.bx + half, Math.min(L.bx + L.B - half, tx.x));
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = th.light ? th.stroke : th.board;
+  ctx.lineWidth = Math.max(2, size * 0.13);
+  ctx.strokeText(tx.text, x, y, maxWidth);
   ctx.fillStyle = tx.role === 'accent' ? th.accent : th.fg;
-  ctx.fillText(tx.text, x, y - (tx.sub ? cs * 0.22 : 0), w - pad * 2);
+  ctx.fillText(tx.text, x, y, maxWidth);
+
   if (tx.sub) {
-    ctx.font = `600 ${subSize}px "Baloo 2", "Trebuchet MS", sans-serif`;
+    ctx.globalAlpha = alpha * (state.REDUCED ? 1 : clamp01((t - 0.045) / 0.13));
+    const subSize = cs * 0.52;
+    ctx.font = `700 ${subSize}px "Baloo 2", "Trebuchet MS", sans-serif`;
+    ctx.lineWidth = Math.max(2, subSize * 0.14);
+    const subY = y + size * 0.5 + subSize * 0.58;
+    ctx.strokeText(tx.sub, x, subY, maxWidth);
     ctx.fillStyle = th.fg;
-    ctx.fillText(tx.sub, x, y + cs * 0.36, w - pad * 2);
+    ctx.fillText(tx.sub, x, subY, maxWidth);
   }
   ctx.globalAlpha = 1;
 }
@@ -375,9 +382,12 @@ function draw(now) {
     const t = (now - state.flash.t0) / (state.flash.dur || 380);
     if (t >= 1) state.flash = null;
     else if (t > 0) {
-      rr(ctx, L.bx + 2, L.by + 2, L.B - 4, L.B - 4, L.B * 0.03);
+      const sweep = state.flash.sweep && !state.REDUCED;
+      const inset = sweep ? 2 + L.B * 0.39 * (1 - outCubic(t)) : 2;
+      const size = L.B - inset * 2;
+      rr(ctx, L.bx + inset, L.by + inset, size, size, Math.min(size * 0.15, cs * 0.23));
       ctx.strokeStyle = rgba(th.accent, (state.flash.a ?? 0.65) * (1 - t));
-      ctx.lineWidth = 2;
+      ctx.lineWidth = sweep ? Math.max(2, cs * 0.09 * (1 - t)) : 2;
       ctx.stroke();
     }
   }
@@ -420,7 +430,7 @@ function draw(now) {
   for (const tx of state.texts) {
     const t = (now - tx.t0) / tx.dur;
     if (t < 0 || t >= 1) continue;
-    if (tx.clear) { drawClearLabel(tx, t, th, cs); continue; }
+    if (tx.clear) { drawClearText(tx, t, th, cs); continue; }
     const y = tx.y - (state.REDUCED ? 0 : outCubic(t) * cs * 0.35);
     ctx.globalAlpha = Math.min(1, t / 0.10, (1 - t) / 0.25);
     ctx.font = `700 ${tx.size}px "Baloo 2", "Trebuchet MS", sans-serif`;

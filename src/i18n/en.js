@@ -125,7 +125,6 @@ export default {
   'Kombo': 'Combo',
   'Puan': 'Score',
   'Kombo ×{c}': 'Combo ×{c}',
-  'Tahta temizlendi': 'Board cleared',
   '{n} sıra temizlendi': ['{n} line cleared', '{n} lines cleared'],
   '{n} taş temizlendi': ['{n} stone cleared', '{n} stones cleared'],
   'Son taş temizlendi': 'Last stone cleared',

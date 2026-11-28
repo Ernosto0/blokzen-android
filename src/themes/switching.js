@@ -45,14 +45,27 @@ export function snapTheme(i) { // instant, no animation
   state.ambCur = AMBIENTS[THEMES[i].amb](THEMES[i]); state.ambPrev = null;
   Sfx.snd = THEMES[i].snd;
 }
-export function burst(now) {
+export function burst(now, fullClear = false) {
   if (state.REDUCED) return;
   const th = TH(), cx = L.bx + L.B / 2, cy = L.by + L.B / 2;
-  for (let i = 0; i < 16; i++) {
-    const ang = Math.random() * Math.PI * 2, v = rand(1.3, 3.2) * L.cell;
-    state.particles.push(fxParticle(th.fx, { x: cx, y: cy, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v - L.cell * 3, life: -0.08, max: rand(0.45, 0.7),
-      size: L.cell * rand(0.12, 0.2), rot: Math.random() * 6, vr: rand(-8, 8), color: i % 3 ? th.blocks[i % 7] : th.accent }));
+  const count = fullClear ? 20 : 16;
+  for (let i = 0; i < count; i++) {
+    const angle = fullClear ? (i + rand(-0.2, 0.2)) * Math.PI * 2 / count : Math.random() * Math.PI * 2;
+    const speed = L.cell * (fullClear ? rand(3.6, 6) : rand(1.3, 3.2));
+    const particle = fxParticle(th.fx, {
+      x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - L.cell * 3,
+      life: -0.08, max: fullClear ? rand(0.52, 0.82) : rand(0.45, 0.7),
+      size: L.cell * rand(0.12, 0.2), rot: Math.random() * 6, vr: rand(-8, 8),
+      color: i % 3 ? th.blocks[i % 7] : th.accent,
+    });
+    if (fullClear) particle.glow = false;
+    state.particles.push(particle);
   }
+}
+
+export function celebrateFullClear(now) {
+  state.flash = { t0: now + 70, a: 0.88, dur: 580, sweep: true };
+  burst(now, true);
 }
 // Mark the cleared grid area briefly, using the same geometry as the drag preview.
 export function markClearedLines(rows, cols, now) {
