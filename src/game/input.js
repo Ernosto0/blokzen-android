@@ -39,11 +39,11 @@ function computeTarget() {
     for (let cc = 0; cc < N; cc++) if (g.every(row => row[cc])) { cols.push(cc); for (let r2 = 0; r2 < N; r2++) hl.add(r2 * N + cc); }
   }
   d.target = valid ? { r, c, hl, rows, cols } : null;
-  // the lines this drop would clear changed: a soft chime and a tick, and the glow starts over
+  // the lines this drop would clear changed: restart the outline and give one haptic tick
   const key = rows.length + cols.length ? rows.join(',') + '|' + cols.join(',') : '';
   if (key !== d.hlKey) {
     d.hlKey = key;
-    if (key) { d.hlT0 = performance.now(); Sfx.preview(rows.length + cols.length); haptic.preview(); }
+    if (key) { d.hlT0 = performance.now(); haptic.preview(); }
   }
 }
 

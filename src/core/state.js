@@ -26,9 +26,7 @@ export const state = {
   displayScore: 0,
   shownScore: -1,
   clearing: [],
-  beams: [], // light sweeping along a line as it clears
-  rings: [], // shockwaves from where the piece landed
-  orbs: [], // score sparks flying from a clear up to the score counter; the counter waits for them
+  beams: [], // outlines of recently cleared rows and columns
   particles: [],
   texts: [],
   shake: null,
